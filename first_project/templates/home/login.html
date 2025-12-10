@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+{% comment %} headでページ設定やデザインの設定をする{% endcomment %}
+    <meta charset="UTF-8">
+    {% comment %} 文字化けしないようにしてる {% endcomment %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% comment %} スマホ画面で拡大されすぎるのを防いで画面サイズに自動調整してくれる {% endcomment %}
+    <title>ログイン - かけいまもるくん</title>
+    <style>
+        body {
+        {% comment %} 余白とかフォントの設定 {% endcomment %}
+            margin: 0;
+            padding: 0;
+            background: #FFF8E7;
+            font-family: 'Hiragino Sans', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+        {% comment %} ログインフォーム（白い箱）の設定 {% endcomment %}
+
+            width: 90%;
+            max-width: 380px;
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        input {
+        {% comment %} 入力フォームの設定 {% endcomment %}
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        button {
+        {% comment %} ボタンの設定 {% endcomment %}
+            width: 100%;
+            padding: 12px;
+            margin-top: 1rem;
+            border: none;
+            border-radius: 10px;
+            background-color: #ffb347;
+            color: #fff;
+            font-size: 18px;
+        }
+        button:active {
+            background-color: #e69900;
+        }
+        p {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+{% comment %} 実際に画面に表示される部分 {% endcomment %}
+    <div class="container">
+        <h1>ログイン</h1>
+        <form method="POST">
+            {% csrf_token %}
+            {% comment %} django専用のセキュリティをまもるためのトークン {% endcomment %}
+            <input type="email" name="email" placeholder="メールアドレス" required>
+            {% comment %} メールアドレス入力欄 {% endcomment %}
+            <input type="password" name="password" placeholder="パスワード" required>
+            {% comment %} パスワード入力欄 {% endcomment %}
+            <button type="submit">ログイン</button>
+            {% comment %} 押すとログイン処理へ送られるボタン {% endcomment %}
+        </form>
+        <p>アカウントをお持ちでない方は<a href="#">新規登録</a></p>
+        {% comment %} 新規登録のボタンを押すと＃内のリンクに飛ぶ {% endcomment %}
+    </div>
+</body>
+</html>

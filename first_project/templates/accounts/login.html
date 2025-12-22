@@ -78,7 +78,7 @@
             <button type="submit">ログイン</button>
             {% comment %} 押すとログイン処理へ送られるボタン {% endcomment %}
         </form>
-        <p>アカウントをお持ちでない方は<a href="#">新規登録</a></p>
+        <p>アカウントをお持ちでない方は<a href={% url 'accounts:regist' %}>新規登録</a></p>
         {% comment %} 新規登録のボタンを押すと＃内のリンクに飛ぶ {% endcomment %}
     </div>
 </body>

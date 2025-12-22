@@ -1,23 +1,36 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import(
-    TemplateView, CreateView, FormView, View
+    CreateView, FormView, View
 )
 from django.urls import reverse_lazy
-from .forms import RegistForm
+from django.contrib.auth import authenticate, login, logout
+from .forms import RegistForm, UserLoginForm
 
-class HomeView(TemplateView):
-# ただ画面を表示するだけの処理に適したView
-    template_name = 'home.html'
     
 class RegistUserView(CreateView):
 # ユーザー登録のView（フォーム入力→バリデーション→DB保存まで）
-    template_name = 'regist.html'
+    template_name = 'accounts/regist.html'
 # 使用するフォーム
     form_class = RegistForm
-    success_url = reverse_lazy('accounts:home')
+    success_url = reverse_lazy('accounts:login')
     
 class UserLoginView(FormView):
-    template_name = 'login.html'
+    template_name = 'accounts/login.html'
+    form_class = UserLoginForm
+    success_url = reverse_lazy('home:home')
+    
+    def form_valid(self, form):
+        email = form.cleaned_data['email']
+        password = form.cleaned_data['password']
+        user = authenticate(email=email, password=password)
+        if user:
+            login(self.request, user)
+        return super().form_valid(form)
     
 class UserLogoutView(View):
-    pass
+    def get(self,request, *args, **kwargs):
+        return render(request, 'accounts/logout.html')
+    
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        return redirect('accounts:login')

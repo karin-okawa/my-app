@@ -62,23 +62,37 @@
             margin-top: 1rem;
             font-size: 0.9rem;
         }
+        label {
+              
+            display: block;
+            text-align: left;
+            margin-top: 12px;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+
     </style>
 </head>
 <body>
 {% comment %} 実際に画面に表示される部分 {% endcomment %}
     <div class="container">
-        <h1>ログイン</h1>
+        <h1>かけいまもるくん</h1>
         <form method="POST">
             {% csrf_token %}
             {% comment %} django専用のセキュリティをまもるためのトークン {% endcomment %}
-            <input type="email" name="email" placeholder="メールアドレス" required>
+            <label for="email">メールアドレス</label>
+            <input type="email" name="email" required>
             {% comment %} メールアドレス入力欄 {% endcomment %}
-            <input type="password" name="password" placeholder="パスワード" required>
+            <label for="password">パスワード</label>
+            <input type="password" name="password" required>
             {% comment %} パスワード入力欄 {% endcomment %}
             <button type="submit">ログイン</button>
             {% comment %} 押すとログイン処理へ送られるボタン {% endcomment %}
         </form>
-        <p>アカウントをお持ちでない方は<a href={% url 'accounts:regist' %}>新規登録</a></p>
+        <p><a href={% url 'accounts:regist' %}>新規アカウント登録</a></p>
+        <p>パスワードを忘れた方は<a href={% url 'accounts:regist' %}>こちら</a></p>
         {% comment %} 新規登録のボタンを押すと＃内のリンクに飛ぶ {% endcomment %}
     </div>
 </body>

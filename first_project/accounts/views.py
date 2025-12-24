@@ -20,11 +20,8 @@ class UserLoginView(FormView):
     success_url = reverse_lazy('home:home')
     
     def form_valid(self, form):
-        email = form.cleaned_data['email']
-        password = form.cleaned_data['password']
-        user = authenticate(email=email, password=password)
-        if user:
-            login(self.request, user)
+        user = form.cleaned_data['user']
+        login(self.request, user)
         return super().form_valid(form)
     
 class UserLogoutView(View):

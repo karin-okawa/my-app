@@ -1,0 +1,31 @@
+<!-- templates/households/transaction_list.html -->
+
+<h1>収支一覧</h1>
+
+<!-- 新規登録ページへ -->
+<p><a href="{% url 'households:new' %}">＋収支を登録する</a></p>
+
+<!--
+  views.py で context_object_name="transactions" にしているので
+  テンプレート側では transactions として受け取れる
+-->
+<ul>
+  {% for t in transactions %}
+    <li>
+      <!-- 日付 / 収支区分（choicesの日本語） / 金額 -->
+      {{ t.date }} / {{ t.get_tx_type_display }} / {{ t.amount }}円
+
+      <!-- 画像がある場合だけ🖼️を表示 -->
+      {% if t.image %} 🖼️ {% endif %}
+
+      <!-- メモがある場合だけ表示 -->
+      {% if t.memo %} - {{ t.memo }}{% endif %}
+    </li>
+  {% empty %}
+    <!-- データが0件の場合 -->
+    <li>まだ収支が登録されていません</li>
+  {% endfor %}
+</ul>
+
+<!-- homeに戻る（home側のURL名に合わせて必要なら変更してね） -->
+<p><a href="{% url 'home:home' %}">ホームに戻る</a></p>

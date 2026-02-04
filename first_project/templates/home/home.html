@@ -1,6 +1,31 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
-  <h1>かけいまもるくん</h1>
+<h1>かけいまもるくん</h1>
 
- 
+<div>
+  <button type="button">◁</button>
+  <strong>{{ year }}年{{ month }}月</strong>
+  <button type="button">▷</button>
+</div>
+
+<table border="1" style="border-collapse: collapse; width: 100%; max-width: 700px;">
+  <thead>
+    <tr>
+      <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for week in calendar %}
+    <tr style="height: 90px;">
+      {% for day in week %}
+      <td style="vertical-align: top; padding: 6px;">
+        {% if day != 0 %}
+          <div style="font-weight: bold;">{{ day }}</div>
+        {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

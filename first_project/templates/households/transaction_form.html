@@ -1,0 +1,26 @@
+<!-- templates/households/transaction_form.html -->
+
+<h1>収支登録</h1>
+
+<!--
+  CreateView のフォーム送信先は「今のURL」になる（actionを書かなくてもOK）
+  画像アップロードがあるので enctype="multipart/form-data" は必須
+-->
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <!--
+    forms.py の labels がここに反映される（日本語で表示される）
+    form.as_p は「入力欄をpタグでいい感じに並べて出す」簡易表示
+  -->
+  {{ form.as_p }}
+
+  <!-- 保存ボタン -->
+  <button type="submit">保存</button>
+</form>
+
+<!-- 一覧に戻るリンク -->
+<p><a href="{% url 'households:list' %}">一覧に戻る</a></p>
+
+<p><a href="{% url 'home:home' %}">ホームに戻る</a></p>
+

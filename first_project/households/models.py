@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 
 
+
 # 家計簿の「1件の収支（収入 or 支出）」を表すモデル
 # カレンダー表示・一覧表示・集計（合計など）の元になるデータをここに保存する
 class Transaction(models.Model):

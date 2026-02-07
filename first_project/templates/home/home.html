@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load dict_extras %}
 {% block content %}
 <h1>かけいまもるくん</h1>
+
 
 <div>
   <button type="button">◁</button>
@@ -21,7 +23,25 @@
       <td style="vertical-align: top; padding: 6px;">
         {% if day != 0 %}
           <div style="font-weight: bold;">{{ day }}</div>
+
+           <!-- 👇 その日の収支 -->
+          <div style="font-size: 12px; margin-top: 6px;">
+
+            {% if income_map|dict_get:day %}
+              <div style="color: blue;">
+                +{{ income_map|dict_get:day }}
+              </div>
+            {% endif %}
+
+            {% if expense_map|dict_get:day %}
+              <div style="color: red;">
+                -{{ expense_map|dict_get:day }}
+              </div>
+            {% endif %}
+
+          </div>
         {% endif %}
+
       </td>
       {% endfor %}
     </tr>

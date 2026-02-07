@@ -1,98 +1,107 @@
-# Djangoの「テンプレートを表示するだけ」のView（ホーム画面などに使う）
+# Djangoの「テンプレートを表示するだけ」のView（HTMLを返すため）
 from django.views.generic import TemplateView
 
-# ログイン必須にするMixin（未ログインならLOGIN_URLへ飛ばす）
+# ログインしていないユーザーをログイン画面へ飛ばすMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-# 汎用クラスベースビュー（一覧表示 / 新規作成）
-from django.views.generic import ListView, CreateView
-
-# URLの名前（namespace:name）からURLを作るためのもの
-from django.urls import reverse_lazy
-
-# Python標準のカレンダーを使うため
+# Python標準ライブラリのカレンダー機能
 import calendar
 
-# households/models.py にある Transaction を読み込む
+# DB集計用（合計）
+from django.db.models import Sum
+
+# 日付（DateField）から「日（1〜31）」だけを取り出すための関数
+from django.db.models.functions import ExtractDay
+
+# households/models.py に定義してある Transaction モデルを使う
 from households.models import Transaction
 
 
 # --------------------------------------------
-# ① ホーム画面（カレンダーを表示するページ）
+# ホーム画面（カレンダー＋日別収支を表示）
 # --------------------------------------------
 class HomeView(LoginRequiredMixin, TemplateView):
     """
-    ログイン後に見せたいホーム画面（カレンダー）
-    ・まずは固定で年月（2026年2月）を表示
-    ・テンプレートにカレンダー用のデータ（週×曜日）を渡す
+    ログイン後に最初に表示されるホーム画面
+    ・月カレンダーを表示する
+    ・その月の「日別 収入 / 支出 合計」をテンプレに渡す
     """
+    # 表示に使うテンプレート
     template_name = "home/home.html"
 
     def get_context_data(self, **kwargs):
         """
-        テンプレートに渡す値（context）を追加する
+        テンプレートに渡すデータ（context）を作るメソッド
         """
-        # まずは親クラスが用意するcontextを取得
+        # まずは親クラス（TemplateView）が用意した context を取得
         context = super().get_context_data(**kwargs)
 
-        # とりあえず固定で 2026年2月（あとで動的にする）
+        # ============================
+        # 表示する年月（まずは固定）
+        # ============================
         year = 2026
         month = 2
 
-        # 週 × 曜日の2次元リストを作る
-        # 日曜始まりのカレンダーを作る（6 = 日曜日）
+        # ============================
+        # カレンダーの枠を作る
+        # ============================
+        # firstweekday=6 → 日曜始まり
+        # 戻り値は「週 × 曜日」の2次元リスト
+        # 例：[[1,2,3,4,5,6,7], [8,9,10,11,12,13,14], ...]
+        # 月に含まれない日は 0 になる
         cal = calendar.Calendar(firstweekday=6).monthdayscalendar(year, month)
 
-        # テンプレートで使えるように context に入れる
+        # テンプレートで {{ year }}, {{ month }}, {% for week in calendar %} が使えるようにする
         context["year"] = year
         context["month"] = month
         context["calendar"] = cal
 
+        # ============================
+        # この月の収支データを取得
+        # ============================
+        # ・ログインユーザーのものだけ
+        # ・指定した年・月のものだけ
+        qs = Transaction.objects.filter(
+            user=self.request.user,
+            date__year=year,
+            date__month=month,
+        )
+
+        # ============================
+        # 日別「収入合計」を作る
+        # ============================
+        # 1. tx_type が income のものだけに絞る
+        # 2. date から「日」だけを取り出す（ExtractDay）
+        # 3. 同じ日の amount を合計（Sum）
+        income_by_day = (
+            qs.filter(tx_type=Transaction.INCOME)
+              .annotate(day=ExtractDay("date"))   # day = 1〜31
+              .values("day")
+              .annotate(total=Sum("amount"))      # total = その日の収入合計
+        )
+
+        # ============================
+        # 日別「支出合計」を作る
+        # ============================
+        expense_by_day = (
+            qs.filter(tx_type=Transaction.EXPENSE)
+              .annotate(day=ExtractDay("date"))
+              .values("day")
+              .annotate(total=Sum("amount"))
+        )
+
+        # ============================
+        # テンプレで使いやすい形に変換
+        # ============================
+        # QuerySet → 辞書に変換
+        # 例：{ 2: 3000, 5: 1200 }
+        context["income_map"] = {
+            row["day"]: row["total"] for row in income_by_day
+        }
+
+        context["expense_map"] = {
+            row["day"]: row["total"] for row in expense_by_day
+        }
+
+        # 最終的にこの context がテンプレートに渡される
         return context
-
-
-# --------------------------------------------
-# ② 収支一覧（ログインユーザーのTransactionだけ表示）
-# ※「homeアプリ内で一覧を出す」暫定版の置き場所
-#   将来的には households/views.py に移すのが自然
-# --------------------------------------------
-class TransactionListView(LoginRequiredMixin, ListView):
-    """
-    Transaction（収支）の一覧画面
-    ・ログインしているユーザーのデータだけ表示する
-    """
-    model = Transaction
-    template_name = "transactions/list.html"
-    context_object_name = "transactions"
-
-    def get_queryset(self):
-        """
-        表示するデータを「ログインユーザーのものだけ」に絞る
-        """
-        return Transaction.objects.filter(user=self.request.user)
-
-
-# --------------------------------------------
-# ③ 収支登録（ログインユーザーとして保存）
-# --------------------------------------------
-class TransactionCreateView(LoginRequiredMixin, CreateView):
-    """
-    Transaction（収支）の新規作成画面
-    ・フォームから登録
-    ・保存時に user を自動で入れる
-    """
-    model = Transaction
-    fields = ["date", "tx_type", "amount", "memo", "image"]
-    template_name = "transactions/form.html"
-
-    # ✅ ここはあなたのURL構成に合わせて変えてOK
-    # 迷うなら一旦ホームに戻すのが安全
-    # success_url = reverse_lazy("home:home")
-    success_url = reverse_lazy("home:home")
-
-    def form_valid(self, form):
-        """
-        保存前に user をログインユーザーにセット
-        """
-        form.instance.user = self.request.user
-        return super().form_valid(form)

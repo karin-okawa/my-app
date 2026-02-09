@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>{{ year }}年{{ month }}月{{ day }}日の収支</h1>
+
+<p>
+  <a href="{% url 'home:home' %}">← カレンダーに戻る</a>
+</p>
+
+{% if transactions %}
+  <ul>
+    {% for tx in transactions %}
+      <li>
+        {{ tx.get_tx_type_display }}：
+        {{ tx.amount }}円
+        {% if tx.memo %}（{{ tx.memo }}）{% endif %}
+        {% if tx.image %} 🖼️ {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>この日の収支はまだありません。</p>
+{% endif %}
+
+{% endblock %}

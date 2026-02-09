@@ -22,7 +22,12 @@
       {% for day in week %}
       <td style="vertical-align: top; padding: 6px;">
         {% if day != 0 %}
-          <div style="font-weight: bold;">{{ day }}</div>
+          <div style="font-weight: bold;">
+            <a href="{% url 'home:day_detail' year=year month=month day=day %}">
+              {{ day }}
+            </a>
+          </div>
+
 
            <!-- 👇 その日の収支 -->
           <div style="font-size: 12px; margin-top: 6px;">

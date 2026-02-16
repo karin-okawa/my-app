@@ -114,52 +114,9 @@ class HomeView(LoginRequiredMixin, TemplateView):
 
 
 
-
-class DayTransactionListView(LoginRequiredMixin, ListView):
-    """
-    その日（YYYY/MM/DD）の収支(Transaction)だけを一覧表示するView
-    ・ログインユーザーのデータだけ
-    ・指定日付のデータだけ
-    """
-    model = Transaction
-    template_name = "transactions/day_list.html"   # ← 新しく作るテンプレ
-    context_object_name = "transactions"
-
-    def get_queryset(self):
-        """
-        URLから受け取った year/month/day を使って日付を作り、
-        その日付のTransactionだけを取ってくる
-        """
-        y = int(self.kwargs["year"])
-        m = int(self.kwargs["month"])
-        d = int(self.kwargs["day"])
-
-        target_date = date(y, m, d)
-
-        return Transaction.objects.filter(
-            user=self.request.user,
-            date=target_date
-        ).order_by("-created_at")
-
-    def get_context_data(self, **kwargs):
-        """
-        テンプレで「何日の日別詳細か」を表示できるようにする
-        """
-        context = super().get_context_data(**kwargs)
-        context["year"] = int(self.kwargs["year"])
-        context["month"] = int(self.kwargs["month"])
-        context["day"] = int(self.kwargs["day"])
-        return context
-
-
-
 # ============================
-# ③ 日別収支一覧ページ
+# 日別収支一覧ページ
 # ============================
-
-# 日付で絞り込むために date を使う
-from datetime import date
-
 
 class DayTransactionListView(LoginRequiredMixin, ListView):
     """

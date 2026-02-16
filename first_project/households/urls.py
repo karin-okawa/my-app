@@ -13,5 +13,5 @@ urlpatterns = [
     path("", TransactionListView.as_view(), name="list"),
 
     # 収支登録ページ（例：/households/new/）
-    path("new/", TransactionCreateView.as_view(), name="new"),
+    path("new/", TransactionCreateView.as_view(), name="create"),
 ]

@@ -40,15 +40,18 @@ class RegistForm(forms.ModelForm):
     #保存処理 
     def save(self, commit=True):
         user = super().save(commit=False)
+        # password1（入力されたパスワード）を使用するように修正
+        password = self.cleaned_data.get('password1')
         
-        #バリデーション（強度チェック）
-        validate_password(self.cleaned_data['password'], user)
-        #ハッシュ化して保存
-        user.set_password(self.cleaned_data['password'])
+        # バリデーション（強度チェック）
+        validate_password(password, user)
+        # ハッシュ化して保存
+        user.set_password(password)
         
         if commit:
             user.save()
         return user
+        
     
 
 class UserLoginForm(forms.Form):

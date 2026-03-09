@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 {% load dict_extras %}
+
+
+
+
 {% block content %}
 <h1>かけいまもるくん</h1>
 
@@ -23,9 +27,16 @@
       <td style="vertical-align: top; padding: 6px;">
         {% if day != 0 %}
           <div style="font-weight: bold;">
-            <a href="{% url 'home:day_detail' year=year month=month day=day %}">
-              {{ day }}
-            </a>
+           <button
+             type="button"
+             class="day-btn"
+             data-year="{{ year }}"
+             data-month="{{ month }}"
+             data-day="{{ day }}"
+           >
+             {{ day }}
+           </button>
+ 
           </div>
 
 
@@ -53,4 +64,48 @@
     {% endfor %}
   </tbody>
 </table>
+
+<!-- ボトムシート（最初は非表示） -->
+<div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+
+<div id="day-sheet" class="day-sheet" hidden>
+  <div class="sheet-content">
+
+    <div id="sheet-date" class="sheet-date">----</div>
+
+    <a id="sheet-create" class="sheet-btn" href="#">＋ 新規作成</a>
+
+    <div id="sheet-list" class="sheet-list">
+      <!-- ここにJSで明細を差し込む -->
+    </div>
+
+    <button type="button" id="sheet-cancel" class="sheet-cancel">キャンセル</button>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block footer %}
+<footer class="app-footer">
+  <a class="nav-item" href="{% url 'home:home' %}">
+    <span class="icon">📅</span>
+    <span class="label">ホーム</span>
+  </a>
+
+  <a class="nav-item" href="{% url 'households:create' %}">
+    <span class="icon">✏️</span>
+    <span class="label">入力</span>
+  </a>
+
+  <a class="nav-item" href="#">
+    <span class="icon">🥧</span>
+    <span class="label">グラフ</span>
+  </a>
+
+  <a class="nav-item" href="#">
+    <span class="icon">🙂</span>
+    <span class="label">掲示板</span>
+  </a>
+</footer>
 {% endblock %}

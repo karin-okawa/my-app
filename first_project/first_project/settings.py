@@ -132,3 +132,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ログインのURLとログイン成功後に飛ぶ先のURL
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "home:home"
+
+# パスワードリセットリンクの有効期限を秒単位で設定（30分 = 1800秒）
+PASSWORD_RESET_TIMEOUT = 1800

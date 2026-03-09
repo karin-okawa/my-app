@@ -49,3 +49,39 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         # 保存前に「誰のデータか」をセット
         form.instance.user = self.request.user
         return super().form_valid(form)
+
+
+from django.http import JsonResponse
+from datetime import date
+
+
+class DayTransactionsJsonView(LoginRequiredMixin, ListView):
+    """
+    指定日付のTransactionをJSONで返す（モーダル用）
+    """
+    model = Transaction
+
+    def get(self, request, *args, **kwargs):
+        y = int(kwargs["year"])
+        m = int(kwargs["month"])
+        d = int(kwargs["day"])
+        target = date(y, m, d)
+
+        qs = Transaction.objects.filter(user=request.user, date=target).order_by("-created_at")
+
+        data = []
+        for tx in qs:
+            data.append({
+                "id": tx.id,
+                "tx_type": tx.tx_type,  # "income" or "expense"
+                "tx_type_label": tx.get_tx_type_display(),  # "収入"/"支出"
+                "amount": tx.amount,
+                "memo": tx.memo or "",
+                # ここは「カテゴリ」フィールドがあるなら入れる（例：tx.category.name）
+                "label": tx.memo or tx.get_tx_type_display(),
+            })
+
+        return JsonResponse({
+            "date": target.isoformat(),
+            "transactions": data,
+        })

@@ -1,63 +1,43 @@
 {% extends "base.html" %}
 {% load dict_extras %}
 
-
-
-
 {% block content %}
-<h1>かけいまもるくん</h1>
-
-
-<div>
-  <button type="button">◁</button>
-  <strong>{{ year }}年{{ month }}月</strong>
-  <button type="button">▷</button>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h6 mb-0" style="color: #5d4037; font-weight: bold;">{{ year }}年{{ month }}月</h2>
+  <div class="btn-group">
+    <button type="button" class="btn btn-sm btn-outline-secondary" style="border-radius: 4px !important; padding: 2px 8px;">◁</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" style="border-radius: 4px !important; padding: 2px 8px;">▷</button>
+  </div>
 </div>
 
-<table border="1" style="border-collapse: collapse; width: 100%; max-width: 700px;">
+<table class="calendar-table">
   <thead>
     <tr>
-      <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+      <th style="color: #a24141;">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th style="color: #2c587c;">土</th>
     </tr>
   </thead>
   <tbody>
     {% for week in calendar %}
-    <tr style="height: 90px;">
+    <tr>
       {% for day in week %}
-      <td style="vertical-align: top; padding: 6px;">
+      <td class="{% if day == current_day %}today{% endif %}">
         {% if day != 0 %}
-          <div style="font-weight: bold;">
-           <button
-             type="button"
-             class="day-btn"
-             data-year="{{ year }}"
-             data-month="{{ month }}"
-             data-day="{{ day }}"
-           >
-             {{ day }}
-           </button>
- 
-          </div>
-
-
-           <!-- 👇 その日の収支 -->
-          <div style="font-size: 12px; margin-top: 6px;">
-
+          <span class="day-number">{{ day }}</span>
+          
+          <div class="day-content">
             {% if income_map|dict_get:day %}
-              <div style="color: blue;">
-                +{{ income_map|dict_get:day }}
-              </div>
+              <span class="amount-badge amt-income">
+                {{ income_map|dict_get:day }}
+              </span>
             {% endif %}
 
             {% if expense_map|dict_get:day %}
-              <div style="color: red;">
-                -{{ expense_map|dict_get:day }}
-              </div>
+              <span class="amount-badge amt-expense">
+                {{ expense_map|dict_get:day }}
+              </span>
             {% endif %}
-
           </div>
         {% endif %}
-
       </td>
       {% endfor %}
     </tr>
@@ -65,47 +45,4 @@
   </tbody>
 </table>
 
-<!-- ボトムシート（最初は非表示） -->
-<div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
-
-<div id="day-sheet" class="day-sheet" hidden>
-  <div class="sheet-content">
-
-    <div id="sheet-date" class="sheet-date">----</div>
-
-    <a id="sheet-create" class="sheet-btn" href="#">＋ 新規作成</a>
-
-    <div id="sheet-list" class="sheet-list">
-      <!-- ここにJSで明細を差し込む -->
-    </div>
-
-    <button type="button" id="sheet-cancel" class="sheet-cancel">キャンセル</button>
-  </div>
-</div>
-
-
-{% endblock %}
-
-{% block footer %}
-<footer class="app-footer">
-  <a class="nav-item" href="{% url 'home:home' %}">
-    <span class="icon">📅</span>
-    <span class="label">ホーム</span>
-  </a>
-
-  <a class="nav-item" href="{% url 'households:create' %}">
-    <span class="icon">✏️</span>
-    <span class="label">入力</span>
-  </a>
-
-  <a class="nav-item" href="#">
-    <span class="icon">🥧</span>
-    <span class="label">グラフ</span>
-  </a>
-
-  <a class="nav-item" href="#">
-    <span class="icon">🙂</span>
-    <span class="label">掲示板</span>
-  </a>
-</footer>
 {% endblock %}

@@ -1,30 +1,51 @@
-# Djangoの「テンプレートを表示するだけ」のView（HTMLを返すため）
-from django.views.generic import TemplateView, ListView
+# ①DjangoのView関連
 
-# ログインしていないユーザーをログイン画面へ飛ばすMixin
+ # Djangoの「テンプレートを表示するだけ」のView（HTMLを返すため）
+from django.views.generic import TemplateView, ListView, CreateView, UpdateView, View
+
+ # ログインしていないユーザーをログイン画面へ飛ばすMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-# Python標準ライブラリのカレンダー機能
+ # URLの名前からURLを取得するための関数
+from django.urls import reverse_lazy
+
+ # 指定された日付の収支データをJSONに変換してブラウザに返す
+from django.http import JsonResponse
+
+
+# ②便利ツール
+
+ # Python標準ライブラリのカレンダー機能
 import calendar
 
-# DB集計用（合計）
+ # 日付で絞り込むために date を使う
+from datetime import date
+
+ # 日付を自動で合わせるために使う
+from django.utils import timezone
+
+ # DB集計用（合計）
 from django.db.models import Sum
 
-# 日付（DateField）から「日（1〜31）」だけを取り出すための関数
+ # 日付（DateField）から「日（1〜31）」だけを取り出すための関数
 from django.db.models.functions import ExtractDay
 
-# households/models.py に定義してある Transaction モデルを使う
+
+# ③自分のアプリのモデルとフォーム
+
+ # households/models.py に定義してある Transaction モデルを使う
 from households.models import Transaction
 
-# 日付で絞り込むために date を使う
-from datetime import date
+ # form.pyからTransactionFormを読み込む
+from .forms import TransactionForm
+
 
 
 
 
 
 # --------------------------------------------
-# ホーム画面（カレンダー＋日別収支を表示）
+# ホーム画面（カレンダー表示）
 # --------------------------------------------
 class HomeView(LoginRequiredMixin, TemplateView):
     """
@@ -34,19 +55,21 @@ class HomeView(LoginRequiredMixin, TemplateView):
     """
     # 表示に使うテンプレート
     template_name = "home/home.html"
-
+    
     def get_context_data(self, **kwargs):
         """
         テンプレートに渡すデータ（context）を作るメソッド
         """
         # まずは親クラス（TemplateView）が用意した context を取得
         context = super().get_context_data(**kwargs)
-
+        
+        # 取得した日付を表示
+        today = timezone.now()
+        
         # ============================
-        # 表示する年月（まずは固定）
+        # 表示する年月
         # ============================
-        year = 2026
-        month = 2
+        year, month = today.year, today.month
 
         # ============================
         # カレンダーの枠を作る
@@ -58,9 +81,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
         cal = calendar.Calendar(firstweekday=6).monthdayscalendar(year, month)
 
         # テンプレートで {{ year }}, {{ month }}, {% for week in calendar %} が使えるようにする
-        context["year"] = year
-        context["month"] = month
-        context["calendar"] = cal
+        context.update({"year": year, "month": month, "calendar": cal})
 
         # ============================
         # この月の収支データを取得
@@ -127,7 +148,7 @@ class DayTransactionListView(LoginRequiredMixin, ListView):
     model = Transaction
     template_name = "home/day_list.html"
     context_object_name = "transactions"
-
+    
     def get_queryset(self):
         """
         URLから受け取った year/month/day を使って日付を作り、
@@ -153,3 +174,67 @@ class DayTransactionListView(LoginRequiredMixin, ListView):
         context["month"] = int(self.kwargs["month"])
         context["day"] = int(self.kwargs["day"])
         return context
+
+    
+# ============================
+# 日別収支データのJSON返却View
+# ============================
+class DayTransactionJsonView(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        y = self.kwargs['year']
+        m = self.kwargs['month']
+        d = self.kwargs['day']
+        
+        target_date = date(y, m, d)
+        # DBから指定した日の自分のデータを取得
+        transactions = Transaction.objects.filter(user=request.user, date=target_date).values('id', 'tx_type', 'amount', 'memo')
+        # リストを作成
+        data = []
+        for tx in transactions:
+            type_label = "収入" if tx['tx_type'] == Transaction.INCOME else "支出"
+            data.append({'id': tx['id'], 'label': f"{type_label}: {tx['amount']}円", 'memo': tx['memo']})
+        
+        # JSONで返す
+        return JsonResponse({'transactions': data})
+        
+
+
+# ============================
+# 収支登録ページ
+# ============================
+class TransactionCreateView(LoginRequiredMixin, CreateView):
+    model = Transaction
+    form_class = TransactionForm
+    template_name = "households/transaction_form.html"
+    success_url = reverse_lazy('home:home')
+    
+    def get_initial(self):
+    # URLから日付を取得して初期値にする
+        initial = super().get_initial()
+        date_str = self.request.GET.get('date')
+        if date_str: 
+            initial['date'] = date_str
+        return initial
+
+    def form_valid(self, form):
+    # 保存時にログインユーザーを自動設定
+        form. instance. user = self. request. user
+        return super().form_valid(form)
+            
+        
+
+ 
+    
+# ============================
+# 収支編集ページ
+# ============================
+class TransactionUpdateView(LoginRequiredMixin, UpdateView):
+    model = Transaction
+    form_class = TransactionForm
+    template_name = "households/transaction_form.html"
+    success_url = reverse_lazy('home:home')
+    
+    def get_queryset(self):
+    # 自分のデータだけを対象にする
+        return Transaction.objects.filter(user=self.request.user)

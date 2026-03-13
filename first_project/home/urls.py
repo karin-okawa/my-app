@@ -1,17 +1,27 @@
 from django.urls import path
 from .views import (
     HomeView, 
-    DayTransactionListView
+    DayTransactionListView,
+    DayTransactionJsonView,
+    TransactionCreateView,
+    TransactionUpdateView,
 )
-
 
 app_name = 'home'
 
 urlpatterns = [
-    # ログイン後のトップ(/home/)
+    # カレンダーのトップ画面
     path('', HomeView.as_view(), name='home'),
     
-    # ✅ 日別詳細（例：/home/2026/2/1/）
-    path("<int:year>/<int:month>/<int:day>/", DayTransactionListView.as_view(), name="day_detail"),
+    # 日別詳細（例: /home/2026/2/10/）
+    path('<int:year>/<int:month>/<int:day>/', DayTransactionListView.as_view(), name='day_detail'),
 
+    # モーダルでデータを読み込む用
+    path('day-json/<int:year>/<int:month>/<int:day>/', DayTransactionJsonView.as_view(), name='day_json'),
+
+    # 新規登録画面
+    path('create/', TransactionCreateView.as_view(), name='transaction_create'),
+   
+    # 編集画面
+    path('update/<int:pk>/', TransactionUpdateView.as_view(), name='transaction_update'),
 ]

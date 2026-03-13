@@ -5,157 +5,305 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}かけいまもるくん{% endblock %}</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <style>
-      body {
-      margin: 0;
-      padding: 0;
-      background: #FFF8E7;
-      font-family: 'Hiragino Sans', sans-serif;
-      min-height: 100vh;
-    }
-
-     {% comment %} 画面中央寄せ  {% endcomment %}
+      /* 【背景】PCで見た時にスマホ枠を浮かび上がらせるための背景色と中央配置 */ 
       .page-center {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 24px 0;
-    }
+        background-color: #b29990; 
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
 
-    {% comment %} 白い縦長ボックス {% endcomment %}
+      /* 【スマホ枠】PC画面上に表示される擬似的なスマホ画面のサイズとデザイン */
       .card-box {
-      width: 90%;
-      max-width: 380px;
-      background-color: #fff;
-      padding: 2rem;
-      padding-bottom: 78px;    
-      {% comment %} ↑ フッター用スペース {% endcomment %}
-      border-radius: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      text-align: center;
-      position: relative;    
-     {% comment %} ↑ フッターの基準点  {% endcomment %}
-    }
+        width: 100%;
+        max-width: 380px; /* 一般的なスマホの横幅 */
+        height: 85vh;     /* PC画面から突き出さないように調整した高さ */
+        background-color: #8e6d59;
+        border-radius: 20px; /* スマホらしい角丸 */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column; /* 中身を縦に並べる(ヘッダー/メイン/フッター) */
+        overflow: hidden; /* メニューなどが枠の外に漏れないようにする */
+        position: relative; /* ドロワーを枠内に固定するために必須 */
+      }
 
-      h1 {
-      font-size: 1.6rem;
-      margin-bottom: 1.5rem;
-      color: #333;
-    }
+      /* 【レスポンシブ】スマホ実機で開いた時は、枠を消して全画面表示に切り替える */
+      @media (max-width: 576px) {
+        .page-center { padding: 0 !important; }
+        .card-box {
+          max-width: 100%;
+          height: 100vh;
+          border-radius: 0;
+        }
+      }
 
-      label {
-      display: block;
-      text-align: left;
-      margin-top: 12px;
-      margin-bottom: 4px;
-      font-size: 0.9rem;
-      color: #555;
-     }
+      /* 【ヘッダー】一番上の「かけいまもるくん」ロゴがあるエリア */
+      header {
+        background-color: #8e6d59;
+        flex-shrink: 0; /* 画面が狭くなってもヘッダーが潰れないように固定 */
+        z-index: 10;
+      }
 
-      input {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 16px;
-    }
+      /* 【ハンバーガーメニュー】ロゴの右上に配置される三本線ボタン */
+      .menu-trigger {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        padding: 0;
+        background: none;
+        border: none;
+        z-index: 11; /* ロゴより手前に表示 */
+      }
 
-      button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 1rem;
-      border: none;
-      border-radius: 10px;
-      background-color: #ffb347;
-      color: #fff;
-      font-size: 18px;
-    }
-
-      button:active {
-      background-color: #e69900;
-    }
-
-      p {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-
-      .top-nav {
-      padding: 10px 16px;
-    }
-
-    {% comment %} コンテンツ部分  {% endcomment %}
+      /* 【メイン】カレンダーや入力画面が表示される中心エリア（ここだけスクロール） */
       .app-main {
-      text-align: left;
-    }
+        flex-grow: 1;    /* 残りのスペースをすべて使う */
+        overflow-y: auto; /* 中身が長い場合はここだけスクロールさせる */
+        padding: 16px;
+        text-align: left;
+      }
 
-    {% comment %} フッター {% endcomment %}
+      /* 【フッター】一番下のメニューアイコンが並ぶエリア */
       .app-footer {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+        display: flex;
+        justify-content: space-around;
+        padding: 8px 0;
+        border-top: 1px solid #eee;
+        background-color: #8e6d59;
+        flex-shrink: 0; /* フッターが潰れないように固定 */
+      }
 
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
- 
-      padding: 10px 0;
-      border-top: 1px solid #ddd;
-      background: #fff;
-
-      border-bottom-left-radius: 20px;
-      border-bottom-right-radius: 20px;
-    }
-
-    {% comment %} フッターボタン  {% endcomment %}
+      /* 【フッターアイコン】ボタン1つずつの形 */
       .nav-item {
-      width: 25%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-decoration: none;
-      color: #333;
-      font-size: 12px;
-    }
+        text-decoration: none;
+        color: #333;
+        text-align: center;
+        flex: 1;
+      }
+      .nav-item i { display: block; font-size: 1.2rem; } /* アイコンを大きく */
+      .nav-item span { font-size: 10px; }               /* 文字を小さく */
 
-      .icon {
-      font-size: 20px;
-      line-height: 1;
-    }
-  
+      /* 【ドロワーメニュー】右から出てくる白枠のメニュー本体 */
+      #drawer {
+        position: absolute; /* card-box（スマホ枠）を基準に配置 */
+        top: 0;
+        right: -70%; /* 最初は枠の右側に隠しておく */
+        width: 70%;  /* 画面の約3分の2の幅 */
+        height: 100%;
+        background: #fff;
+        z-index: 1001; /* 一番手前に表示 */
+        transition: right 0.3s ease; /* アニメーション速度 */
+        box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+        padding: 24px 16px;
+      }
+
+      /* 【暗幕】メニューが開いた時に、メイン画面をタップできなくするグレーの背景 */
+      #drawerOverlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1000;
+        display: none; /* 通常は非表示 */
+      }
+
+      /* カレンダーのボタン全体の光沢を消してフラットにする */
+      .btn {
+        background-image: none !important; /* グラデーション（光沢）を強制削除 */
+        box-shadow: none !important;      /* 立体的な影を削除 */
+        border-radius: 50px !important;    /* 完全な丸角（カプセル型）にする */
+        border: none;                     /* 枠線を消すとよりフラットになります */
+        transition: opacity 0.2s;          /* 押した時の反応をふわっとさせる */
+      }
+
+      /* ボタンを押した時やマウスを乗せた時に少し暗くするだけにする */
+      .btn:hover, .btn:active {
+        opacity: 0.8;
+        box-shadow: none !important;
+      }
+
+      /* 特定の色のボタン（青や赤など）もフラットに固定 */
+      .btn-primary, .btn-success, .btn-danger, .btn-secondary {
+        background-image: none !important;
+      }
+
+      /* カレンダー全体のテーブル（表）の設定 */
+      .calendar-table {
+        width: 100%;
+        table-layout: fixed; /* マス目の幅を均等にする */
+        border-collapse: collapse; /* 枠線を1本にまとめる */
+        border: 1px solid #eee;
+      }
+
+      /* 曜日のヘッダー（月火水...） */
+      .calendar-table th {
+        text-align: center;
+        font-size: 0.75rem;
+        padding: 8px 0;
+        background-color: #f9f9f9;
+        border-bottom: 1px solid #eee;
+        color: #666;
+      }
+
+      /* 各日付のマス目 */
+      .calendar-table td {
+        height: 80px; /* マス目の高さ（お好みで調整） */
+        border: 1px solid; #d5c1b8
+        vertical-align: top; /* 中身を上に寄せる */
+        padding: 4px;
+        position: relative;
+        background-color: #9c6d5c;
+      }
+
+      /* 日付の数字 */
+      .day-number {
+        font-size: 0.7rem;
+        margin-left: 2px;
+        margin-top: 2px;
+        color: #5d4037;
+      }
+      
+
+      /* 今日の日付を強調する場合 */
+      .today {
+        background-color: #fff9e6 !important; /* 薄い黄色 */
+      }
+
+      /* マス目の中の予定や金額を表示するエリア */
+      .day-content {
+        font-size: 0.65rem;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      /* 金額表示のベース（中央揃え、少し丸みを持たせる） */
+      .amount-badge {
+        display: block;
+        text-align: center;
+        font-size: 0.65rem;
+        padding: 2px 4px;
+        border-radius: 4px;
+        margin-bottom: 2px;
+        font-weight: bold;
+      }
+      
+
+
+
+      /* 支出 */
+      .amt-expense {
+        color: #a24141; 
+      }
+
+      /* 収入 */
+      .amt-income {
+        color: #2c587c;
+      } 
     </style>
-
-    {% block extra_head %}{% endblock %}
 </head>
+      
+
 
 <body>
-    {% if not hide_nav %}
-<nav class="navbar navbar-expand-lg navbar-light bg-light top-nav">
-    <a class="navbar-brand" href="{% url 'home:home' %}">ホーム</a>
+  <div class="page-center">
+    
+    <div class="card-box">
 
-    {% if user.is_authenticated %}
-        <a class="navbar-brand" href="{% url 'accounts:logout' %}">ログアウト</a>
-    {% else %}
-        <a class="navbar-brand" href="{% url 'accounts:login' %}">ログイン</a>
-        <a class="navbar-brand" href="{% url 'accounts:regist' %}">ユーザー登録</a>
-    {% endif %}
-</nav>
-{% endif %}
+      {% if user.is_authenticated %}
+      
+        <div id="drawerOverlay"></div>
 
-<div class="page-center">
-  <div class="card-box">
+        <div id="drawer">
+          <button id="drawerClose" class="btn" style="position: absolute; top: 12px; right: 12px; padding: 0;">
+            <i class="bi bi-x-lg" style="font-size: 1.4rem;"></i>
+          </button>
+          
+          <ul style="list-style: none; margin: 48px 0 0; padding: 0; font-size: 0.9rem;">
+            <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+              <a href="{% url 'home:home' %}" style="text-decoration: none; color: #333;">ホーム</a>
+            </li>
+            <li style="padding: 12px 0;">
+              <a href="{% url 'accounts:logout' %}" style="text-decoration: none; color: #d9534f;">ログアウト</a>
+            </li>
+          </ul>
+        </div>
 
-    <div class="app-main">
-      {% block content %}{% endblock %}
-    </div>
+        <header style="border-bottom: 1px solid #eee; flex-shrink: 0; position: relative;">
+          <div style="display: flex; justify-content: center; align-items: center; padding: 12px 0;">
+            <h1 style="font-size: 1rem; margin: 0; font-weight: bold;">かけいまもるくん</h1>
+            <button id="drawerToggle" class="btn menu-trigger" type="button">
+              <i class="bi bi-list" style="font-size: 1.5rem;"></i>
+            </button>
+          </div>
+          
+          <div style="border-top: 1px solid #eee; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; background: #f9f9f9;">
+            <div style="font-size: 0.8rem; font-weight: bold;">
+              <i class="bi bi-book" style="margin-right: 4px;"></i>自分用
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <a href="#" style="color: #333;"><i class="bi bi-arrow-left-right"></i></a>
+              <a href="#" style="color: #333;"><i class="bi bi-people"></i></a>
+            </div>
+          </div>
+        </header>
+      {% endif %}
 
-  {% block footer %}{% endblock %}
+      <div class="app-main">
+        {% block content %}{% endblock %}
+      </div>
 
-  </div>
-</div>
+      {% if user.is_authenticated %}
+        <div class="app-footer" style="border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 8px 0; background: #fff; flex-shrink: 0;">
+          <a href="{% url 'home:home' %}" class="nav-item" style="text-decoration: none; color: #333; text-align: center;">
+            <i class="bi bi-calendar3 d-block"></i>
+            <span style="font-size: 10px; display: block;">ホーム</span>
+          </a>
+          <a href="{% url 'home:transaction_create' %}" class="nav-item" style="text-decoration: none; color: #333; text-align: center;">
+            <i class="bi bi-pencil-square d-block"></i>
+            <span style="font-size: 10px; display: block;">入力</span>
+          </a>
+          <a href="#" class="nav-item" style="text-decoration: none; color: #333; text-align: center;">
+            <i class="bi bi-pie-chart d-block"></i>
+            <span style="font-size: 10px; display: block;">グラフ</span>
+          </a>
+          <a href="#" class="nav-item" style="text-decoration: none; color: #333; text-align: center;">
+            <i class="bi bi-emoji-smile d-block"></i>
+            <span style="font-size: 10px; display: block;">掲示板</span>
+          </a>
+        </div>
+      {% endif %}
+
+    </div></div><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 1. 必要な要素（ボタンやメニュー本体）をJavaScriptで操作できるように取得
+    const toggle = document.getElementById('drawerToggle');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const closeBtn = document.getElementById('drawerClose');
+
+    // 2. メニューを開く関数（右側から0の位置までスライドさせ、背景を出す）
+    function openDrawer() {
+      drawer.style.right = '0';
+      overlay.style.display = 'block';
+    }
+
+    // 3. メニューを閉じる関数（右側-70%の位置に隠し、背景を消す）
+    function closeDrawer() {
+      drawer.style.right = '-70%';
+      overlay.style.display = 'none';
+    }
+
+    // 4. 「いつ」その関数を実行するかを指定（クリックされた時）
+    toggle.addEventListener('click', openDrawer);  // 三本線を押した時
+    closeBtn.addEventListener('click', closeDrawer); // 「×」を押した時
+    overlay.addEventListener('click', closeDrawer);  // 暗い背景部分を押した時
+  </script>
+</body>
+</html>

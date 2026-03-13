@@ -1,14 +1,28 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from .views import RegistUserView, UserLoginView, UserLogoutView
+from .views import (
+    RegistUserView, UserLoginView, UserLogoutView, 
+    MyPageView, LogoutDoneView, UserUpdateView
+)
 
 app_name = 'accounts'
 
 urlpatterns = [
+    #　ユーザー登録・ログイン・ログアウト
     path('regist/', RegistUserView.as_view(), name='regist'),
     path('login/', UserLoginView.as_view(), name='login'),
     path('logout/', UserLogoutView.as_view(), name='logout'),
-   
+    
+    # ログアウト完了画面
+    path('logout/done/', LogoutDoneView.as_view(), name='logout_done'),
+
+    # マイページ
+    path('mypage/', MyPageView.as_view(), name='mypage'),
+
+    # プロフィール編集
+    path('update/', UserUpdateView.as_view(), name='user_update'),
+
+    # パスワードリセット系
     path(
         'password_reset/',
         auth_views.PasswordResetView.as_view(

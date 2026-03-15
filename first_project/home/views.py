@@ -47,90 +47,60 @@ from .forms import TransactionForm
 # --------------------------------------------
 # ホーム画面（カレンダー表示）
 # --------------------------------------------
+# home/views.py
+
 class HomeView(LoginRequiredMixin, TemplateView):
-    """
-    ログイン後に最初に表示されるホーム画面
-    ・月カレンダーを表示する
-    ・その月の「日別 収入 / 支出 合計」をテンプレに渡す
-    """
-    # 表示に使うテンプレート
     template_name = "home/home.html"
     
     def get_context_data(self, **kwargs):
-        """
-        テンプレートに渡すデータ（context）を作るメソッド
-        """
-        # まずは親クラス（TemplateView）が用意した context を取得
         context = super().get_context_data(**kwargs)
         
-        # 取得した日付を表示
+        # --- 表示する年月を決定する ---
+        # URLに year/month があればそれを使う。なければ今の年月を使う
         today = timezone.now()
-        
-        # ============================
-        # 表示する年月
-        # ============================
-        year, month = today.year, today.month
+        year = self.kwargs.get('year', today.year)
+        month = self.kwargs.get('month', today.month)
 
-        # ============================
-        # カレンダーの枠を作る
-        # ============================
-        # firstweekday=6 → 日曜始まり
-        # 戻り値は「週 × 曜日」の2次元リスト
-        # 例：[[1,2,3,4,5,6,7], [8,9,10,11,12,13,14], ...]
-        # 月に含まれない日は 0 になる
+        # --- 「前月」と「翌月」を計算する ---
+        # カレンダーの ◁ ▷ ボタンのリンク先を作るために必要
+        if month == 1:
+            prev_year, prev_month = year - 1, 12
+        else:
+            prev_year, prev_month = year, month - 1
+
+        if month == 12:
+            next_year, next_month = year + 1, 1
+        else:
+            next_year, next_month = year, month + 1
+
+        # カレンダーの枠を作成（日曜始まり）
         cal = calendar.Calendar(firstweekday=6).monthdayscalendar(year, month)
 
-        # テンプレートで {{ year }}, {{ month }}, {% for week in calendar %} が使えるようにする
-        context.update({"year": year, "month": month, "calendar": cal})
+        # テンプレートに渡すデータを更新
+        context.update({
+            "year": year,
+            "month": month,
+            "calendar": cal,
+            "prev_year": prev_year,
+            "prev_month": prev_month,
+            "next_year": next_year,
+            "next_month": next_month,
+        })
 
-        # ============================
-        # この月の収支データを取得
-        # ============================
-        # ・ログインユーザーのものだけ
-        # ・指定した年・月のものだけ
+        # --- その月の収支データを取得 ---
         qs = Transaction.objects.filter(
             user=self.request.user,
             date__year=year,
             date__month=month,
         )
 
-        # ============================
-        # 日別「収入合計」を作る
-        # ============================
-        # 1. tx_type が income のものだけに絞る
-        # 2. date から「日」だけを取り出す（ExtractDay）
-        # 3. 同じ日の amount を合計（Sum）
-        income_by_day = (
-            qs.filter(tx_type=Transaction.INCOME)
-              .annotate(day=ExtractDay("date"))   # day = 1〜31
-              .values("day")
-              .annotate(total=Sum("amount"))      # total = その日の収入合計
-        )
+        # (日別合計の計算ロジックなどは以前のまま変更なし)
+        income_by_day = qs.filter(tx_type=Transaction.INCOME).annotate(day=ExtractDay("date")).values("day").annotate(total=Sum("amount"))
+        expense_by_day = qs.filter(tx_type=Transaction.EXPENSE).annotate(day=ExtractDay("date")).values("day").annotate(total=Sum("amount"))
 
-        # ============================
-        # 日別「支出合計」を作る
-        # ============================
-        expense_by_day = (
-            qs.filter(tx_type=Transaction.EXPENSE)
-              .annotate(day=ExtractDay("date"))
-              .values("day")
-              .annotate(total=Sum("amount"))
-        )
+        context["income_map"] = {row["day"]: row["total"] for row in income_by_day}
+        context["expense_map"] = {row["day"]: row["total"] for row in expense_by_day}
 
-        # ============================
-        # テンプレで使いやすい形に変換
-        # ============================
-        # QuerySet → 辞書に変換
-        # 例：{ 2: 3000, 5: 1200 }
-        context["income_map"] = {
-            row["day"]: row["total"] for row in income_by_day
-        }
-
-        context["expense_map"] = {
-            row["day"]: row["total"] for row in expense_by_day
-        }
-
-        # 最終的にこの context がテンプレートに渡される
         return context
 
 
@@ -188,15 +158,22 @@ class DayTransactionJsonView(LoginRequiredMixin, View):
         
         target_date = date(y, m, d)
         # DBから指定した日の自分のデータを取得
-        transactions = Transaction.objects.filter(user=request.user, date=target_date).values('id', 'tx_type', 'amount', 'memo')
+        transactions = Transaction.objects.filter(
+            user=request.user, 
+            date=target_date
+        ).values('id', 'tx_type', 'amount', 'memo').order_by('-id') # idの大きい順＝新しい順
         # リストを作成
-        data = []
+        transactions_data = []
         for tx in transactions:
-            type_label = "収入" if tx['tx_type'] == Transaction.INCOME else "支出"
-            data.append({'id': tx['id'], 'label': f"{type_label}: {tx['amount']}円", 'memo': tx['memo']})
+            transactions_data.append({
+                'id': tx['id'], 
+                'amount_str': f"{tx['amount']}円", # 金額だけにする
+                'is_income': tx['tx_type'] == Transaction.INCOME, # 判定用にフラグを持たせる
+                'memo': tx['memo']
+            })
         
-        # JSONで返す
-        return JsonResponse({'transactions': data})
+        # 辞書形式にして 'transactions' というキーで返す
+        return JsonResponse({'transactions': transactions_data})
         
 
 

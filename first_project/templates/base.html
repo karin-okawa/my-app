@@ -197,6 +197,64 @@
     box-shadow: none !important;
   }
   
+  /* モーダルの背景（暗幕） */
+.sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 2000;
+  display: none; /* 最初は隠す */
+}
+
+/* 下から出るモーダル本体 */
+.day-sheet {
+  position: absolute;
+  bottom: -100%; /* 最初は画面の下に隠す */
+  left: 0;
+  width: 100%;
+  height: 40%; /* 画面の約3分の1強 */
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  z-index: 2001;
+  transition: bottom 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+/* モーダルが表示された時の状態 */
+.day-sheet.show { bottom: 0; }
+
+/* 日付とボタンのエリア */
+.sheet-header { text-align: center; margin-bottom: 15px; }
+.sheet-date { font-weight: bold; font-size: 1.1rem; color: #5d4037; }
+
+/* スクロール可能な一覧エリア */
+.sheet-list {
+  flex-grow: 1;
+  overflow-y: auto; /* ここでスクロールを有効にする */
+  margin-bottom: 15px;
+}
+
+/* 収支一件ずつのデザイン */
+.sheet-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+/* キャンセルボタン */
+.sheet-cancel {
+  width: 100%;
+  padding: 10px;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 10px;
+  color: #666;
+}
+
 </style>  
 </head>
       

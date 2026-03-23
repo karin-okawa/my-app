@@ -1,48 +1,62 @@
 from django import forms
-from .models import Transaction
-# 現在の日付（今日）を取得するために必要
+from .models import Transaction, Category  # Categoryをインポート
 from django.utils import timezone
 
-# Transaction（収支）を登録・編集するためのフォーム
-# ModelForm を使うと「モデルの定義」からフォームの入力欄を自動で作ってくれるからコードを短く・安全に書ける
 class TransactionForm(forms.ModelForm):
 
-    # Meta クラスは「このフォームがどのモデルを元にしているか」や
-    # 「フォームに出すフィールドはどれか」をまとめて指定する場所
     class Meta:
-        # どのモデルのフォームか（Transaction を元にする）
         model = Transaction
+        # 【修正】fieldsに "category" を追加
+        fields = ["date", "tx_type", "category", "amount", "memo", "image"]
 
-        # フォームに表示して入力させたい項目だけを指定する
-        # user はログイン中ユーザーを自動で紐づけたいので、フォームには出さない
-        fields = ["date", "tx_type", "amount", "memo", "image"]
-
-        # 入力欄の表示ラベルを日本語にしたい場合はここで指定できる
         labels = {
             "date": "日付",
             "tx_type": "収支区分",
+            "category": "カテゴリ", # ラベルを追加
             "amount": "金額",
             "memo": "メモ",
             "image": "画像",
-         }
-         # HTMLでカレンダーから選びやすくするための設定
-        widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'}),
         }
-    
-    def clean_date(self):
-        """
-        日付項目のチェック。未来の日付ならエラーを出す
-        """
-        # 画面から入力された日付を取得
-        input_date = self.cleaned_data.get('date')
-        # システム上の「今日」の日付を取得
-        today = timezone.now().date()
 
-        # もし入力された日付が今日よりも後の日（未来）だった場合
-        if input_date > today:
-            # Djangoにエラーを伝え、画面にメッセージを出す
-            raise forms.ValidationError("未来の日付は登録できません。")
+        # 【修正】見た目を整えるためのウィジェット設定
+        widgets = {
+            # 日付：カレンダーから選びやすくする
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            
+            # カテゴリ：プルダウン（セレクトボックス）
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            
+            # 金額：数値入力
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '金額を入力'}),
+            
+            # メモ：テキスト入力
+            'memo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '例：スーパーでの買い物'}),
+            
+            # 画像：ファイル選択
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
-        # チェックを通過した（今日以前だった）場合はそのままの値を返す
-        return input_date
+        # 1. 収支区分の選択肢を固定
+        self.fields['tx_type'].choices = [('income', '収入'), ('expense', '支出')]
+        
+        # 2. 初期値の設定
+        if not self.instance.pk:
+            self.fields['tx_type'].initial = 'expense'
+            self.fields['date'].initial = timezone.now().date()
+
+        self.fields['category'].empty_label = "カテゴリを選択"
+
+        # --- 【ここから重要】カテゴリの動的フィルタリング ---
+        # 編集時（instanceがある場合）は、その収支区分に合ったカテゴリだけを表示
+        if self.instance and self.instance.pk:
+            self.fields['category'].queryset = Category.objects.filter(
+                category_type=self.instance.tx_type
+            )
+        else:
+            # 新規作成時は、初期値の「支出(expense)」用カテゴリを表示
+            self.fields['category'].queryset = Category.objects.filter(
+                category_type='expense'
+            )

@@ -1,0 +1,27 @@
+<div class="card mb-3" style="border-radius: 12px; border: none; shadow: 0 2px 5px rgba(0,0,0,0.05);">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <strong style="color: #5d4037;">@{{ post.user.username }}</strong>
+      <small class="text-muted">{{ post.created_at|date:"Y/m/d H:i" }}</small>
+    </div>
+    
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+      <h6 class="mb-1" style="font-weight: bold;">{{ post.year }}年{{ post.month }}月の{{ post.get_post_type_display }}</h6>
+      <span class="badge bg-light text-dark" style="border: 1px solid #ddd;">{{ post.household_size }}人暮らし</span>
+    </div>
+
+    <p class="card-text">{{ post.memo }}</p>
+
+        <div style="max-width: 250px; margin: 0 auto 15px;">
+          <canvas id="chart-{{ post.id }}" 
+                  data-values='{{ post.category_data|safe }}' 
+                  class="post-chart"></canvas>
+        </div>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-link btn-sm p-0 text-decoration-none" style="color: #5d4037;">
+        いいね！ 👍 <span>{{ post.number_of_likes }}</span>
+      </button>
+    </div>
+  </div>
+</div>

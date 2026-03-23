@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-3" id="main-content" style="position: relative;">
+  <ul class="nav nav-tabs nav-fill mb-3" id="postTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" style="color: #5d4037; font-weight: bold;">みんなの投稿</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="my-tab" data-bs-toggle="tab" data-bs-target="#my" type="button" role="tab" style="color: #5d4037; font-weight: bold;">わたしの投稿</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="postTabContent">
+    <div class="tab-pane fade show active" id="all" role="tabpanel">
+      {% for post in all_posts %}
+        {% include "posts/_post_card.html" with post=post %}
+      {% empty %}
+        <p class="text-center mt-5 text-muted">まだ投稿がありません</p>
+      {% endfor %}
+    </div>
+
+    <div class="tab-pane fade" id="my" role="tabpanel">
+      {% for post in my_posts %}
+        {% include "posts/_post_card.html" with post=post %}
+      {% empty %}
+        <p class="text-center mt-5 text-muted">自分の投稿はまだありません</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div style="position: fixed; 
+            bottom: 150px; 
+            left: 50%; 
+            transform: translateX(120px); 
+            z-index: 1000;">
+  <button type="button" 
+     class="btn shadow-lg" 
+     data-bs-toggle="modal" 
+     data-bs-target="#postModal"
+     style="width: 60px; height: 60px; border-radius: 50%; background-color: #9c6d5c; color: white; border: 2px solid white; font-size: 30px; display: flex; align-items: center; justify-content: center;">
+    +
+  </button>
+</div>
+
+<div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 360px; margin: 1.75rem auto;"> 
+    <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; max-height: 80vh;">
+      
+      <div class="modal-header" style="border: none; padding: 15px 15px 0 15px;">
+        <h5 class="modal-title w-100 text-center" id="postModalLabel" style="color: #5d4037; font-weight: bold; font-size: 1rem;">家計簿レポートを投稿</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body" style="padding: 15px; overflow-y: auto;">
+        <form method="post" action="{% url 'posts:post_create' %}">
+          {% csrf_token %}
+          
+          <div class="row gx-2 mb-3">
+            <div class="col-6">
+              <label class="form-label small text-muted mb-1">年</label>
+              <div class="custom-scroll-select">
+                <select name="year" class="form-select scroll-box">
+                  {% for val, label in form.year.field.choices %}
+                    <option value="{{ val }}" {% if forloop.first %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label small text-muted mb-1">月</label>
+              <div class="custom-scroll-select">
+                <select name="month" class="form-select scroll-box">
+                  {% for val, label in form.month.field.choices %}
+                    <option value="{{ val }}" {% if val == current_month %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label d-block small text-muted text-center mb-2">どちらのデータを共有しますか？</label>
+            <div class="btn-group w-100" role="group">
+              {% for radio in form.post_type %}
+                <input type="radio" 
+                       class="btn-check" 
+                       name="{{ form.post_type.name }}" 
+                       id="modal_{{ radio.id_for_label }}" 
+                       value="{{ radio.data.value }}" 
+                       {% if radio.data.selected %}checked{% endif %}>
+                <label class="btn btn-outline-custom py-2" for="modal_{{ radio.id_for_label }}">
+                  {{ radio.choice_label }}
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-3 text-start">
+            <label class="form-label small text-muted mb-1">世帯人数</label>
+            {{ form.household_size }}
+          </div>
+
+          <div class="mb-4 text-start">
+            <label class="form-label small text-muted mb-1">一言メモ</label>
+            <div style="width: 100%;">
+              {{ form.memo }}
+            </div>
+          </div>
+
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary" style="background-color: #9c6d5c; border: none; padding: 10px; border-radius: 10px; font-weight: bold;">
+              投稿する
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* --- モーダル内のデザイン調整 --- */
+
+  /* 収入・支出ボタンのカスタム色 */
+  .btn-outline-custom {
+    color: #9c6d5c;
+    border-color: #9c6d5c;
+    font-size: 0.9rem;
+    font-weight: bold;
+    background-color: transparent;
+  }
+  .btn-check:checked + .btn-outline-custom {
+    background-color: #9c6d5c !important;
+    color: white !important;
+    border-color: #9c6d5c !important;
+  }
+
+  /* セレクトボックス（プルダウン）のはみ出し防止とスクロール設定 */
+  .scroll-box {
+    appearance: none; 
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+
+  /* PCで見た際にプルダウンが枠を超えて表示されるのを防ぐための強制設定 */
+  #postModal .modal-content {
+    max-height: 80vh; 
+    overflow-y: auto; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+
+  /* 入力フォーム全般の幅を枠内に収める */
+  #postModal .modal-content input, 
+  #postModal .modal-content select, 
+  #postModal .modal-content textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    font-size: 16px; /* スマホでの自動ズーム防止 */
+  }
+
+  /* 一言メモ欄の微調整 */
+  #postModal textarea {
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const charts = document.querySelectorAll('.post-chart');
+    charts.forEach(canvas => {
+      const rawData = canvas.getAttribute('data-values');
+      if (!rawData || rawData === 'null' || rawData === '{}') return;
+
+      try {
+        const categoryData = JSON.parse(rawData);
+        new Chart(canvas, {
+          type: 'pie',
+          data: {
+            labels: Object.keys(categoryData),
+            datasets: [{
+              data: Object.values(categoryData),
+              backgroundColor: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bfbc0', '#a0c4ff', '#bdb2ff', '#ffc6ff'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+            }
+          }
+        });
+      } catch (e) {
+        console.error("グラフ描画エラー:", e);
+      }
+    });
+  });
+</script>
+{% endblock %}

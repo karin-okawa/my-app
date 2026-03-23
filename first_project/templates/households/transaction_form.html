@@ -1,26 +1,235 @@
-<!-- templates/households/transaction_form.html -->
+{% extends "base.html" %}
 
-<h1>収支登録</h1>
+{% block content %}
+<style>
+/* 1. ブラウザ全体のスクロールを禁止（二重スクロール防止） */
+html, body {
+overflow: hidden !important;
+height: 100% !important;
+margin: 0 !important;
+position: fixed;
+width: 100%;
+background-color: #f0f2f5;
+}
 
-<!--
-  CreateView のフォーム送信先は「今のURL」になる（actionを書かなくてもOK）
-  画像アップロードがあるので enctype="multipart/form-data" は必須
--->
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
+/* 2. スマホ枠：ここだけがスクロールし、かつ電卓の基準になる */
+.custom-phone-frame {
+max-width: 500px;
+margin: 0 auto;
+height: 100vh;
+overflow-y: auto;
+overflow-x: hidden;
+background-color: #fff;
+position: relative;
+padding-bottom: 80px;
+box-sizing: border-box;
+}
 
-  <!--
-    forms.py の labels がここに反映される（日本語で表示される）
-    form.as_p は「入力欄をpタグでいい感じに並べて出す」簡易表示
-  -->
-  {{ form.as_p }}
+/* 3. 収支ボタンのデザイン */
+.btn-outline-custom {
+color: #9c6d5c !important;
+border: 2px solid #9c6d5c !important;
+font-weight: bold !important;
+background-color: transparent;
+}
+.btn-check:checked + .btn-outline-custom {
+background-color: #9c6d5c !important;
+color: white !important;
+}
 
-  <!-- 保存ボタン -->
-  <button type="submit">保存</button>
+
+/* 4. 電卓パネル：隠れている時は下のボタンを邪魔しない設定 */
+.calculator-panel {
+position: sticky; /* 枠のスクロールに関係なく画面下端に固定 */
+bottom: -100%;
+left: 0%;
+width: 100%;
+max-width: 500px;
+background: #f8f9fa;
+box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
+transition: transform 0.3s ease-out;
+z-index: 2000;
+border-radius: 20px 20px 0 0;
+display: none; /* 隠れている時はクリックを透過 */
+}
+.calculator-panel.show {
+display: block;
+bottom: 0;
+}
+
+/* その他デザイン（変更なし） */
+.calculator-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #ddd; }
+.calc-btn { height: 65px; background: white; border: none; font-size: 1.5rem; color: #5d4037; }
+
+/* 5. ノート風デザイン の中の select 指定を少し弱めるか、カテゴリーを除外する */
+.note-input-wrapper input,
+.note-input-wrapper textarea {
+border: none !important; box-shadow: none !important; background: transparent !important;
+text-align: right; width: 100%; font-weight: bold; color: #5d4037;
+}
+
+/* カテゴリー入力欄のボックス設定（優先度を最大に） */
+select.category-select-box {
+display: inline-block !important; /* 透明化を阻止 */
+border: 1px solid #ddd !important; /* 枠線を出す */
+border-radius: 8px !important;
+padding: 5px 10px !important;
+background-color: #fdfdfd !important; /* 背景色を出す */
+min-width: 160px !important; /* クリック領域を確保 */
+height: 38px !important;
+font-size: 0.95rem !important;
+color: #5d4037 !important;
+font-weight: bold !important;
+text-align: center !important; /* 文字は中央か右に */
+cursor: pointer !important;
+appearance: menulist !important; /* 下向き矢印を出す */
+-webkit-appearance: menulist !important;
+}
+
+/* 右寄せにするエリア */
+.category-area {
+display: flex;
+justify-content: flex-end;
+flex-grow: 1;
+}
+</style>
+
+<div class="custom-phone-frame">
+<div class="p-4">
+<form method="post" enctype="multipart/form-data" id="main-form">
+{% csrf_token %}
+<div class="mb-4 mt-2" style="position: relative; z-index: 10;">
+<div class="d-flex justify-content-between gap-3"> <div class="flex-fill">
+<input type="radio" class="btn-check" name="tx_type" id="tx_type_expense" value="expense"
+{% if form.tx_type.value == "expense" or not form.tx_type.value %}checked{% endif %}>
+<label class="btn btn-outline-custom w-100 py-2" for="tx_type_expense" style="border-radius: 12px;">支出</label>
+</div>
+
+<div class="flex-fill">
+<input type="radio" class="btn-check" name="tx_type" id="tx_type_income" value="income"
+{% if form.tx_type.value == "income" %}checked{% endif %}>
+<label class="btn btn-outline-custom w-100 py-2" for="tx_type_income" style="border-radius: 12px;">収入</label>
+</div>
+
+</div>
+</div>
+
+<div class="note-style-container">
+<div class="note-row d-flex align-items-center justify-content-between">
+<span class="note-label">金額</span>
+<div class="note-input-wrapper d-flex align-items-center">
+<span style="font-weight: bold; color: #9c6d5c; margin-right: 5px;">¥</span>
+{{ form.amount }}
+</div>
+</div>
+<div style="height: 30px;"></div>
+<div class="note-row d-flex align-items-center justify-content-between">
+<span class="note-label">カテゴリー</span>
+<div class="note-input-wrapper category-area">
+{{ form.category }}
+</div>
+</div>
+<div class="note-row d-flex align-items-center justify-content-between">
+<span class="note-label">メモ</span>
+<div class="note-input-wrapper">{{ form.memo }}</div>
+</div>
+<div class="note-row d-flex align-items-center justify-content-between">
+<span class="note-label">日付</span>
+<div class="note-input-wrapper">{{ form.date }}</div>
+</div>
+</div>
+
+<div class="d-grid gap-2 mt-5">
+<button type="submit" class="btn btn-primary py-2" style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;">保存する</button>
+<a href="{% url 'households:list' %}" class="btn btn-link btn-sm text-muted text-decoration-none text-center">キャンセル</a>
+</div>
 </form>
+</div>
+</div>
 
-<!-- 一覧に戻るリンク -->
-<p><a href="{% url 'households:list' %}">一覧に戻る</a></p>
+<div id="calculator-panel" class="calculator-panel">
+<div class="p-2 d-flex justify-content-between align-items-center bg-brown text-white" style="background: #9c6d5c; border-radius: 20px 20px 0 0;">
+<button type="button" class="btn btn-sm text-white" id="header-close-btn">閉じる</button>
+<button type="button" class="btn btn-sm text-white fw-bold" id="header-done-btn">確定</button>
+</div>
+<div class="calculator-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #ddd;">
+<button type="button" class="calc-btn" data-val="7">7</button>
+<button type="button" class="calc-btn" data-val="8">8</button>
+<button type="button" class="calc-btn" data-val="9">9</button>
+<button type="button" class="calc-btn" data-val="back" style="color: #9c6d5c;">⌫</button>
+<button type="button" class="calc-btn" data-val="4">4</button>
+<button type="button" class="calc-btn" data-val="5">5</button>
+<button type="button" class="calc-btn" data-val="6">6</button>
+<button type="button" class="calc-btn" data-val="clear" style="color: #9c6d5c;">C</button>
+<button type="button" class="calc-btn" data-val="1">1</button>
+<button type="button" class="calc-btn" data-val="2">2</button>
+<button type="button" class="calc-btn" data-val="3">3</button>
+<button type="button" class="calc-btn" data-val="0">0</button>
+</div>
+</div>
 
-<p><a href="{% url 'home:home' %}">ホームに戻る</a></p>
 
+<style>
+.calc-btn { height: 65px; background: white; border: none; font-size: 1.5rem; color: #5d4037; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+const amountInput = document.getElementById('id_amount') || document.querySelector('input[name="amount"]');
+const calcPanel = document.getElementById('calculator-panel');
+const allFormElements = document.querySelectorAll('input, select, textarea');
+const hideCalc = () => {
+calcPanel.classList.remove('show');
+};
+const categorySelect = document.querySelector('select[name="category"]');
+
+
+// 1. 金額をタップしたら電卓を出す
+if (amountInput) {
+amountInput.addEventListener('click', function(e) {
+e.preventDefault();
+this.blur();
+calcPanel.classList.add('show');
+});
+}
+
+// 2. 金額以外をタップしたら電卓を隠す
+allFormElements.forEach(el => {
+if (el !== amountInput) {
+el.addEventListener('click', hideCalc);
+el.addEventListener('focus', hideCalc);
+}
+});
+
+// 閉じる・確定ボタン
+document.getElementById('header-close-btn').addEventListener('click', hideCalc);
+document.getElementById('header-done-btn').addEventListener('click', hideCalc);
+
+// 数字入力
+document.querySelectorAll('.calc-btn[data-val]').forEach(btn => {
+btn.addEventListener('click', function(e) {
+e.preventDefault();
+const val = this.dataset.val;
+let current = amountInput.value;
+if (val === 'clear') {
+amountInput.value = '';
+} else if (val === 'back') {
+amountInput.value = current.slice(0, -1);
+} else {
+amountInput.value = (current === '0') ? val : current + val;
+}
+});
+});
+
+if (categorySelect) {
+// 元々のスタイルを完全に解除してから専用クラスを当てる
+categorySelect.className = 'category-select-box';
+
+// スマホでタップした時に反応しやすくする
+categorySelect.addEventListener('click', function() {
+hideCalc();
+});
+}
+});
+</script>
+{% endblock %}

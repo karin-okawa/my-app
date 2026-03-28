@@ -99,7 +99,9 @@
       sheetDate.innerText = `${year}年${month}月${day}日`;
       
       // 新規作成ボタンのリンク先を作成（URLパラメータに日付を添えて、入力画面で自動セットされるようにする）
-      sheetCreateBtn.href = `{% url 'home:transaction_create' %}?date=${year}-${month}-${day}`;
+      const mm = String(month).padStart(2, '0');
+      const dd = String(day).padStart(2, '0');
+      sheetCreateBtn.href = `{% url 'home:transaction_create' %}?date=${year}-${mm}-${dd}`;
 
       // サーバー（Django）からその日のデータをJSON形式で取ってくるためのURL
       const jsonUrl = `{% url 'home:home' %}day-json/${year}/${month}/${day}/`; 
@@ -130,8 +132,10 @@
 
               // メモと金額（is_incomeの結果に応じた色）を1行分作成
               div.innerHTML = `
-                <span style="color:#555;">${tx.memo || '（メモなし）'}</span>
-                <span style="${colorStyle} font-weight:bold;">${tx.amount_str}</span>
+                <a href="/home/update/${tx.id}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%;">
+                  <span style="color:#555;">${tx.memo || '（メモなし）'}</span>
+                  <span style="${colorStyle} font-weight:bold;">${tx.amount_str}</span>
+                </a>
               `;
               // 作った1行を一覧エリアに追加
               sheetList.appendChild(div);

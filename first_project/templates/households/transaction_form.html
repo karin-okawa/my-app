@@ -2,234 +2,435 @@
 
 {% block content %}
 <style>
-/* 1. ブラウザ全体のスクロールを禁止（二重スクロール防止） */
-html, body {
-overflow: hidden !important;
-height: 100% !important;
-margin: 0 !important;
-position: fixed;
-width: 100%;
-background-color: #f0f2f5;
-}
+  /* 1. ブラウザ全体のスクロールを禁止 */
+  html, body {
+    overflow: hidden !important;
+    height: 100% !important;
+    margin: 0 !important;
+    position: fixed;
+    width: 100%;
+    background-color: #f0f2f5;
+  }
 
-/* 2. スマホ枠：ここだけがスクロールし、かつ電卓の基準になる */
-.custom-phone-frame {
-max-width: 500px;
-margin: 0 auto;
-height: 100vh;
-overflow-y: auto;
-overflow-x: hidden;
-background-color: #fff;
-position: relative;
-padding-bottom: 80px;
-box-sizing: border-box;
-}
+  /* 2. スマホ枠 */
+  .custom-phone-frame {
+    max-width: 500px;
+    margin: 0 auto;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: #fff;
+    position: relative;
+    padding-bottom: 80px;
+    box-sizing: border-box;
+  }
 
-/* 3. 収支ボタンのデザイン */
-.btn-outline-custom {
-color: #9c6d5c !important;
-border: 2px solid #9c6d5c !important;
-font-weight: bold !important;
-background-color: transparent;
-}
-.btn-check:checked + .btn-outline-custom {
-background-color: #9c6d5c !important;
-color: white !important;
-}
+  /* 3. 収支ボタン */
+  .btn-outline-custom { 
+    color: #9c6d5c !important; 
+    border: 2px solid #9c6d5c !important; 
+    font-weight: bold !important; 
+  }
+  .btn-check:checked + .btn-outline-custom { 
+    background-color: #9c6d5c !important; 
+    color: white !important; 
+  }
 
+  /* 4. 電卓パネル（スマホ枠の底） */
+  .calculator-panel {
+    position: absolute;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    background: #f8f9fa;
+    box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
+    transition: bottom 0.3s ease-out;
+    z-index: 2000;
+    border-radius: 20px 20px 0 0;
+  }
+  .calculator-panel.show {
+    bottom: 0;
+  }
 
-/* 4. 電卓パネル：隠れている時は下のボタンを邪魔しない設定 */
-.calculator-panel {
-position: sticky; /* 枠のスクロールに関係なく画面下端に固定 */
-bottom: -100%;
-left: 0%;
-width: 100%;
-max-width: 500px;
-background: #f8f9fa;
-box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
-transition: transform 0.3s ease-out;
-z-index: 2000;
-border-radius: 20px 20px 0 0;
-display: none; /* 隠れている時はクリックを透過 */
-}
-.calculator-panel.show {
-display: block;
-bottom: 0;
-}
+  /* 5. ノート風デザイン */
+  .note-row { 
+    border-bottom: 1px solid #eee; 
+    padding: 15px 0; 
+    position: relative;
+    z-index: 10;
+  }
+  .note-label { font-size: 0.9rem; color: #888; font-weight: bold; min-width: 80px; }
+  
+  .note-input-wrapper input, 
+  .note-input-wrapper textarea { 
+    border: none !important; 
+    box-shadow: none !important; 
+    background: transparent !important; 
+    text-align: right; 
+    width: 100%; 
+    font-weight: bold; 
+    color: #5d4037; 
+  }
 
-/* その他デザイン（変更なし） */
-.calculator-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #ddd; }
-.calc-btn { height: 65px; background: white; border: none; font-size: 1.5rem; color: #5d4037; }
+  /* 6. 電卓ボタンのスタイル */
+  .calculator-grid { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 1px; 
+    background: #ddd; 
+  }
+  .calc-btn { 
+    height: 65px; 
+    background: white; 
+    border: none; 
+    font-size: 1.5rem; 
+    color: #5d4037; 
+  }
+  .operator-btn {
+    color: #9c6d5c !important;
+    font-weight: bold;
+  }
 
-/* 5. ノート風デザイン の中の select 指定を少し弱めるか、カテゴリーを除外する */
-.note-input-wrapper input,
-.note-input-wrapper textarea {
-border: none !important; box-shadow: none !important; background: transparent !important;
-text-align: right; width: 100%; font-weight: bold; color: #5d4037;
-}
-
-/* カテゴリー入力欄のボックス設定（優先度を最大に） */
-select.category-select-box {
-display: inline-block !important; /* 透明化を阻止 */
-border: 1px solid #ddd !important; /* 枠線を出す */
-border-radius: 8px !important;
-padding: 5px 10px !important;
-background-color: #fdfdfd !important; /* 背景色を出す */
-min-width: 160px !important; /* クリック領域を確保 */
-height: 38px !important;
-font-size: 0.95rem !important;
-color: #5d4037 !important;
-font-weight: bold !important;
-text-align: center !important; /* 文字は中央か右に */
-cursor: pointer !important;
-appearance: menulist !important; /* 下向き矢印を出す */
--webkit-appearance: menulist !important;
-}
-
-/* 右寄せにするエリア */
-.category-area {
-display: flex;
-justify-content: flex-end;
-flex-grow: 1;
-}
+  /* 7. 数値入力欄の上下矢印を非表示 */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 </style>
 
 <div class="custom-phone-frame">
-<div class="p-4">
-<form method="post" enctype="multipart/form-data" id="main-form">
-{% csrf_token %}
-<div class="mb-4 mt-2" style="position: relative; z-index: 10;">
-<div class="d-flex justify-content-between gap-3"> <div class="flex-fill">
-<input type="radio" class="btn-check" name="tx_type" id="tx_type_expense" value="expense"
-{% if form.tx_type.value == "expense" or not form.tx_type.value %}checked{% endif %}>
-<label class="btn btn-outline-custom w-100 py-2" for="tx_type_expense" style="border-radius: 12px;">支出</label>
+  <div class="p-4">
+    <form method="post" enctype="multipart/form-data" id="main-form">
+      {% csrf_token %}
+      
+      <!-- 収入・支出の切り替えボタン -->
+      <div class="mb-4 mt-2" style="position: relative; z-index: 100;">
+        <div class="d-flex justify-content-between gap-3">
+          <div class="flex-fill">
+            <input type="radio" class="btn-check" name="tx_type" id="tx_type_income" value="income" 
+                   {% if form.tx_type.value == "income" %}checked{% endif %}>
+            <label class="btn btn-outline-custom w-100 py-2" for="tx_type_income" style="border-radius: 12px;">収入</label>
+          </div>
+          <div class="flex-fill">
+            <input type="radio" class="btn-check" name="tx_type" id="tx_type_expense" value="expense" 
+                   {% if form.tx_type.value == "expense" or not form.tx_type.value %}checked{% endif %}>
+            <label class="btn btn-outline-custom w-100 py-2" for="tx_type_expense" style="border-radius: 12px;">支出</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="note-style-container">
+        <!-- 金額入力行 -->
+        <div class="note-row d-flex align-items-center justify-content-between">
+          <span class="note-label">金額</span>
+          <div class="note-input-wrapper d-flex align-items-center">
+            <span style="font-weight: bold; color: #9c6d5c; margin-right: 5px;">¥</span>
+            {{ form.amount }}
+          </div>
+        </div>
+
+        <!-- カテゴリー選択行（タップするとパネルが開く） -->
+        <div class="note-row d-flex align-items-center justify-content-between" id="category-row" style="cursor: pointer;">
+          <span class="note-label">カテゴリー</span>
+          <!-- 選択中のカテゴリー名を表示するエリア -->
+          <div id="category-display" style="font-weight: bold; color: #5d4037; text-align: right;">
+            選択してください
+          </div>
+          <!-- フォーム送信用の隠しフィールド（画面には表示されない） -->
+          <input type="hidden" name="category" id="category-hidden" value="{{ form.category.value|default:'' }}">
+        </div>
+
+        <!-- メモ入力行 -->
+        <div class="note-row d-flex align-items-center justify-content-between">
+          <span class="note-label">メモ</span>
+          <div class="note-input-wrapper">{{ form.memo }}</div>
+        </div>
+
+        <!-- 日付入力行 -->
+        <div class="note-row d-flex align-items-center justify-content-between">
+          <span class="note-label">日付</span>
+          <div class="note-input-wrapper">{{ form.date }}</div>
+        </div>
+      </div>
+
+      <!-- 保存・キャンセルボタン -->
+      <div class="d-grid gap-2 mt-5">
+        <button type="submit" class="btn btn-primary py-2" style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;">保存する</button>
+        <a href="{% url 'households:list' %}" class="btn btn-link btn-sm text-muted text-decoration-none text-center">キャンセル</a>
+      </div>
+    </form>
+  </div>
 </div>
 
-<div class="flex-fill">
-<input type="radio" class="btn-check" name="tx_type" id="tx_type_income" value="income"
-{% if form.tx_type.value == "income" %}checked{% endif %}>
-<label class="btn btn-outline-custom w-100 py-2" for="tx_type_income" style="border-radius: 12px;">収入</label>
-</div>
-
-</div>
-</div>
-
-<div class="note-style-container">
-<div class="note-row d-flex align-items-center justify-content-between">
-<span class="note-label">金額</span>
-<div class="note-input-wrapper d-flex align-items-center">
-<span style="font-weight: bold; color: #9c6d5c; margin-right: 5px;">¥</span>
-{{ form.amount }}
-</div>
-</div>
-<div style="height: 30px;"></div>
-<div class="note-row d-flex align-items-center justify-content-between">
-<span class="note-label">カテゴリー</span>
-<div class="note-input-wrapper category-area">
-{{ form.category }}
-</div>
-</div>
-<div class="note-row d-flex align-items-center justify-content-between">
-<span class="note-label">メモ</span>
-<div class="note-input-wrapper">{{ form.memo }}</div>
-</div>
-<div class="note-row d-flex align-items-center justify-content-between">
-<span class="note-label">日付</span>
-<div class="note-input-wrapper">{{ form.date }}</div>
-</div>
-</div>
-
-<div class="d-grid gap-2 mt-5">
-<button type="submit" class="btn btn-primary py-2" style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;">保存する</button>
-<a href="{% url 'households:list' %}" class="btn btn-link btn-sm text-muted text-decoration-none text-center">キャンセル</a>
-</div>
-</form>
-</div>
-</div>
-
+<!-- 電卓パネル（custom-phone-frameの外に独立して配置） -->
 <div id="calculator-panel" class="calculator-panel">
-<div class="p-2 d-flex justify-content-between align-items-center bg-brown text-white" style="background: #9c6d5c; border-radius: 20px 20px 0 0;">
-<button type="button" class="btn btn-sm text-white" id="header-close-btn">閉じる</button>
-<button type="button" class="btn btn-sm text-white fw-bold" id="header-done-btn">確定</button>
-</div>
-<div class="calculator-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #ddd;">
-<button type="button" class="calc-btn" data-val="7">7</button>
-<button type="button" class="calc-btn" data-val="8">8</button>
-<button type="button" class="calc-btn" data-val="9">9</button>
-<button type="button" class="calc-btn" data-val="back" style="color: #9c6d5c;">⌫</button>
-<button type="button" class="calc-btn" data-val="4">4</button>
-<button type="button" class="calc-btn" data-val="5">5</button>
-<button type="button" class="calc-btn" data-val="6">6</button>
-<button type="button" class="calc-btn" data-val="clear" style="color: #9c6d5c;">C</button>
-<button type="button" class="calc-btn" data-val="1">1</button>
-<button type="button" class="calc-btn" data-val="2">2</button>
-<button type="button" class="calc-btn" data-val="3">3</button>
-<button type="button" class="calc-btn" data-val="0">0</button>
-</div>
+  <div class="p-2 d-flex justify-content-between align-items-center" style="background: #9c6d5c; border-radius: 20px 20px 0 0;">
+    <button type="button" class="btn btn-sm text-white" id="header-close-btn">閉じる</button>
+    <div id="calc-display" style="color: white; font-size: 1.2rem; font-weight: bold;">0</div>
+    <button type="button" class="btn btn-sm text-white fw-bold" id="header-done-btn">確定</button>
+  </div>
+  <div class="calculator-grid">
+    <button type="button" class="calc-btn" data-val="7">7</button>
+    <button type="button" class="calc-btn" data-val="8">8</button>
+    <button type="button" class="calc-btn" data-val="9">9</button>
+    <button type="button" class="calc-btn operator-btn" data-val="/">÷</button>
+    <button type="button" class="calc-btn" data-val="4">4</button>
+    <button type="button" class="calc-btn" data-val="5">5</button>
+    <button type="button" class="calc-btn" data-val="6">6</button>
+    <button type="button" class="calc-btn operator-btn" data-val="*">×</button>
+    <button type="button" class="calc-btn" data-val="1">1</button>
+    <button type="button" class="calc-btn" data-val="2">2</button>
+    <button type="button" class="calc-btn" data-val="3">3</button>
+    <button type="button" class="calc-btn operator-btn" data-val="-">－</button>
+    <button type="button" class="calc-btn" data-val="0" style="grid-column: span 2;">0</button>
+    <button type="button" class="calc-btn" data-val="back" style="color: #9c6d5c;">⌫</button>
+    <button type="button" class="calc-btn operator-btn" data-val="+">＋</button>
+    <button type="button" class="calc-btn" data-val="clear" style="grid-column: span 2; color: #9c6d5c;">C</button>
+    <button type="button" class="calc-btn" data-val="=" style="grid-column: span 2; background-color: #9c6d5c; color: white; font-weight: bold;">=</button>
+  </div>
 </div>
 
-
-<style>
-.calc-btn { height: 65px; background: white; border: none; font-size: 1.5rem; color: #5d4037; }
-</style>
+<!-- カテゴリー選択パネル（電卓パネルとは独立して配置） -->
+<div id="category-panel" style="
+  position: absolute;
+  bottom: -100%;
+  left: 0;
+  width: 100%;
+  max-width: 500px;
+  background: #fff;
+  box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
+  transition: bottom 0.3s ease-out;
+  z-index: 2001;
+  border-radius: 20px 20px 0 0;
+  max-height: 60%;
+  display: flex;
+  flex-direction: column;
+">
+  <!-- パネルのヘッダー -->
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #9c6d5c; border-radius: 20px 20px 0 0; flex-shrink: 0;">
+    <button type="button" id="category-close-btn" class="btn btn-sm text-white">閉じる</button>
+    <span style="color: white; font-weight: bold;">カテゴリー</span>
+    <!-- 追加/編集ボタン：カテゴリー管理画面へ遷移 -->
+    <a href="{% url 'households:category_list' %}" class="btn btn-sm text-white">追加/編集</a>
+  </div>
+  <!-- カテゴリー一覧（スクロール可能） -->
+  <div id="category-list" style="overflow-y: auto; flex-grow: 1; padding: 8px 0;">
+    <!-- JavaScriptで動的に生成される -->
+  </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-const amountInput = document.getElementById('id_amount') || document.querySelector('input[name="amount"]');
-const calcPanel = document.getElementById('calculator-panel');
-const allFormElements = document.querySelectorAll('input, select, textarea');
-const hideCalc = () => {
-calcPanel.classList.remove('show');
-};
-const categorySelect = document.querySelector('select[name="category"]');
+  // 各要素を取得
+  const amountInput = document.getElementById('id_amount');
+  const calcPanel = document.getElementById('calculator-panel');
+  const calcDisplay = document.getElementById('calc-display');
+  const catSelect = document.querySelector('select[name="category"]');
+  const categoryPanel = document.getElementById('category-panel');
+  const categoryRow = document.getElementById('category-row');
+  const categoryDisplay = document.getElementById('category-display');
+  const categoryHidden = document.getElementById('category-hidden');
+  const categoryList = document.getElementById('category-list');
 
+  let expression = ''; // 電卓の計算式を保持
 
-// 1. 金額をタップしたら電卓を出す
-if (amountInput) {
-amountInput.addEventListener('click', function(e) {
-e.preventDefault();
-this.blur();
-calcPanel.classList.add('show');
+  // ===== 電卓の開閉 =====
+  const hideCalc = () => {
+    calcPanel.classList.remove('show');
+    calcPanel.style.pointerEvents = 'none';
+  };
+
+  const showCalc = () => {
+    expression = amountInput.value || '';
+    calcDisplay.innerText = expression || '0';
+    calcPanel.classList.add('show');
+    calcPanel.style.pointerEvents = 'auto';
+  };
+
+  // 金額欄タップで電卓を表示
+  if (amountInput) {
+    amountInput.addEventListener('click', function(e) {
+      e.preventDefault();
+      this.blur();
+      showCalc();
+    });
+  }
+
+  // メモ・日付などにフォーカスしたら電卓を閉じる
+  document.querySelectorAll('input, textarea').forEach(el => {
+    if (el !== amountInput) {
+      el.addEventListener('focus', hideCalc);
+    }
+  });
+
+  // 電卓の閉じるボタン
+  document.getElementById('header-close-btn').addEventListener('click', hideCalc);
+
+  // 電卓の確定ボタン：計算結果を金額欄に反映
+  document.getElementById('header-done-btn').addEventListener('click', function() {
+    try {
+      const result = Math.round(eval(expression));
+      if (!isNaN(result) && result >= 0) {
+        amountInput.value = result;
+      }
+    } catch(e) {}
+    hideCalc();
+  });
+
+  // 電卓ボタンの入力処理
+  document.querySelectorAll('.calc-btn[data-val]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const val = this.dataset.val;
+      const displayMap = {'+': '＋', '-': '－', '*': '×', '/': '÷'};
+
+      if (val === 'clear') {
+        expression = '';
+        calcDisplay.innerText = '0';
+      } else if (val === 'back') {
+        expression = expression.slice(0, -1);
+        calcDisplay.innerText = expression || '0';
+      } else if (val === '=') {
+        try {
+          const result = Math.round(eval(expression));
+          if (!isNaN(result) && result >= 0) {
+            expression = String(result);
+            calcDisplay.innerText = expression;
+          }
+        } catch(e) {}
+      } else if (['+', '-', '*', '/'].includes(val)) {
+        const last = expression.slice(-1);
+        if (['+', '-', '*', '/'].includes(last)) {
+          expression = expression.slice(0, -1);
+        }
+        expression += val;
+        calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]);
+      } else {
+        // 先頭が0の場合は0を置き換える
+        if (expression === '0') {
+          expression = val;
+        } else {
+          // 演算子の直後に0から始まる数字を防ぐ
+          const last = expression.slice(-1);
+          const secondLast = expression.slice(-2, -1);
+          if (last === '0' && ['+', '-', '*', '/'].includes(secondLast)) {
+            expression = expression.slice(0, -1) + val;
+          } else {
+            expression += val;
+          }
+        }
+        calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]);
+      }
+    });
+  });
+
+  // ===== カテゴリーパネルの開閉 =====
+
+  // 収支タイプに応じてカテゴリー一覧を更新する
+  const updateCategoryPanel = () => {
+    const selectedType = document.querySelector('input[name="tx_type"]:checked').value;
+    categoryList.innerHTML = '';
+
+    // セレクトボックスの選択肢を使ってカテゴリー一覧を生成
+    Array.from(catSelect.options).forEach(opt => {
+      if (opt.value === '') return; // 空欄はスキップ
+      const targetLabel = selectedType === 'income' ? '（収入）' : '（支出）';
+      if (!opt.text.includes(targetLabel)) return; // 収支タイプと合わないものはスキップ
+
+      const cleanText = opt.text.replace('（収入）', '').replace('（支出）', '');
+
+      // 1行分のカテゴリーアイテムを作成
+      const item = document.createElement('div');
+      item.style.cssText = 'padding: 14px 16px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; color: #5d4037;';
+      item.innerText = cleanText;
+
+      // 現在選択中のカテゴリーにチェックマークをつける
+      if (opt.value === categoryHidden.value) {
+        item.style.color = '#9c6d5c';
+        item.innerText = '✓ ' + cleanText;
+      }
+
+      // タップしたらそのカテゴリーを選択してパネルを閉じる
+      item.addEventListener('click', function() {
+        categoryHidden.value = opt.value;
+        categoryDisplay.innerText = cleanText;
+        hideCategoryPanel();
+      });
+
+      categoryList.appendChild(item);
+    });
+  };
+
+  // カテゴリーパネルを表示する
+  const showCategoryPanel = () => {
+    updateCategoryPanel();
+    categoryPanel.style.bottom = '0';
+  };
+
+  // カテゴリーパネルを隠す
+  const hideCategoryPanel = () => {
+    categoryPanel.style.bottom = '-100%';
+  };
+
+  // カテゴリー行をタップしたらパネルを表示
+  categoryRow.addEventListener('click', function() {
+    hideCalc(); // 電卓が出ていたら先に閉じる
+    showCategoryPanel();
+  });
+
+  // 閉じるボタンでパネルを隠す
+  document.getElementById('category-close-btn').addEventListener('click', hideCategoryPanel);
+
+  // 収支タイプが切り替わったらカテゴリーの選択をリセット
+  document.querySelectorAll('input[name="tx_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      categoryDisplay.innerText = '選択してください';
+      categoryHidden.value = '';
+    });
+  });
+
+  // ページ読み込み時に既存の選択値を表示に反映（編集画面用）
+  if (categoryHidden.value) {
+    const matchedOption = Array.from(catSelect.options).find(o => o.value === categoryHidden.value);
+    if (matchedOption) {
+      const cleanText = matchedOption.text.replace('（収入）', '').replace('（支出）', '');
+      categoryDisplay.innerText = cleanText;
+    }
+  }
 });
-}
 
-// 2. 金額以外をタップしたら電卓を隠す
-allFormElements.forEach(el => {
-if (el !== amountInput) {
-el.addEventListener('click', hideCalc);
-el.addEventListener('focus', hideCalc);
-}
-});
+// カテゴリーフィルタリング（収支タイプに応じてセレクトボックスを絞り込む）
+document.addEventListener('DOMContentLoaded', function() {
+  const typeRadios = document.querySelectorAll('input[name="tx_type"]');
+  const catSelect = document.querySelector('select[name="category"]');
+  
+  // 全カテゴリーの選択肢をバックアップしておく
+  const allOptions = Array.from(catSelect.options);
 
-// 閉じる・確定ボタン
-document.getElementById('header-close-btn').addEventListener('click', hideCalc);
-document.getElementById('header-done-btn').addEventListener('click', hideCalc);
+  const filterCategories = () => {
+    const selectedType = document.querySelector('input[name="tx_type"]:checked').value;
+    const targetLabel = (selectedType === 'income') ? '（収入）' : '（支出）';
 
-// 数字入力
-document.querySelectorAll('.calc-btn[data-val]').forEach(btn => {
-btn.addEventListener('click', function(e) {
-e.preventDefault();
-const val = this.dataset.val;
-let current = amountInput.value;
-if (val === 'clear') {
-amountInput.value = '';
-} else if (val === 'back') {
-amountInput.value = current.slice(0, -1);
-} else {
-amountInput.value = (current === '0') ? val : current + val;
-}
-});
-});
+    catSelect.innerHTML = '';
+    catSelect.options.length = 0;
 
-if (categorySelect) {
-// 元々のスタイルを完全に解除してから専用クラスを当てる
-categorySelect.className = 'category-select-box';
+    // 収支タイプに合うカテゴリーだけを追加する
+    allOptions.forEach(opt => {
+      if (opt.value === "" || opt.text.includes(targetLabel)) {
+        const cleanText = opt.text.replace('（収入）', '').replace('（支出）', '');
+        const newOption = new Option(cleanText, opt.value);
+        catSelect.add(newOption);
+      }
+    });
+  };
 
-// スマホでタップした時に反応しやすくする
-categorySelect.addEventListener('click', function() {
-hideCalc();
-});
-}
+  typeRadios.forEach(radio => {
+    radio.addEventListener('change', filterCategories);
+  });
+
+  // ページ読み込み時に一度実行して初期化
+  filterCategories();
 });
 </script>
 {% endblock %}

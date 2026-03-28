@@ -26,4 +26,5 @@ urlpatterns = [
    
     # 編集画面
     path('update/<int:pk>/', TransactionUpdateView.as_view(), name='transaction_update'),
+
 ]

@@ -1,7 +1,8 @@
 from django.urls import path
-
+from . import views
 # households/views.py にあるビュー（CBV）を読み込む
-from .views import TransactionListView, TransactionCreateView, DayTransactionsJsonView
+from .views import TransactionListView, TransactionCreateView, DayTransactionsJsonView, TransactionUpdateView, CategoryListView, CategoryCreateView, CategoryUpdateView, CategoryDeleteView
+
 
 
 # URLの名前空間を households にする
@@ -20,5 +21,13 @@ urlpatterns = [
     # → DayTransactionsJsonView が実行され、
     #   その日の収支データをモーダル表示用に返す
     path("api/day/<int:year>/<int:month>/<int:day>/", DayTransactionsJsonView.as_view(), name="day_api"),
+
+    # 編集用のパスを追加（<int:pk> でどの収支かを指定）
+    path('transaction/<int:pk>/edit/', views.TransactionUpdateView.as_view(), name='transaction_edit'),
+
+    path('categories/', CategoryListView.as_view(), name='category_list'),
+    path('categories/new/', CategoryCreateView.as_view(), name='category_create'),
+    path('categories/<int:pk>/edit/', CategoryUpdateView.as_view(), name='category_edit'),
+    path('categories/<int:pk>/delete/', CategoryDeleteView.as_view(), name='category_delete'),
 
 ]

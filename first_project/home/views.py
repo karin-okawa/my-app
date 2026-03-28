@@ -37,7 +37,7 @@ from django.db.models.functions import ExtractDay
 from households.models import Transaction
 
  # form.pyからTransactionFormを読み込む
-from .forms import TransactionForm
+from households.forms import TransactionForm
 
 
 
@@ -187,11 +187,13 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('home:home')
     
     def get_initial(self):
-    # URLから日付を取得して初期値にする
+    # 初期値に今日を設定
         initial = super().get_initial()
         date_str = self.request.GET.get('date')
-        if date_str: 
+        if date_str:
             initial['date'] = date_str
+        else:
+            initial['date'] = timezone.now().date()  # 今日の日付をデフォルトに
         return initial
 
     def form_valid(self, form):

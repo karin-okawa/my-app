@@ -114,6 +114,19 @@ class CategoryListView(LoginRequiredMixin, ListView):
     template_name = "households/category_list.html"
     # テンプレートで使う変数名
     context_object_name = "categories"
+    
+    def get_queryset(self):
+        # URLパラメータ type が渡された場合はそれで絞り込む
+        category_type = self.request.GET.get('type')
+        if category_type in ['income', 'expense']:
+            return Category.objects.filter(category_type=category_type)
+        return Category.objects.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # テンプレートでも収支タイプを使えるようにする
+        context['category_type'] = self.request.GET.get('type', '')
+        return context
 
 
 # ============================

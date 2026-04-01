@@ -139,6 +139,8 @@
           </div>
           <!-- フォーム送信用の隠しフィールド（画面には表示されない） -->
           <input type="hidden" name="category" id="category-hidden" value="{{ form.category.value|default:'' }}">
+          <!-- セレクトボックスは非表示で残しておく（JavaScriptがカテゴリー一覧を取得するために必要） -->
+          <div style="display: none;">{{ form.category }}</div>
         </div>
 
         <!-- メモ入力行 -->
@@ -163,7 +165,7 @@
   </div>
 </div>
 
-<!-- 電卓パネル（custom-phone-frameの外に独立して配置） -->
+<!-- 電卓パネル -->
 <div id="calculator-panel" class="calculator-panel">
   <div class="p-2 d-flex justify-content-between align-items-center" style="background: #9c6d5c; border-radius: 20px 20px 0 0;">
     <button type="button" class="btn btn-sm text-white" id="header-close-btn">閉じる</button>
@@ -191,19 +193,19 @@
   </div>
 </div>
 
-<!-- カテゴリー選択パネル（電卓パネルとは独立して配置） -->
+<!-- カテゴリー選択パネル -->
 <div id="category-panel" style="
-  position: absolute;
+  position: fixed;
   bottom: -100%;
-  left: 0;
-  width: 100%;
-  max-width: 500px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 380px;
   background: #fff;
   box-shadow: 0 -10px 20px rgba(0,0,0,0.1);
   transition: bottom 0.3s ease-out;
   z-index: 2001;
   border-radius: 20px 20px 0 0;
-  max-height: 60%;
+  height: 33vh;
   display: flex;
   flex-direction: column;
 ">
@@ -211,8 +213,8 @@
   <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #9c6d5c; border-radius: 20px 20px 0 0; flex-shrink: 0;">
     <button type="button" id="category-close-btn" class="btn btn-sm text-white">閉じる</button>
     <span style="color: white; font-weight: bold;">カテゴリー</span>
-    <!-- 追加/編集ボタン：カテゴリー管理画面へ遷移 -->
-    <a href="{% url 'households:category_list' %}" class="btn btn-sm text-white">追加/編集</a>
+    <!-- 追加/編集ボタン：収支タイプをURLパラメータで渡す -->
+    <a href="#" id="category-edit-btn" class="btn btn-sm text-white">追加/編集</a>
   </div>
   <!-- カテゴリー一覧（スクロール可能） -->
   <div id="category-list" style="overflow-y: auto; flex-grow: 1; padding: 8px 0;">
@@ -241,6 +243,17 @@ document.addEventListener('DOMContentLoaded', function() {
     calcPanel.style.pointerEvents = 'none';
   };
 
+  // ===== カテゴリーパネルの開閉 =====
+  const hideCategoryPanel = () => {
+    categoryPanel.style.bottom = '-100%';
+  };
+
+  // 全パネルを閉じる共通関数（hideCalcとhideCategoryPanelの後に定義）
+  const hideAll = () => {
+    hideCalc();
+    hideCategoryPanel();
+  };
+
   const showCalc = () => {
     expression = amountInput.value || '';
     calcDisplay.innerText = expression || '0';
@@ -253,14 +266,17 @@ document.addEventListener('DOMContentLoaded', function() {
     amountInput.addEventListener('click', function(e) {
       e.preventDefault();
       this.blur();
+      hideAll();
       showCalc();
     });
   }
 
-  // メモ・日付などにフォーカスしたら電卓を閉じる
+  // メモ・日付などにフォーカスしたら全パネルを閉じる
   document.querySelectorAll('input, textarea').forEach(el => {
     if (el !== amountInput) {
-      el.addEventListener('focus', hideCalc);
+      el.addEventListener('focus', function() {
+        hideAll();
+      });
     }
   });
 
@@ -325,36 +341,29 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // ===== カテゴリーパネルの開閉 =====
-
   // 収支タイプに応じてカテゴリー一覧を更新する
   const updateCategoryPanel = () => {
-    const selectedType = document.querySelector('input[name="tx_type"]:checked').value;
     categoryList.innerHTML = '';
 
-    // セレクトボックスの選択肢を使ってカテゴリー一覧を生成
+    // filterCategoriesで絞り込まれたセレクトボックスの中身をそのまま表示
     Array.from(catSelect.options).forEach(opt => {
       if (opt.value === '') return; // 空欄はスキップ
-      const targetLabel = selectedType === 'income' ? '（収入）' : '（支出）';
-      if (!opt.text.includes(targetLabel)) return; // 収支タイプと合わないものはスキップ
-
-      const cleanText = opt.text.replace('（収入）', '').replace('（支出）', '');
 
       // 1行分のカテゴリーアイテムを作成
       const item = document.createElement('div');
       item.style.cssText = 'padding: 14px 16px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; color: #5d4037;';
-      item.innerText = cleanText;
+      item.innerText = opt.text;
 
       // 現在選択中のカテゴリーにチェックマークをつける
       if (opt.value === categoryHidden.value) {
         item.style.color = '#9c6d5c';
-        item.innerText = '✓ ' + cleanText;
+        item.innerText = '✓ ' + opt.text;
       }
 
       // タップしたらそのカテゴリーを選択してパネルを閉じる
       item.addEventListener('click', function() {
         categoryHidden.value = opt.value;
-        categoryDisplay.innerText = cleanText;
+        categoryDisplay.innerText = opt.text;
         hideCategoryPanel();
       });
 
@@ -362,31 +371,39 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   };
 
-  // カテゴリーパネルを表示する
+  // カテゴリーパネルを表示する（フッターの上に配置）
   const showCategoryPanel = () => {
     updateCategoryPanel();
-    categoryPanel.style.bottom = '0';
-  };
 
-  // カテゴリーパネルを隠す
-  const hideCategoryPanel = () => {
-    categoryPanel.style.bottom = '-100%';
+    // 収支タイプをURLパラメータに乗せて追加/編集ボタンのリンクを動的に設定
+    const selectedType = document.querySelector('input[name="tx_type"]:checked').value;
+    document.getElementById('category-edit-btn').href = 
+      `{% url 'households:category_list' %}?type=${selectedType}`;
+
+    const footer = document.querySelector('.app-footer');
+    const footerRect = footer.getBoundingClientRect();
+    const bottomOffset = window.innerHeight - footerRect.top;
+    categoryPanel.style.bottom = bottomOffset + 'px';
   };
 
   // カテゴリー行をタップしたらパネルを表示
   categoryRow.addEventListener('click', function() {
-    hideCalc(); // 電卓が出ていたら先に閉じる
+    hideAll();
     showCategoryPanel();
   });
 
   // 閉じるボタンでパネルを隠す
   document.getElementById('category-close-btn').addEventListener('click', hideCategoryPanel);
 
-  // 収支タイプが切り替わったらカテゴリーの選択をリセット
+  // 収支タイプが切り替わったらカテゴリーの選択をリセットしてパネルも更新
   document.querySelectorAll('input[name="tx_type"]').forEach(radio => {
     radio.addEventListener('change', function() {
       categoryDisplay.innerText = '選択してください';
       categoryHidden.value = '';
+      // filterCategoriesが先に実行されるよう少し遅らせてから更新
+      setTimeout(() => {
+        updateCategoryPanel();
+      }, 50);
     });
   });
 
@@ -394,8 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (categoryHidden.value) {
     const matchedOption = Array.from(catSelect.options).find(o => o.value === categoryHidden.value);
     if (matchedOption) {
-      const cleanText = matchedOption.text.replace('（収入）', '').replace('（支出）', '');
-      categoryDisplay.innerText = cleanText;
+      categoryDisplay.innerText = matchedOption.text;
     }
   }
 });

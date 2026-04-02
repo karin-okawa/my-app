@@ -32,4 +32,6 @@ urlpatterns = [
     path('categories/<int:pk>/delete/', CategoryDeleteView.as_view(), name='category_delete'),
     # 並び替え結果をサーバーに保存するAPI用URL
     path('categories/reorder/', views.CategoryReorderView.as_view(), name='category_reorder'),
+    # カテゴリーの色選択ページ
+    path('categories/<int:pk>/color/', views.CategoryColorView.as_view(), name='category_color'),
 ]

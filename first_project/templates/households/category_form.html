@@ -1,5 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  /* カテゴリー名入力欄をノート風にする */
+  #id_name {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    text-align: right;
+    width: 100%;
+    font-weight: bold;
+    color: #5d4037;
+    outline: none;
+  }
+</style>
+
 <div class="custom-phone-frame">
   <div class="p-4">
 
@@ -23,19 +37,41 @@
     </div>
 
     <form method="post">
+      <!-- フォームのエラーメッセージを表示する -->
+      {% if form.errors %}
+      <div style="color: #d9534f; font-size: 0.9rem; margin-bottom: 16px;">
+        {{ form.errors }}
+      </div>
+      {% endif %}
+
       {% csrf_token %}
 
-      <!-- カテゴリー名の入力欄 -->
+      <!-- 新規作成時はランダムで設定された色をhiddenフィールドで送信する -->
+      {% if not form.instance.pk %}
+      <input type="hidden" name="color" value="{{ form.initial.color|default:'#9c6d5c' }}">
+      {% endif %}
+
+      <!-- カテゴリー名の入力欄（ノート風デザイン） -->
       <div style="border-bottom: 1px solid #eee; padding: 15px 0; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 0.9rem; color: #888; font-weight: bold;">カテゴリー名</span>
-        <div style="flex-grow: 1; margin-left: 16px;">{{ form.name }}</div>
+        <span style="font-size: 0.9rem; color: #888; font-weight: bold; min-width: 80px;">カテゴリー名</span>
+        <div style="flex-grow: 1; margin-left: 16px;">
+          {{ form.name }}
+        </div>
       </div>
 
-      <!-- 収入・支出の種類選択欄 -->
-      <div style="border-bottom: 1px solid #eee; padding: 15px 0; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 0.9rem; color: #888; font-weight: bold;">種類</span>
-        <div style="flex-grow: 1; margin-left: 16px;">{{ form.category_type }}</div>
-      </div>
+      <!-- グラフの色選択行（編集時のみ表示） -->
+      {% if form.instance.pk %}
+      <a href="{% url 'households:category_color' form.instance.pk %}?type={{ request.GET.type }}" style="text-decoration: none;">
+        <div style="border-bottom: 1px solid #eee; padding: 15px 0; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 0.9rem; color: #888; font-weight: bold;">グラフの色</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <!-- 現在選択中の色を丸で表示 -->
+            <div style="width: 24px; height: 24px; border-radius: 50%; background-color: {{ form.instance.color }}; border: 1px solid #eee;"></div>
+            <span style="color: #ccc;">›</span>
+          </div>
+        </div>
+      </a>
+      {% endif %}
 
       <!-- 保存ボタン -->
       <div class="mt-5" style="display: flex; justify-content: center;">
@@ -43,7 +79,7 @@
       </div>
 
     </form>
-
   </div>
 </div>
 {% endblock %}
+

@@ -19,6 +19,8 @@ from django.http import JsonResponse
 # フロントから送られてくるJSON文字列をPythonのデータに変換するための標準ライブラリ
 import json
 
+import random
+
 
 # ============================
 # 収支一覧ページ
@@ -136,20 +138,6 @@ class CategoryListView(LoginRequiredMixin, ListView):
 
 
 # ============================
-# カテゴリー新規作成ページ
-# ============================
-class CategoryCreateView(LoginRequiredMixin, CreateView):
-    # カテゴリーを新規作成する
-    model = Category
-    # 入力項目：カテゴリー名・種類・色
-    fields = ['name', 'category_type', 'color']
-    # 使用するテンプレート
-    template_name = "households/category_form.html"
-    # 作成成功後 → カテゴリー一覧へ戻る
-    success_url = reverse_lazy('households:category_list')
-
-
-# ============================
 # カテゴリー編集ページ
 # ============================
 class CategoryUpdateView(LoginRequiredMixin, UpdateView):
@@ -189,3 +177,57 @@ class CategoryReorderView(LoginRequiredMixin, View):
             return JsonResponse({'status': 'ok'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+        
+# カテゴリーの色選択ページ
+class CategoryColorView(LoginRequiredMixin, UpdateView):
+    # Categoryモデルのcolorフィールドだけを更新する
+    model = Category
+    fields = ['color']
+    template_name = "households/category_color.html"
+    
+    def get_success_url(self):
+        # 色選択後はカテゴリー編集画面に戻る
+        category_type = self.request.GET.get('type', '')
+        return f"{reverse_lazy('households:category_edit', kwargs={'pk': self.object.pk})}?type={category_type}"
+    
+
+class CategoryCreateView(LoginRequiredMixin, CreateView):
+    # カテゴリーを新規作成する
+    model = Category
+    # 入力項目：カテゴリー名・種類・色
+    fields = ['name', 'category_type', 'color']
+    # 使用するテンプレート
+    template_name = "households/category_form.html"
+    # 作成成功後 → カテゴリー一覧へ戻る
+    success_url = reverse_lazy('households:category_list')
+
+    def get_initial(self):
+        initial = super().get_initial()
+        # プリセットカラーの中からランダムで1色を初期値に設定する
+        preset_colors = [
+            '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+            '#3498db', '#9c6d5c', '#2c3e50', '#95a5a6', '#9b59b6'
+        ]
+        initial['color'] = random.choice(preset_colors)
+        # URLパラメータからcategory_typeを取得して初期値に設定する
+        category_type = self.request.GET.get('type')
+        if category_type in ['income', 'expense']:
+            initial['category_type'] = category_type
+        return initial
+
+    def form_valid(self, form):
+        # 常にランダムで色を設定する（新規作成時は毎回ランダム）
+        preset_colors = [
+          '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+          '#3498db', '#9c6d5c', '#2c3e50', '#95a5a6', '#9b59b6'
+        ]
+        form.instance.color = random.choice(preset_colors)
+        print("設定した色:", form.instance.color)
+        return super().form_valid(form)
+
+
+    def get_success_url(self):
+        # 作成成功後はカテゴリー一覧へ戻る（収支タイプを引き継ぐ）
+        category_type = self.request.GET.get('type', '')
+        return f"{reverse_lazy('households:category_list')}?type={category_type}"

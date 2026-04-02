@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="custom-phone-frame">
+  <div class="p-4">
+
+    <!-- ページタイトル：左にキャンセル、中央にタイトル -->
+    <div style="display: flex; align-items: center; margin-bottom: 24px;">
+      <!-- 左端：キャンセルボタン（カテゴリー一覧に戻る） -->
+      <a href="{% url 'households:category_list' %}?type={{ request.GET.type }}" style="
+        color: #888;
+        text-decoration: none;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+      ">キャンセル</a>
+
+      <!-- 中央：タイトル -->
+      <h2 style="font-size: 1.1rem; font-weight: bold; color: #5d4037; margin: 0; flex-grow: 1; text-align: center;">
+        {% if form.instance.pk %}カテゴリー編集{% else %}カテゴリー追加{% endif %}
+      </h2>
+
+      <!-- 右端：スペーサー -->
+      <div style="width: 50px; flex-shrink: 0;"></div>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <!-- カテゴリー名の入力欄 -->
+      <div style="border-bottom: 1px solid #eee; padding: 15px 0; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 0.9rem; color: #888; font-weight: bold;">カテゴリー名</span>
+        <div style="flex-grow: 1; margin-left: 16px;">{{ form.name }}</div>
+      </div>
+
+      <!-- 収入・支出の種類選択欄 -->
+      <div style="border-bottom: 1px solid #eee; padding: 15px 0; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 0.9rem; color: #888; font-weight: bold;">種類</span>
+        <div style="flex-grow: 1; margin-left: 16px;">{{ form.category_type }}</div>
+      </div>
+
+      <!-- 保存ボタン -->
+      <div class="mt-5" style="display: flex; justify-content: center;">
+        <button type="submit" class="btn" style="background-color: #9c6d5c; color: white; border: none; border-radius: 10px; font-weight: bold; padding: 10px 0; width: 90%;">保存</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+{% endblock %}

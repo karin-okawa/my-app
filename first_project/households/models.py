@@ -17,10 +17,14 @@ class Category(models.Model):
     # グラフやカテゴリー表示に使う色（HEXコードで保存 例：#FF0000）
     # デフォルトはアプリのテーマカラー（茶色）
     color = models.CharField(max_length=7, default="#9c6d5c")
+ 
+    # 表示順を管理するフィールド（数字が小さいほど上に表示される）
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
         verbose_name_plural = "Categories"  # 管理画面で末尾にsが重なるのを防ぐ
-
+        ordering = ['order', 'id']  # orderで並び替え、同じ場合はidで並び替え
+        
     def __str__(self):
         # 管理画面などで「食費（支出）」のように表示されるようにする
         type_label = "収入" if self.category_type == "income" else "支出"

@@ -12,6 +12,12 @@ from .forms import TransactionForm
 from django.http import JsonResponse
 # 日付を扱うために使う
 from datetime import date
+# Viewの基本クラス（LoginRequiredMixinと組み合わせてログイン必須にする）
+from django.views import View
+# JSON形式でレスポンスを返すためのクラス
+from django.http import JsonResponse
+# フロントから送られてくるJSON文字列をPythonのデータに変換するための標準ライブラリ
+import json
 
 
 # ============================
@@ -167,3 +173,19 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "households/category_confirm_delete.html"
     # 削除成功後 → カテゴリー一覧へ戻る
     success_url = reverse_lazy('households:category_list')
+    
+
+class CategoryReorderView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        try:
+            # フロントから送られてくる順番データをJSONで受け取る
+            data = json.loads(request.body)
+            order_list = data.get('order', [])
+            
+            # 受け取った順番通りにorderフィールドを更新する
+            for index, category_id in enumerate(order_list):
+                Category.objects.filter(id=category_id).update(order=index)
+            
+            return JsonResponse({'status': 'ok'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

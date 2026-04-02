@@ -5,6 +5,7 @@ from .views import TransactionListView, TransactionCreateView, DayTransactionsJs
 
 
 
+
 # URLの名前空間を households にする
 # テンプレートでは {% url 'households:list' %} のように呼び出せるようになる
 app_name = "households"
@@ -29,5 +30,6 @@ urlpatterns = [
     path('categories/new/', CategoryCreateView.as_view(), name='category_create'),
     path('categories/<int:pk>/edit/', CategoryUpdateView.as_view(), name='category_edit'),
     path('categories/<int:pk>/delete/', CategoryDeleteView.as_view(), name='category_delete'),
-
+    # 並び替え結果をサーバーに保存するAPI用URL
+    path('categories/reorder/', views.CategoryReorderView.as_view(), name='category_reorder'),
 ]

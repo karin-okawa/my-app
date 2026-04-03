@@ -4,8 +4,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 # URL名からURLを作るための関数
 from django.urls import reverse_lazy
-# households/models.py のモデルを使う
-from .models import Transaction, Category
 # forms.py のフォームを使う
 from .forms import TransactionForm
 # JSONレスポンスを返すために使う
@@ -18,9 +16,10 @@ from django.views import View
 from django.http import JsonResponse
 # フロントから送られてくるJSON文字列をPythonのデータに変換するための標準ライブラリ
 import json
-
+# ランダムな色を選ぶために使う標準ライブラリ
 import random
-
+# households/models.py のTransaction・Category・CustomColorモデルを使う
+from .models import Transaction, Category, CustomColor
 
 # ============================
 # 収支一覧ページ
@@ -147,8 +146,11 @@ class CategoryUpdateView(LoginRequiredMixin, UpdateView):
     fields = ['name', 'category_type', 'color']
     # 使用するテンプレート
     template_name = "households/category_form.html"
-    # 編集成功後 → カテゴリー一覧へ戻る
-    success_url = reverse_lazy('households:category_list')
+    
+    def get_success_url(self):
+        # 編集成功後は収支タイプを引き継いでカテゴリー一覧へ戻る
+        category_type = self.request.GET.get('type', '')
+        return f"{reverse_lazy('households:category_list')}?type={category_type}"
 
 
 # ============================
@@ -186,12 +188,55 @@ class CategoryColorView(LoginRequiredMixin, UpdateView):
     fields = ['color']
     template_name = "households/category_color.html"
     
-    def get_success_url(self):
-        # 色選択後はカテゴリー編集画面に戻る
-        category_type = self.request.GET.get('type', '')
-        return f"{reverse_lazy('households:category_edit', kwargs={'pk': self.object.pk})}?type={category_type}"
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 現在編集中のカテゴリーの収支タイプを取得する
+        category_type = self.object.category_type
+        # 同じ収支タイプのカテゴリーで使われている色を重複なしで取得する
+        used_colors = list(
+            Category.objects.filter(category_type=category_type)
+            .values_list('color', flat=True)
+            .distinct()
+        )
+        context['used_colors'] = used_colors
+        # プリセットカラーの一覧をテンプレートに渡す
+        context['preset_colors'] = [
+          '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+          '#3498db', '#9c6d5c', '#2c3e50', '#95a5a6', '#9b59b6'
+        ]
+        # 同じ収支タイプのカスタムカラーを取得する
+        context['custom_colors'] = list(
+            CustomColor.objects.filter(category_type=category_type)
+            .values_list('color', flat=True)
+        )
+        return context
     
+    def form_valid(self, form):
+        # 選択した色がプリセットカラーに含まれていない場合はカスタムカラーとして保存する
+        preset_colors = [
+          '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+          '#3498db', '#9c6d5c', '#2c3e50', '#95a5a6', '#9b59b6'
+        ]
+        selected_color = form.instance.color
+        if selected_color not in preset_colors:
+            # カスタムカラーをDBに保存する（すでに存在する場合は保存しない）
+            CustomColor.objects.get_or_create(
+                category_type=self.object.category_type,
+                color=selected_color
+            )
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        category_type = self.request.GET.get('type', '')
+        from_page = self.request.GET.get('from', '')
+        if from_page == 'create':
+            # 新規作成からの場合はカテゴリー一覧へ戻る
+            return f"{reverse_lazy('households:category_list')}?type={category_type}"
+        # 編集からの場合はカテゴリー編集画面へ戻る
+        return f"{reverse_lazy('households:category_edit', kwargs={'pk': self.object.pk})}?type={category_type}"
 
+
+# カテゴリー追加のページ
 class CategoryCreateView(LoginRequiredMixin, CreateView):
     # カテゴリーを新規作成する
     model = Category
@@ -199,8 +244,7 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
     fields = ['name', 'category_type', 'color']
     # 使用するテンプレート
     template_name = "households/category_form.html"
-    # 作成成功後 → カテゴリー一覧へ戻る
-    success_url = reverse_lazy('households:category_list')
+    
 
     def get_initial(self):
         initial = super().get_initial()
@@ -223,11 +267,16 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
           '#3498db', '#9c6d5c', '#2c3e50', '#95a5a6', '#9b59b6'
         ]
         form.instance.color = random.choice(preset_colors)
-        print("設定した色:", form.instance.color)
+        
+        # 同じcategory_typeの中で一番大きいorderの次の番号を設定することで新しいカテゴリーが一覧の最後に追加される
+        max_order = Category.objects.filter(
+            category_type=form.instance.category_type
+        ).order_by('-order').values_list('order', flat=True).first()
+        form.instance.order = (max_order or 0) + 1
+
         return super().form_valid(form)
 
-
     def get_success_url(self):
-        # 作成成功後はカテゴリー一覧へ戻る（収支タイプを引き継ぐ）
+    # 作成成功後はすぐに色選択画面へ遷移する
         category_type = self.request.GET.get('type', '')
-        return f"{reverse_lazy('households:category_list')}?type={category_type}"
+        return f"{reverse_lazy('households:category_color', kwargs={'pk': self.object.pk})}?type={category_type}&from=create"

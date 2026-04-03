@@ -5,13 +5,12 @@
 
     <!-- ページタイトル：左に戻るボタン、中央にタイトル -->
     <div style="display: flex; align-items: center; margin-bottom: 24px;">
-      <!-- 左端：戻るボタン -->
-      <a href="{% url 'households:category_edit' object.pk %}?type={{ request.GET.type }}" style="
-        color: #888;
-        text-decoration: none;
-        font-size: 0.9rem;
-        flex-shrink: 0;
-      ">＜ 戻る</a>
+      <!-- 左端：戻るボタン（新規作成からか編集からかで遷移先を変える） -->
+      {% if request.GET.from == 'create' %}
+      <a href="{% url 'households:category_list' %}?type={{ request.GET.type }}" style="color: #888; text-decoration: none; font-size: 0.9rem; flex-shrink: 0;">＜ 戻る</a>
+      {% else %}
+      <a href="{% url 'households:category_edit' object.pk %}?type={{ request.GET.type }}" style="color: #888; text-decoration: none; font-size: 0.9rem; flex-shrink: 0;">＜ 戻る</a>
+      {% endif %}
 
       <!-- 中央：タイトル -->
       <h2 style="font-size: 1.1rem; font-weight: bold; color: #5d4037; margin: 0; flex-grow: 1; text-align: center;">
@@ -38,51 +37,65 @@
       <!-- 選択した色をhiddenフィールドで送信する -->
       <input type="hidden" name="color" id="selected-color" value="{{ object.color }}">
 
-      <!-- プリセットカラー一覧 -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
-        <!-- 赤 -->
-        <div class="color-option" data-color="#e74c3c" style="width: 50px; height: 50px; border-radius: 50%; background-color: #e74c3c; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#e74c3c' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
+     <!-- プリセットカラー一覧（スクロール可能） -->
+    <div style="overflow-y: auto; max-height: 45vh; margin-bottom: 16px;">
+      <div id="color-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 8px;">
+
+        <!-- プリセットカラー -->
+        {% for color in preset_colors %}
+        <div class="color-option" data-color="{{ color }}" style="
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background-color: {{ color }};
+          cursor: pointer;
+          margin: 0 auto;
+          position: relative;
+          border: {% if color == object.color %}3px solid #5d4037{% else %}2px solid #eee{% endif %};
+        ">
+          <!-- 同じ収支タイプのカテゴリーで使用中の色に✓をつける -->
+          {% if color in used_colors %}
+          <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>
+          {% endif %}
         </div>
-        <!-- オレンジ -->
-        <div class="color-option" data-color="#e67e22" style="width: 50px; height: 50px; border-radius: 50%; background-color: #e67e22; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#e67e22' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
+        {% endfor %}
+
+        <!-- DBに保存済みのカスタムカラーを表示する -->
+        {% for color in custom_colors %}
+        <div class="color-option" data-color="{{ color }}" style="
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background-color: {{ color }};
+          cursor: pointer;
+          margin: 0 auto;
+          position: relative;
+          border: {% if color == object.color %}3px solid #5d4037{% else %}2px solid #eee{% endif %};
+        ">
+          <!-- 使用中の色に✓をつける -->
+          {% if color in used_colors %}
+          <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>
+          {% endif %}
         </div>
-        <!-- 黄色 -->
-        <div class="color-option" data-color="#f1c40f" style="width: 50px; height: 50px; border-radius: 50%; background-color: #f1c40f; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#f1c40f' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
-        </div>
-        <!-- 緑 -->
-        <div class="color-option" data-color="#2ecc71" style="width: 50px; height: 50px; border-radius: 50%; background-color: #2ecc71; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#2ecc71' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
-        </div>
-        <!-- 青 -->
-        <div class="color-option" data-color="#3498db" style="width: 50px; height: 50px; border-radius: 50%; background-color: #3498db; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#3498db' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
-        </div>
-        <!-- 茶色 -->
-        <div class="color-option" data-color="#9c6d5c" style="width: 50px; height: 50px; border-radius: 50%; background-color: #9c6d5c; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#9c6d5c' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
-        </div>
-        <!-- 黒 -->
-        <div class="color-option" data-color="#2c3e50" style="width: 50px; height: 50px; border-radius: 50%; background-color: #2c3e50; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#2c3e50' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
-        </div>
-        <!-- グレー -->
-        <div class="color-option" data-color="#95a5a6" style="width: 50px; height: 50px; border-radius: 50%; background-color: #95a5a6; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#95a5a6' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
-        </div>
-        <!-- 紫 -->
-        <div class="color-option" data-color="#9b59b6" style="width: 50px; height: 50px; border-radius: 50%; background-color: #9b59b6; cursor: pointer; margin: 0 auto; position: relative;">
-          {% if object.color == '#9b59b6' %}<span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;">✓</span>{% endif %}
-        </div>
+        {% endfor %}
+
         <!-- カスタムカラー（虹色アイコン） -->
-        <div id="custom-color-btn" style="width: 50px; height: 50px; border-radius: 50%; cursor: pointer; margin: 0 auto; background: linear-gradient(135deg, #e74c3c, #e67e22, #f1c40f, #2ecc71, #3498db, #9b59b6); position: relative;">
-        </div>
+        <div id="custom-color-btn" style="
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          cursor: pointer;
+          margin: 0 auto;
+          background: linear-gradient(135deg, #e74c3c, #e67e22, #f1c40f, #2ecc71, #3498db, #9b59b6);
+          position: relative;
+          border: 2px solid #eee;
+        "></div>
+
       </div>
+    </div>   
 
       <!-- カスタムカラー入力エリア（虹色アイコンを押した時に表示） -->
-      <div id="custom-color-area" style="display: none; margin-bottom: 24px;">
+      <div id="custom-color-area" style="display: none; margin-bottom: 16px;">
         <div style="border-bottom: 1px solid #eee; padding: 12px 0; display: flex; align-items: center; justify-content: space-between;">
           <span style="font-size: 0.9rem; color: #888; font-weight: bold;">カスタムカラー</span>
           <!-- カラーピッカー -->
@@ -108,28 +121,29 @@
 document.addEventListener('DOMContentLoaded', function() {
   const selectedColorInput = document.getElementById('selected-color');
   const colorPreview = document.getElementById('color-preview');
+  const colorGrid = document.getElementById('color-grid');
   const customColorPicker = document.getElementById('custom-color-picker');
   const customColorArea = document.getElementById('custom-color-area');
   const customColorBtn = document.getElementById('custom-color-btn');
 
   // プリセットカラーをタップした時の処理
-  document.querySelectorAll('.color-option').forEach(option => {
-    option.addEventListener('click', function() {
-      const color = this.dataset.color;
-      
-      // 選択した色をhiddenフィールドとプレビューに反映
-      selectedColorInput.value = color;
-      colorPreview.style.backgroundColor = color;
+  colorGrid.addEventListener('click', function(e) {
+    const option = e.target.closest('.color-option');
+    if (!option) return;
 
-      // 全てのチェックマークを消す
-      document.querySelectorAll('.color-option span').forEach(span => span.remove());
+    const color = option.dataset.color;
 
-      // 選択した色にチェックマークをつける
-      const check = document.createElement('span');
-      check.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem;';
-      check.innerText = '✓';
-      this.appendChild(check);
+    // 選択した色をhiddenフィールドとプレビューに反映
+    selectedColorInput.value = color;
+    colorPreview.style.backgroundColor = color;
+
+    // 全ての選択枠を元に戻す
+    document.querySelectorAll('.color-option').forEach(el => {
+      el.style.border = '2px solid #eee';
     });
+
+    // 選択した色に枠をつける
+    option.style.border = '3px solid #5d4037';
   });
 
   // 虹色アイコンをタップした時にカスタムカラーエリアを表示
@@ -139,8 +153,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // カラーピッカーで色を変更した時の処理
   customColorPicker.addEventListener('input', function() {
-    selectedColorInput.value = this.value;
-    colorPreview.style.backgroundColor = this.value;
+    const color = this.value;
+    selectedColorInput.value = color;
+    colorPreview.style.backgroundColor = color;
+
+    // カスタムカラーがすでにグリッドにあるか確認する
+    const existing = colorGrid.querySelector(`.color-option[data-color="${color}"]`);
+    if (existing) {
+      // すでにある場合はそれを選択状態にする
+      document.querySelectorAll('.color-option').forEach(el => {
+        el.style.border = '2px solid #eee';
+      });
+      existing.style.border = '3px solid #5d4037';
+      return;
+    }
+
+    // カスタムカラーをグリッドに追加する
+    const newOption = document.createElement('div');
+    newOption.className = 'color-option';
+    newOption.dataset.color = color;
+    newOption.style.cssText = `
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: ${color};
+      cursor: pointer;
+      margin: 0 auto;
+      position: relative;
+      border: 3px solid #5d4037;
+    `;
+
+    // 虹色ボタンの直前に追加する
+    colorGrid.insertBefore(newOption, customColorBtn);
+
+    // 全ての選択枠を元に戻してから新しい色を選択状態にする
+    document.querySelectorAll('.color-option').forEach(el => {
+      el.style.border = '2px solid #eee';
+    });
+    newOption.style.border = '3px solid #5d4037';
   });
 });
 </script>

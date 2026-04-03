@@ -66,3 +66,22 @@ class Transaction(models.Model):
         # 表示にカテゴリ名を含める
         cat_name = self.category.name if self.category else "未分類"
         return f"{self.user} | {self.date} | {cat_name} | {self.amount}"
+
+
+# ユーザーが作成したカスタムカラーを保存するモデル
+class CustomColor(models.Model):
+    # どの収支タイプのカスタムカラーか（income or expense）
+    category_type = models.CharField(
+        max_length=10,
+        choices=[("income", "収入"), ("expense", "支出")],
+        default="expense"
+    )
+    # カスタムカラーのHEXコード（例：#FF0000）
+    color = models.CharField(max_length=7)
+
+    class Meta:
+        # 同じ収支タイプで同じ色は重複して保存しない
+        unique_together = ['category_type', 'color']
+
+    def __str__(self):
+        return f"{self.category_type} - {self.color}"

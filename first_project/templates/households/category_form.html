@@ -46,10 +46,15 @@
 
       {% csrf_token %}
 
-      <!-- 新規作成時はランダムで設定された色をhiddenフィールドで送信する -->
-      {% if not form.instance.pk %}
-      <input type="hidden" name="color" value="{{ form.initial.color|default:'#9c6d5c' }}">
-      {% endif %}
+    <!-- 新規作成時はhiddenフィールドで送信する -->
+    {% if not form.instance.pk %}
+    <input type="hidden" name="color" value="{{ form.initial.color|default:'#9c6d5c' }}">
+    <input type="hidden" name="category_type" value="{{ form.initial.category_type|default:'expense' }}">
+    {% else %}
+    <!-- 編集時はhiddenフィールドで既存の値を送信する -->
+    <input type="hidden" name="category_type" value="{{ form.instance.category_type }}">
+    <input type="hidden" name="color" value="{{ form.instance.color }}">
+    {% endif %}
 
       <!-- カテゴリー名の入力欄（ノート風デザイン） -->
       <div style="border-bottom: 1px solid #eee; padding: 15px 0; display: flex; align-items: center; justify-content: space-between;">

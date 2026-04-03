@@ -123,7 +123,7 @@
       <div class="note-style-container">
         <!-- 金額入力行 -->
         <div class="note-row d-flex align-items-center justify-content-between">
-          <span class="note-label">金額</span>
+          <span class="note-label">金額<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
           <div class="note-input-wrapper d-flex align-items-center">
             <span style="font-weight: bold; color: #9c6d5c; margin-right: 5px;">¥</span>
             {{ form.amount }}
@@ -132,7 +132,7 @@
 
         <!-- カテゴリー選択行（タップするとパネルが開く） -->
         <div class="note-row d-flex align-items-center justify-content-between" id="category-row" style="cursor: pointer;">
-          <span class="note-label">カテゴリー</span>
+          <span class="note-label">カテゴリー<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">*</span></span>
           <!-- 選択中のカテゴリー名を表示するエリア -->
           <div id="category-display" style="font-weight: bold; color: #5d4037; text-align: right;">
             選択してください
@@ -151,10 +151,30 @@
 
         <!-- 日付入力行 -->
         <div class="note-row d-flex align-items-center justify-content-between">
-          <span class="note-label">日付</span>
+          <span class="note-label">日付<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">*</span></span>
           <div class="note-input-wrapper">{{ form.date }}</div>
         </div>
-      </div>
+
+        <!-- 写真アップロード行 -->
+        <div class="note-row d-flex align-items-center justify-content-between">
+          <span class="note-label">写真<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <!-- 確認ボタン：すでに登録してある写真を確認する -->
+            {% if form.instance.pk and form.instance.image %}
+            <button type="button" id="image-confirm-btn" class="btn btn-sm" style="background-color: #f0f0f0; color: #5d4037; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px;">確認</button>
+            {% endif %}
+            <!-- アップロードボタン：スマホ内の写真を選択する -->
+            <label for="id_image" class="btn btn-sm" style="background-color: #9c6d5c; color: white; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px; cursor: pointer; margin: 0;">アップロード</label>
+            <!-- 実際のファイル入力（非表示） -->
+            <div style="display: none;">{{ form.image }}</div>
+          </div>
+        </div>
+      
+        <!-- 必須項目の説明 -->
+        <div style="margin-top: 16px; font-size: 0.75rem; color: #999;">
+          <span style="color: #e74c3c;">*</span> 必須入力　
+          <span style="color: #e74c3c;">**</span> どちらか必須
+        </div>
 
       <!-- 保存・キャンセルボタン -->
       <div class="d-grid gap-2 mt-5">
@@ -448,5 +468,29 @@ document.addEventListener('DOMContentLoaded', function() {
   // ページ読み込み時に一度実行して初期化
   filterCategories();
 });
+
+// 写真がアップロードされた時にファイル名を表示する
+const imageInput = document.getElementById('id_image');
+if (imageInput) {
+  imageInput.addEventListener('change', function() {
+    const fileName = this.files[0] ? this.files[0].name : '';
+    const label = document.querySelector('label[for="id_image"]');
+    if (fileName) {
+      label.innerText = '✓ ' + fileName.slice(0, 10) + '...';
+      label.style.backgroundColor = '#2ecc71';
+    }
+  });
+}
+
+// 確認ボタンを押した時に登録済みの写真を別タブで開く
+const confirmBtn = document.getElementById('image-confirm-btn');
+if (confirmBtn) {
+  confirmBtn.addEventListener('click', function() {
+    {% if form.instance.pk and form.instance.image %}
+    window.open('{{ form.instance.image.url }}', '_blank');
+    {% endif %}
+  });
+}
+
 </script>
 {% endblock %}

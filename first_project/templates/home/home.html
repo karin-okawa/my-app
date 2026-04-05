@@ -2,59 +2,193 @@
 {% load dict_extras %}
 
 {% block content %}
-<div class="d-flex justify-content-center align-items-center mb-4" style="gap: 20px;">
-  
-  <a href="{% url 'home:home_with_month' prev_year prev_month %}" 
-     class="btn btn-sm btn-outline-secondary" 
-     style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
-    ◁
-  </a>
+<style>
+  /* ホーム画面全体をflexboxで上下に分割する */
+  .home-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
 
-  <h2 class="mb-0" style="color: #5d4037; font-weight: bold; font-size: 1.25rem;">
-    {{ year }}年{{ month }}月
-  </h2>
+  /* 上部固定エリア（カレンダー＋月間合計） */
+  .home-fixed {
+    flex-shrink: 0;
+  }
 
-  <a href="{% url 'home:home_with_month' next_year next_month %}" 
-     class="btn btn-sm btn-outline-secondary" 
-     style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
-    ▷
-  </a>
-</div>
+  /* 下部スクロールエリア（収支一覧） */
+  .home-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 0; /* flexboxでスクロールを正しく動作させるために必要 */
+  }
 
-<table class="calendar-table">
-  <thead>
-    <tr>
-      <th style="color: #a24141;">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th style="color: #2c587c;">土</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for week in calendar %}
-    <tr>
-      {% for day in week %}
-      <td class="{% if day == current_day %}today{% endif %}">
-        {% if day != 0 %}
-          <span class="day-number">{{ day }}</span>
-          
-          <div class="day-content">
-            {% if income_map|dict_get:day %}
-              <span class="amount-badge amt-income">
-                {{ income_map|dict_get:day }}
-              </span>
+  /* カレンダーのマス目の高さを固定 */
+  .calendar-table td {
+    height: 35px !important;
+    max-height: 35px !important;
+    padding: 2px !important;
+    overflow: hidden !important; 
+    vertical-align: top !important;
+  }
+
+  /* day-contentの高さを固定 */
+  .day-content {
+  height: 22px !important;
+  max-height: 22px !important;
+  overflow: hidden !important;
+  font-size: 0.65rem !important;
+  gap: 0 !important;
+  line-height: 1 !important;
+}
+
+  /* 年月ナビゲーションの余白を縮小 */
+  .month-nav {
+    padding: 6px 0;
+    margin-bottom: 4px !important;
+  }
+
+  /* カレンダーの行の高さを固定する */
+  .calendar-table tr {
+    line-height: 0;
+  }
+
+  /* 曜日ヘッダーの行は通常に戻す */
+  .calendar-table thead tr {
+    line-height: normal;
+  }
+
+</style>
+
+<div class="home-container">
+
+  <!-- 上部固定エリア -->
+  <div class="home-fixed">
+
+    <!-- 年月ナビゲーション -->
+    <div class="month-nav d-flex justify-content-center align-items-center" style="gap: 20px;">
+      <a href="{% url 'home:home_with_month' prev_year prev_month %}" 
+         class="btn btn-sm btn-outline-secondary" 
+         style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
+        ◁
+      </a>
+      <h2 class="mb-0" style="color: #5d4037; font-weight: bold; font-size: 1.25rem;">
+        {{ year }}年{{ month }}月
+      </h2>
+      <a href="{% url 'home:home_with_month' next_year next_month %}" 
+         class="btn btn-sm btn-outline-secondary" 
+         style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
+        ▷
+      </a>
+    </div>
+
+    <!-- カレンダー -->
+    <table class="calendar-table">
+      <thead>
+        <tr>
+          <th style="color: #a24141;">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th style="color: #2c587c;">土</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for week in calendar %}
+        <tr>
+          {% for day in week %}
+          <td class="{% if day == current_day %}today{% endif %}">
+            {% if day != 0 %}
+              <span class="day-number">{{ day }}</span>
+             <div class="day-content">
+                <!-- 上段：収入（収入写真マークあれば左端に表示） -->
+                <div style="display: flex; align-items: center; justify-content: space-between; min-height: 10px; line-height: 1;">
+                  <!-- 左端：収入の写真マーク -->
+                  <span style="font-size: 0.6rem; color: #2c587c;">
+                    {% if day in income_image_days %}🖼{% endif %}
+                  </span>
+                  <!-- 右端：収入金額 -->
+                  <span class="amount-badge amt-income">
+                    {% if income_map|dict_get:day %}{{ income_map|dict_get:day }}円{% endif %}
+                  </span>
+                </div>
+
+                <!-- 下段：支出（支出写真マークあれば左端に表示） -->
+                <div style="display: flex; align-items: center; justify-content: space-between; min-height: 10px; line-height: 1;">
+                  <!-- 左端：支出の写真マーク -->
+                  <span style="font-size: 0.6rem; color: #a24141;">
+                    {% if day in expense_image_days %}🖼{% endif %}
+                  </span>
+                  <!-- 右端：支出金額 -->
+                  <span class="amount-badge amt-expense">
+                    {% if expense_map|dict_get:day %}{{ expense_map|dict_get:day }}円{% endif %}
+                  </span>
+                </div>
+              </div> 
             {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-            {% if expense_map|dict_get:day %}
-              <span class="amount-badge amt-expense">
-                {{ expense_map|dict_get:day }}
-              </span>
-            {% endif %}
-          </div>
+    <!-- 月間合計エリア -->
+    <div style="display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; background: #fdfaf9;">
+      <div style="text-align: center;">
+        <div style="font-size: 0.7rem; color: #888;">収入</div>
+        <div style="font-size: 0.85rem; font-weight: bold; color: #2c587c;">{{ total_income|floatformat:0 }}円</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 0.7rem; color: #888;">支出</div>
+        <div style="font-size: 0.85rem; font-weight: bold; color: #a24141;">{{ total_expense|floatformat:0 }}円</div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-size: 0.7rem; color: #888;">合計</div>
+        <div style="font-size: 0.85rem; font-weight: bold; color: #5d4037;">{{ total_balance|floatformat:0 }}円</div>
+      </div>
+    </div>
+
+  </div><!-- home-fixed閉じタグ -->
+
+  <!-- 下部スクロールエリア（収支一覧） -->
+  <div class="home-scroll">
+    {% regroup transactions by date as transactions_by_date %}
+    {% for day_group in transactions_by_date %}
+
+    <!-- 日付ヘッダー -->
+    <div style="padding: 6px 8px; background: #f9f9f9; font-size: 0.75rem; color: #888; font-weight: bold; border-bottom: 1px solid #eee;">
+      {{ day_group.grouper|date:"m月d日(D)" }}
+    </div>
+
+    <!-- その日の収支一覧 -->
+    {% for tx in day_group.list %}
+    <a href="/home/update/{{ tx.pk }}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #eee;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        {% if tx.category %}
+        <div style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ tx.category.color }}; flex-shrink: 0;"></div>
+        <span style="font-size: 0.85rem; color: #5d4037; font-weight: bold;">{{ tx.category.name }}</span>
+        {% else %}
+        <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #ccc; flex-shrink: 0;"></div>
+        <span style="font-size: 0.85rem; color: #999;">未分類</span>
         {% endif %}
-      </td>
-      {% endfor %}
-    </tr>
+        {% if tx.memo %}
+        <span style="font-size: 0.75rem; color: #999;">（{{ tx.memo }}）</span>
+        {% endif %}
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        {% if tx.image %}
+        <span style="font-size: 0.75rem;">🖼</span>
+        {% endif %}
+        <span style="font-size: 0.85rem; font-weight: bold; {% if tx.tx_type == 'income' %}color: #2c587c;{% else %}color: #a24141;{% endif %}">
+          {% if tx.amount %}{{ tx.amount|floatformat:0 }}円{% else %}ー{% endif %}
+        </span>
+      </div>
+    </a>
     {% endfor %}
-  </tbody>
-</table>
+
+    {% empty %}
+    <div style="text-align: center; color: #999; padding: 20px; font-size: 0.85rem;">この月の収支はまだありません</div>
+    {% endfor %}
+  </div><!-- home-scroll閉じタグ -->
+
+</div><!-- home-container閉じタグ -->
 
 <div id="sheetBackdrop" class="sheet-backdrop"></div>
 <div id="daySheet" class="day-sheet">
@@ -62,110 +196,76 @@
     <div id="sheetDate" class="sheet-date"></div>
     <a id="sheetCreateBtn" href="#" class="btn btn-primary w-100 mt-2" style="background-color: #9c6d5c;">+ 新規作成</a>
   </div>
-
-  <div id="sheetList" class="sheet-list">
-    </div>
-
+  <div id="sheetList" class="sheet-list"></div>
   <button type="button" id="sheetCancel" class="sheet-cancel">キャンセル</button>
 </div>
 
 <script>
   // --- 1. 画面上のパーツ（要素）を取得 ---
-  const backdrop = document.getElementById('sheetBackdrop'); // 背景の暗幕
-  const sheet = document.getElementById('daySheet');       // モーダル本体
-  const sheetDate = document.getElementById('sheetDate');   // モーダル内の日付表示ラベル
-  const sheetList = document.getElementById('sheetList');   // 収支一覧を表示するエリア
-  const sheetCreateBtn = document.getElementById('sheetCreateBtn'); // 「新規作成」ボタン
+  const backdrop = document.getElementById('sheetBackdrop');
+  const sheet = document.getElementById('daySheet');
+  const sheetDate = document.getElementById('sheetDate');
+  const sheetList = document.getElementById('sheetList');
+  const sheetCreateBtn = document.getElementById('sheetCreateBtn');
 
   // --- 2. カレンダーの各マスに対してクリックイベントを設定 ---
   document.querySelectorAll('.calendar-table td').forEach(td => {
-    // マスの中にある日付数字の要素を取得
     const dayElement = td.querySelector('.day-number');
-    
-    // 日付がないマス（前月の余白など）はクリックできないようにスキップ
     if (!dayElement) return;
-
-    // マウスを乗せた時に指マーク（ポインタ）にして「押せる感」を出す
     td.style.cursor = 'pointer';
 
-    // マスがクリックされた時の動き
     td.addEventListener('click', function() {
-      // 表示する日付・月・年を数値として準備
       const day = parseInt(dayElement.innerText.trim(), 10);
       const year = parseInt("{{ year }}", 10);
       const month = parseInt("{{ month }}", 10);
-      
-      // モーダルのヘッダーに「2026年3月15日」のように日付をセット
       sheetDate.innerText = `${year}年${month}月${day}日`;
-      
-      // 新規作成ボタンのリンク先を作成（URLパラメータに日付を添えて、入力画面で自動セットされるようにする）
       const mm = String(month).padStart(2, '0');
       const dd = String(day).padStart(2, '0');
       sheetCreateBtn.href = `{% url 'home:transaction_create' %}?date=${year}-${mm}-${dd}`;
+      const jsonUrl = `{% url 'home:home' %}day-json/${year}/${month}/${day}/`;
 
-      // サーバー（Django）からその日のデータをJSON形式で取ってくるためのURL
-      const jsonUrl = `{% url 'home:home' %}day-json/${year}/${month}/${day}/`; 
-
-      // 非同期通信（Fetch API）を開始
       fetch(jsonUrl)
         .then(response => {
-          // サーバーがエラー（404など）を返した場合はエラーを投げる
           if (!response.ok) throw new Error('Network response was not ok');
-          return response.json(); // 成功したらJSONデータとして解析
+          return response.json();
         })
         .then(data => {
-          // 一覧エリアを一旦空にする（前回の表示を残さないため）
-          sheetList.innerHTML = ''; 
-          
-          // 収支データが1件もなかった場合
+          sheetList.innerHTML = '';
           if (!data.transactions || data.transactions.length === 0) {
             sheetList.innerHTML = '<div style="text-align:center; color:#999; margin-top:30px; font-size:0.8rem;">登録された履歴はありません</div>';
-          } 
-          // データがある場合は、1件ずつループして表示用HTMLを作る
-          else {
+          } else {
             data.transactions.forEach(tx => {
               const div = document.createElement('div');
-              div.className = 'sheet-item'; // CSSでデザインしたクラスを適用
-              
-              // Python側（Views.py）で判定した is_income を使って文字色を決定
+              div.className = 'sheet-item';
               const colorStyle = tx.is_income ? 'color: #2c587c;' : 'color: #a24141;';
-
-              // メモと金額（is_incomeの結果に応じた色）を1行分作成
               div.innerHTML = `
                 <a href="/home/update/${tx.id}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%;">
                   <span style="color:#555;">${tx.memo || '（メモなし）'}</span>
                   <span style="${colorStyle} font-weight:bold;">${tx.amount_str}</span>
                 </a>
               `;
-              // 作った1行を一覧エリアに追加
               sheetList.appendChild(div);
             });
           }
         })
         .catch(error => {
-          // 通信に失敗した場合のログ出力と表示
           console.error('Error:', error);
           sheetList.innerHTML = '<div style="text-align:center; color:#999; margin-top:30px; font-size:0.8rem;">登録された履歴はありません</div>';
         })
         .finally(() => {
-          // 通信が成功しても失敗しても、最後にモーダルをふわっと表示させる
-          backdrop.style.display = 'block'; // まず背景の黒幕を出す
-          setTimeout(() => sheet.classList.add('show'), 10); // わずかに遅らせて下からスライドさせる（CSS transition用）
+          backdrop.style.display = 'block';
+          setTimeout(() => sheet.classList.add('show'), 10);
         });
     });
   });
 
   // --- 3. モーダルを閉じるための関数 ---
   function closeSheet() {
-    sheet.classList.remove('show'); // スライドして下に隠す
-    // 隠れるアニメーション（0.3秒）が終わってから背景を消す
+    sheet.classList.remove('show');
     setTimeout(() => { backdrop.style.display = 'none'; }, 300);
   }
 
-  // キャンセルボタンが押された時
   document.getElementById('sheetCancel').addEventListener('click', closeSheet);
-  
-  // 背景の黒幕（暗い部分）が押された時も閉じる
   backdrop.addEventListener('click', closeSheet);
 </script>
 

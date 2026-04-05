@@ -101,6 +101,42 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context["income_map"] = {row["day"]: row["total"] for row in income_by_day}
         context["expense_map"] = {row["day"]: row["total"] for row in expense_by_day}
 
+        # その月の収支一覧を日付の新しい順に取得する
+        transactions = qs.order_by('-date', '-created_at').select_related('category')
+        context['transactions'] = transactions
+
+        # その月の収入・支出・合計を計算する
+        total_income = qs.filter(tx_type=Transaction.INCOME).aggregate(total=Sum('amount'))['total'] or 0
+        total_expense = qs.filter(tx_type=Transaction.EXPENSE).aggregate(total=Sum('amount'))['total'] or 0
+        total_balance = total_income - total_expense
+        context['total_income'] = total_income
+        context['total_expense'] = total_expense
+        context['total_balance'] = total_balance
+
+        # 収入カテゴリーで画像がアップロードされている日を取得する
+        income_image_days = qs.filter(
+            image__isnull=False,
+            tx_type=Transaction.INCOME
+        ).exclude(
+            image=''
+        ).annotate(
+            day=ExtractDay("date")
+        ).values_list("day", flat=True).distinct()
+
+        # 支出カテゴリーで画像がアップロードされている日を取得する
+        expense_image_days = qs.filter(
+            image__isnull=False,
+            tx_type=Transaction.EXPENSE
+        ).exclude(
+            image=''
+        ).annotate(
+            day=ExtractDay("date")
+        ).values_list("day", flat=True).distinct()
+
+        # それぞれセットとして保持する
+        context["income_image_days"] = set(income_image_days)
+        context["expense_image_days"] = set(expense_image_days) 
+
         return context
 
 

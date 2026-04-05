@@ -27,7 +27,7 @@ class TransactionForm(forms.ModelForm):
             'category': forms.Select(attrs={'class': 'form-select'}),
             
             # 金額：数値入力
-            'amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'required': False}),
             
             # メモ：テキスト入力
             'memo': forms.TextInput(attrs={'class': 'form-control'}),

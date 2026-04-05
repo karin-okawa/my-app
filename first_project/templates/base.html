@@ -53,13 +53,15 @@
     z-index: 11;
   }
 
-  /* 【メイン】カレンダーや入力画面が表示される中心エリア（ここだけスクロール） */
+  /* 【メイン】カレンダーや入力画面が表示される中心エリア */
   .app-main {
     flex-grow: 1;
-    overflow-y: auto;
+    overflow: hidden; /* overflow-y: autoからhiddenに変更 */
     padding: 16px;
     text-align: left;
-    background-color: #fff; /* メインエリアも白 */
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
   }
 
   /* 【フッター】一番下のメニューアイコンが並ぶエリア */
@@ -122,68 +124,77 @@
   .calendar-table th {
     text-align: center;
     font-size: 0.75rem;
-    padding: 8px 0;
+    padding: 1px 0;
     background-color: #fdfaf9;
-    border-bottom: 1px solid #d5c1b8 !important;
+    border: 1px solid #d5c1b8 !important;
     color: #5d4037;
   }
 
   /* 各日付のマス目 */
   .calendar-table td {
-    height: 80px;
+    height: 52px;
     border: 1px solid #d5c1b8 !important; 
     vertical-align: top;
-    padding: 4px;
+    padding: 0;
     position: relative;
     background-color: #fff; /* マス目の中は白 */
   }
 
   /* 日付の数字*/
   .day-number {
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     font-weight: bold;
     color: #5d4037;
     background: none !important; /* 背景を消す */
     border: none !important;     /* 枠線を消す */
     box-shadow: none !important; /* 影を消す */
     padding: 0;
-    margin: 2px 0 0 2px;
+    margin: 5px 0 0 1px;
     display: inline-block;
+    line-height; 1;
   }
 
   /* 今日の日付を強調する場合 */
   .today { background-color: #fff9e6 !important; }
 
-  /* 金額の表示スタイル */
+  /* 金額の表示スタイル（囲いなし） */
   .amount-badge {
     display: block;
-    text-align: center;
-    font-size: 0.65rem;
-    padding: 1px 2px;
-    border-radius: 4px;
-    margin-bottom: 2px;
+    text-align: right;
+    font-size: 0.65em;
     font-weight: bold;
+    line-height: 1.2;
   }
 
-  /* 支出 */
+  /* 支出（囲いなし・文字色のみ） */
   .amt-expense {
-    background-color: #f8d7da; /* 淡い赤の背景 */
-    color: #a24141;           /* 濃い赤の文字 */
+    color: #a24141;
   }
 
-  /* 収入*/
+  /* 収入（囲いなし・文字色のみ） */
   .amt-income {
-    background-color: #d1ecf1; /* 淡い青の背景 */
-    color: #2c587c;           /* 濃い青の文字 */
+    color: #2c587c;
   }
 
-  /* マス目の中の予定や金額を表示するエリア */
+  /* 各日付のマス目（高さを固定） */
+  .calendar-table td {
+    height: 52px;
+    border: 1px solid #d5c1b8 !important; 
+    vertical-align: top;
+    padding: 2px;
+    position: relative;
+    background-color: #fff;
+    overflow: hidden; /* マスからはみ出さないようにする */
+  }
+
+  /* マス目の中の予定や金額を表示するエリア（高さ固定） */
   .day-content {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
+    height: 34px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 0;
   }
   
   /* もし a タグや button タグが日付を囲っている場合の対策 */
@@ -328,9 +339,15 @@
           </a>
         </div>
       {% endif %}
+      <!-- 各ページ固有のパネル（電卓・カテゴリーなど）をここに表示する -->
+      {% block extra_panels %}{% endblock %}
 
-    </div></div><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
+    </div><!-- card-box閉じタグ -->
+    </div><!-- page-center閉じタグ -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+  
+    <script>
     // 1. 必要な要素（ボタンやメニュー本体）をJavaScriptで操作できるように取得
     const toggle = document.getElementById('drawerToggle');
     const drawer = document.getElementById('drawer');

@@ -1,7 +1,7 @@
 # ①DjangoのView関連
 
  # Djangoの「テンプレートを表示するだけ」のView（HTMLを返すため）
-from django.views.generic import TemplateView, ListView, CreateView, UpdateView, View
+from django.views.generic import TemplateView, ListView, CreateView, UpdateView, View, DeleteView
 
  # ログインしていないユーザーをログイン画面へ飛ばすMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -36,8 +36,8 @@ from django.db.models.functions import ExtractDay
  # households/models.py に定義してある Transaction モデルを使う
 from households.models import Transaction
 
- # form.pyからTransactionFormを読み込む
-from households.forms import TransactionForm
+ # home専用のTransactionFormを読み込む
+from .forms import TransactionForm
 
 
 
@@ -233,14 +233,15 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def form_valid(self, form):
-    # 保存時にログインユーザーを自動設定
-        form. instance. user = self. request. user
+        # デバッグ用：送信されたデータを確認する
+        print("POST data:", self.request.POST)
+        print("category:", form.cleaned_data.get('category'))
+        # 保存時にログインユーザーを自動設定
+        form.instance.user = self.request.user
         return super().form_valid(form)
-            
+                
         
-
- 
-    
+        
 # ============================
 # 収支編集ページ
 # ============================
@@ -253,3 +254,27 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     def get_queryset(self):
     # 自分のデータだけを対象にする
         return Transaction.objects.filter(user=self.request.user)
+    
+    def form_valid(self, form):
+        # デバッグ用：送信されたデータを確認する
+        print("POST data:", self.request.POST)
+        print("category:", form.cleaned_data.get('category'))
+        return super().form_valid(form)
+    
+
+# ============================
+# 収支削除処理
+# ============================
+class TransactionDeleteView(LoginRequiredMixin, DeleteView):
+    # 収支を削除する
+    model = Transaction
+    # 削除後はホーム画面へ戻る
+    success_url = reverse_lazy('home:home')
+
+    def get_queryset(self):
+        # 自分のデータだけを削除対象にする
+        return Transaction.objects.filter(user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        # GETリクエストでも即削除してリダイレクトする（確認画面なし）
+        return self.delete(request, *args, **kwargs)

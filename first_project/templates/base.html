@@ -142,16 +142,16 @@
 
   /* 日付の数字*/
   .day-number {
-    font-size: 0.6rem;
+    font-size: 0.5rem;
     font-weight: bold;
     color: #5d4037;
-    background: none !important; /* 背景を消す */
-    border: none !important;     /* 枠線を消す */
-    box-shadow: none !important; /* 影を消す */
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
     padding: 0;
-    margin: 5px 0 0 1px;
-    display: inline-block;
-    line-height; 1;
+    margin: 1px 0 0 1px;
+    display: block;
+    line-height: 1;
   }
 
   /* 今日の日付を強調する場合 */
@@ -161,7 +161,7 @@
   .amount-badge {
     display: block;
     text-align: right;
-    font-size: 0.65em;
+    font-size: 1.2em;
     font-weight: bold;
     line-height: 1.2;
   }
@@ -178,13 +178,11 @@
 
   /* 各日付のマス目（高さを固定） */
   .calendar-table td {
-    height: 52px;
-    border: 1px solid #d5c1b8 !important; 
-    vertical-align: top;
-    padding: 2px;
-    position: relative;
-    background-color: #fff;
-    overflow: hidden; /* マスからはみ出さないようにする */
+    height: 35px !important;
+    max-height: 35px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    vertical-align: top !important;
   }
 
   /* マス目の中の予定や金額を表示するエリア（高さ固定） */
@@ -209,62 +207,67 @@
   }
   
   /* モーダルの背景（暗幕） */
-.sheet-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 2000;
-  display: none; /* 最初は隠す */
-}
+  .sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    display: none; /* 最初は隠す */
+  }
 
-/* 下から出るモーダル本体 */
-.day-sheet {
-  position: absolute;
-  bottom: -100%; /* 最初は画面の下に隠す */
-  left: 0;
-  width: 100%;
-  height: 40%; /* 画面の約3分の1強 */
-  background: #fff;
-  border-radius: 20px 20px 0 0;
-  z-index: 2001;
-  transition: bottom 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-}
+  /* 下から出るモーダル本体 */
+  .day-sheet {
+    position: absolute;
+    bottom: -100%; /* 最初は画面の下に隠す */
+    left: 0;
+    width: 100%;
+    height: 40%; /* 画面の約3分の1強 */
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    z-index: 2001;
+    transition: bottom 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
 
-/* モーダルが表示された時の状態 */
-.day-sheet.show { bottom: 0; }
+  /* モーダルが表示された時の状態 */
+  .day-sheet.show { bottom: 0; }
 
-/* 日付とボタンのエリア */
-.sheet-header { text-align: center; margin-bottom: 15px; }
-.sheet-date { font-weight: bold; font-size: 1.1rem; color: #5d4037; }
+  /* 日付とボタンのエリア */
+  .sheet-header { text-align: center; margin-bottom: 15px; }
+  .sheet-date { font-weight: bold; font-size: 1.1rem; color: #5d4037; }
 
-/* スクロール可能な一覧エリア */
-.sheet-list {
-  flex-grow: 1;
-  overflow-y: auto; /* ここでスクロールを有効にする */
-  margin-bottom: 15px;
-}
+  /* スクロール可能な一覧エリア */
+  .sheet-list {
+    flex-grow: 1;
+    overflow-y: auto; /* ここでスクロールを有効にする */
+    margin-bottom: 15px;
+  }
 
-/* 収支一件ずつのデザイン */
-.sheet-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-}
+  /* 収支一件ずつのデザイン */
+  .sheet-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+  }
 
-/* キャンセルボタン */
-.sheet-cancel {
-  width: 100%;
-  padding: 10px;
-  background: #f8f9fa;
-  border: none;
-  border-radius: 10px;
-  color: #666;
-}
+  /* キャンセルボタン */
+  .sheet-cancel {
+    width: 100%;
+    padding: 10px;
+    background: #f8f9fa;
+    border: none;
+    border-radius: 10px;
+    color: #666;
+  }
+
+  /* 電卓パネルが表示された時の状態 */
+  .calculator-panel.show {
+    bottom: 0 !important;
+  }
 
 </style>  
 </head>

@@ -136,3 +136,7 @@ LOGIN_REDIRECT_URL = "home:home"
 
 # パスワードリセットリンクの有効期限を秒単位で設定（30分 = 1800秒）
 PASSWORD_RESET_TIMEOUT = 1800
+
+# メディアファイル（アップロードされた画像など）の設定
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

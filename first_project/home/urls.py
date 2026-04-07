@@ -5,6 +5,7 @@ from .views import (
     DayTransactionJsonView,
     TransactionCreateView,
     TransactionUpdateView,
+    TransactionDeleteView,
 )
 
 app_name = 'home'
@@ -27,4 +28,6 @@ urlpatterns = [
     # 編集画面
     path('update/<int:pk>/', TransactionUpdateView.as_view(), name='transaction_update'),
 
+    # 収支削除URL
+    path('delete/<int:pk>/', TransactionDeleteView.as_view(), name='transaction_delete'),
 ]

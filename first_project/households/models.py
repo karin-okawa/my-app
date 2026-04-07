@@ -54,7 +54,8 @@ class Transaction(models.Model):
         verbose_name="カテゴリ"
     )
 
-    amount = models.PositiveIntegerField()
+    # null=True, blank=Trueで金額なしでも保存できるようにする
+    amount = models.PositiveIntegerField(null=True, blank=True)
     memo = models.CharField(max_length=200, blank=True)
     image = models.ImageField(upload_to="receipts/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -16,7 +16,7 @@
   .custom-phone-frame {
     max-width: 500px;
     margin: 0 auto;
-    height: 100vh;
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     background-color: #fff;
@@ -99,6 +99,24 @@
   }
 </style>
 
+{% if form.instance.pk %}
+<div style="padding: 12px 16px 0 16px;">
+  <button type="button" onclick="history.back()" style="
+    color: #888;
+    background: none;
+    border: 2px solid #888;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+  ">✕</button>
+</div>
+{% endif %}
+
 <div class="custom-phone-frame">
   <div class="p-4">
     <form method="post" enctype="multipart/form-data" id="main-form" novalidate>
@@ -137,7 +155,13 @@
             選択してください
           </div>
           <input type="hidden" name="category" id="category-hidden" value="{{ form.category.value|default:'' }}">
-          <div style="display: none;">{{ form.category }}</div>
+          <div style="display: none;">
+            <select id="id_category" name="_category_ref">
+              {% for choice in form.category.field.choices %}
+              <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
 
         <!-- メモ入力行 -->
@@ -171,10 +195,16 @@
         </div>
       </div>
 
-      <!-- 保存・キャンセルボタン -->
+      <!-- 保存・削除ボタン -->
       <div class="d-grid gap-2 mt-5">
         <button type="submit" class="btn btn-primary py-2" style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;">保存する</button>
-        <a href="{% url 'households:list' %}" class="btn btn-link btn-sm text-muted text-decoration-none text-center">キャンセル</a>
+        {% if form.instance.pk %}
+        <!-- 編集時のみ削除ボタンを表示する -->
+        <button type="button" id="delete-btn" class="btn py-2" 
+          style="background-color: #e74c3c; color: white; border: none; border-radius: 10px; font-weight: bold;">
+          この収支を削除
+        </button>
+        {% endif %}
       </div>
     </form>
   </div>
@@ -185,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const amountInput = document.getElementById('id_amount');
   const calcPanel = document.getElementById('calculator-panel');
   const calcDisplay = document.getElementById('calc-display');
-  const catSelect = document.querySelector('select[name="category"]');
+  const catSelect = document.querySelector('select[name="_category_ref"]');
   const categoryPanel = document.getElementById('category-panel');
   const categoryRow = document.getElementById('category-row');
   const categoryDisplay = document.getElementById('category-display');
@@ -382,22 +412,29 @@ const confirmBtn = document.getElementById('image-confirm-btn');
 if (confirmBtn) {
   confirmBtn.addEventListener('click', function() {
     {% if form.instance.pk and form.instance.image %}
+    
     // モーダルオーバーレイを作成する
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+    // card-boxを基準に配置するためpositionをabsoluteにする
+    overlay.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
     
     // 画像を作成する
     const img = document.createElement('img');
     img.src = '{{ form.instance.image.url }}';
-    img.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 8px; object-fit: contain;';
+    img.style.cssText = 'max-width: 90%; max-height: 80%; border-radius: 8px; object-fit: contain;';
     
     // タップしたらモーダルを閉じる
     overlay.addEventListener('click', function() {
       overlay.remove();
     });
     
+    // 先に画像をoverlayに追加する
     overlay.appendChild(img);
-    document.body.appendChild(overlay);
+
+    // その後card-boxに追加してスマホ枠内に収める
+    const cardBox = document.querySelector('.card-box');
+    cardBox.appendChild(overlay);
+    
     {% endif %}
   });
 }
@@ -457,9 +494,39 @@ document.getElementById('main-form').addEventListener('submit', function(e) {
   }
 });
 
-</script>
-{% endblock %}
+// 削除ボタンを押した時に確認モーダルを表示する
+const deleteBtn = document.getElementById('delete-btn');
 
+if (deleteBtn) {
+  deleteBtn.addEventListener('click', function() {
+    // モーダルをJavaScriptで動的に作成してcard-boxに追加する
+    const cardBox = document.querySelector('.card-box');
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
+    
+    modal.innerHTML = `
+      <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+        <p style="font-weight: bold; color: #333; margin-bottom: 20px;">削除してよろしいですか？</p>
+        <div style="display: flex; gap: 12px;">
+          <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 10px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
+          <a href="/home/delete/{{ form.instance.pk }}/" style="flex: 1; background-color: #e74c3c; ...">削除</a>
+        </div>
+      </div>
+    `;
+    
+    // キャンセルボタンでモーダルを閉じる
+    modal.querySelector('#modal-cancel-btn').addEventListener('click', function() {
+      modal.remove();
+    });
+    
+    cardBox.appendChild(modal);
+  });
+}
+
+</script>
+
+{% endblock %}
 {% block extra_panels %}
 <!-- 電卓パネル（card-box内に配置） -->
 <div id="calculator-panel" class="calculator-panel" style="
@@ -521,4 +588,7 @@ document.getElementById('main-form').addEventListener('submit', function(e) {
   </div>
   <div id="category-list" style="overflow-y: auto; flex-grow: 1; padding: 8px 0;"></div>
 </div>
+
+
+
 {% endblock %}

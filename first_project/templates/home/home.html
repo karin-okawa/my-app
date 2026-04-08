@@ -102,7 +102,15 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; min-height: 10px; line-height: 1;">
                   <!-- 左端：収入の写真マーク -->
                   <span style="font-size: 0.6rem; color: #2c587c;">
-                    {% if day in income_image_days %}<i class="bi bi-image"></i>{% endif %}
+                    {% if day in income_image_days %}
+                      {% if income_map|dict_get:day %}
+                        <!-- 金額と画像の両方がある場合は絵のアイコン -->
+                        <i class="bi bi-image"></i>
+                      {% else %}
+                        <!-- 画像のみの場合はびっくりマーク -->
+                        <i class="bi bi-exclamation-circle"></i>
+                      {% endif %}
+                    {% endif %}
                   </span>
                   <!-- 右端：収入金額 -->
                   <span class="amount-badge amt-income">
@@ -114,7 +122,15 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; min-height: 10px; line-height: 1;">
                   <!-- 左端：支出の写真マーク -->
                   <span style="font-size: 0.6rem; color: #a24141;">
-                    {% if day in expense_image_days %}<i class="bi bi-image"></i>{% endif %}
+                    {% if day in expense_image_days %}
+                      {% if expense_map|dict_get:day %}
+                        <!-- 金額と画像の両方がある場合は絵のアイコン -->
+                        <i class="bi bi-image"></i>
+                      {% else %}
+                        <!-- 画像のみの場合はびっくりマーク -->
+                        <i class="bi bi-exclamation-circle"></i>
+                      {% endif %}
+                    {% endif %}
                   </span>
                   <!-- 右端：支出金額 -->
                   <span class="amount-badge amt-expense">
@@ -175,11 +191,19 @@
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
         {% if tx.image %}
-        <i class="bi bi-image" style="font-size: 0.75rem; {% if tx.tx_type == 'income' %}color: #2c587c;{% else %}color: #a24141;{% endif %}"></i>
+          {% if tx.amount %}
+            <!-- 金額と画像の両方がある場合は絵のアイコン -->
+            <i class="bi bi-image" style="font-size: 0.75rem; {% if tx.tx_type == 'income' %}color: #2c587c;{% else %}color: #a24141;{% endif %}"></i>
+          {% else %}
+            <!-- 画像のみの場合はびっくりマーク -->
+            <i class="bi bi-exclamation-circle" style="font-size: 0.75rem; {% if tx.tx_type == 'income' %}color: #2c587c;{% else %}color: #a24141;{% endif %}"></i>
+          {% endif %}
         {% endif %}
+        {% if tx.amount %}
         <span style="font-size: 0.85rem; font-weight: bold; {% if tx.tx_type == 'income' %}color: #2c587c;{% else %}color: #a24141;{% endif %}">
-          {% if tx.amount %}{{ tx.amount|floatformat:0 }}円{% else %}ー{% endif %}
+          {{ tx.amount|floatformat:0 }}円
         </span>
+        {% endif %}
       </div>
     </a>
     {% endfor %}
@@ -239,10 +263,20 @@
               const div = document.createElement('div');
               div.className = 'sheet-item';
               const colorStyle = tx.is_income ? 'color: #2c587c;' : 'color: #a24141;';
+              // 画像アイコンを決定する（画像あり&金額あり→絵、画像あり&金額なし→びっくり、画像なし→なし）
+              const iconHtml = tx.has_image
+                ? (tx.has_amount
+                    ? `<i class="bi bi-image" style="font-size: 0.85rem; ${colorStyle}"></i>`
+                    : `<i class="bi bi-exclamation-circle" style="font-size: 0.85rem; ${colorStyle}"></i>`)
+                : '';
+
               div.innerHTML = `
-                <a href="/home/update/${tx.id}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%;">
+                <a href="/home/update/${tx.id}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%; align-items: center;">
                   <span style="color:#555;">${tx.memo || '（メモなし）'}</span>
-                  <span style="${colorStyle} font-weight:bold;">${tx.amount_str}</span>
+                  <span style="display: flex; align-items: center; gap: 4px;">
+                    ${iconHtml}
+                    <span style="${colorStyle} font-weight:bold;">${tx.amount_str}</span>
+                  </span>
                 </a>
               `;
               sheetList.appendChild(div);

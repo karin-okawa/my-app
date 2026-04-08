@@ -197,15 +197,19 @@ class DayTransactionJsonView(LoginRequiredMixin, View):
         transactions = Transaction.objects.filter(
             user=request.user, 
             date=target_date
-        ).values('id', 'tx_type', 'amount', 'memo').order_by('-id') # idの大きい順＝新しい順
+        ).values('id', 'tx_type', 'amount', 'memo', 'image').order_by('-id') # idの大きい順＝新しい順
         # リストを作成
         transactions_data = []
         for tx in transactions:
-            transactions_data.append({
+           transactions_data.append({
                 'id': tx['id'], 
-                'amount_str': f"{tx['amount']}円", # 金額だけにする
-                'is_income': tx['tx_type'] == Transaction.INCOME, # 判定用にフラグを持たせる
-                'memo': tx['memo']
+                'amount_str': f"{tx['amount']}円" if tx['amount'] else '',
+                'is_income': tx['tx_type'] == Transaction.INCOME,
+                'memo': tx['memo'],
+                # 画像があるかどうかのフラグを追加する
+                'has_image': bool(tx['image']),
+                # 金額があるかどうかのフラグを追加する
+                'has_amount': bool(tx['amount']),
             })
         
         # 辞書形式にして 'transactions' というキーで返す

@@ -7,6 +7,8 @@ from django.contrib.auth import login, logout
 from .forms import RegistForm, UserLoginForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import User
+from django.http import JsonResponse
+
 
 # ユーザー登録
 class RegistUserView(CreateView):
@@ -60,3 +62,25 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self):
         # URLのpkではなく、現在ログインしているユーザー自身を編集対象にする
         return self.request.user
+
+
+# プロフィール画像更新
+class AvatarUpdateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        # アップロードされた画像をユーザーのavatarに保存する
+        user = request.user
+        if 'avatar' in request.FILES:
+            user.avatar = request.FILES['avatar']
+            user.save()
+        return redirect('accounts:mypage')
+
+# ニックネーム更新
+class NicknameUpdateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        # 送信されたニックネームを保存する
+        user = request.user
+        username = request.POST.get('username', '').strip()
+        if username:
+            user.username = username
+            user.save()
+        return redirect('accounts:mypage')

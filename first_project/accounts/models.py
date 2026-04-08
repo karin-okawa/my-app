@@ -30,17 +30,18 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=25)
     email = models.EmailField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
-    # 管理画面に入れるかどうか
     is_staff = models.BooleanField(default=False)
-    
-    # ログインIDとしてユーザー名ではなくメールアドレスを設定してる
+    # プロフィール画像
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    # リマインダー時間
+    reminder_time = models.TimeField(null=True, blank=True)
+    # 作成日時・更新日時
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
-    
-    # User.objectsを使った時にUserManagerが動く設定
     objects = UserManager()
-    
-    # get_absolute_urlがユーザー登録後などに遷移するurlを渡す
+
     def get_absolute_url(self):
         return reverse_lazy('home:home')
-    

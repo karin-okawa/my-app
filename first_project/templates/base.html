@@ -279,7 +279,7 @@
     
     <div class="card-box">
 
-      {% if user.is_authenticated %}
+      {% if user.is_authenticated and not hide_nav %}
       
         <div id="drawerOverlay"></div>
 
@@ -320,7 +320,8 @@
         {% block content %}{% endblock %}
       </div>
 
-      {% if user.is_authenticated %}
+      {% if user.is_authenticated and not hide_nav %}
+      
         <div class="app-footer" style="border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 8px 0; background: #fff; flex-shrink: 0;">
           <a href="{% url 'home:home' %}" class="nav-item" style="text-decoration: none; color: #333; text-align: center;">
             <i class="bi bi-calendar3 d-block"></i>

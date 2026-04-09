@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .update-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px;
+  }
+</style>
+
+<div class="update-container">
+
+  <!-- 戻るボタン -->
+  <div style="margin-bottom: 8px;">
+    <a href="{% url 'accounts:mypage' %}" style="color: #888; text-decoration: none; font-size: 0.9rem;">
+      ← 戻る
+    </a>
+  </div>
+
+  <!-- タイトル -->
+  <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 24px;">メールアドレスの変更</h2>
+
+  <!-- 現在のメールアドレス -->
+  <div style="margin-bottom: 20px;">
+    <div style="font-size: 0.85rem; color: #888; font-weight: bold; margin-bottom: 4px;">現在のメールアドレス：</div>
+    <div style="font-size: 0.95rem; color: #5d4037; font-weight: bold;">{{ user_obj.email }}</div>
+  </div>
+
+  <!-- エラーメッセージ -->
+  {% if error %}
+  <div style="background: #fde8e8; border: 1px solid #e74c3c; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.85rem; color: #e74c3c;">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- 新しいメールアドレス -->
+    <div style="margin-bottom: 16px;">
+      <label style="font-size: 0.85rem; color: #888; font-weight: bold; display: block; margin-bottom: 6px;">新しいメールアドレス：</label>
+      <input type="email" name="email" 
+             style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;">
+    </div>
+
+    <!-- パスワード確認 -->
+    <div style="margin-bottom: 24px;">
+      <label style="font-size: 0.85rem; color: #888; font-weight: bold; display: block; margin-bottom: 6px;">パスワード：</label>
+      <input type="password" name="password"
+             style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;">
+    </div>
+
+    <button type="submit" class="btn w-100 py-2"
+            style="background-color: #e8d5c0; color: #5d4037; border-radius: 10px; font-weight: bold; border: none;">
+      メールアドレスを変更する
+    </button>
+
+    <!-- 注意書き -->
+    <p style="font-size: 0.75rem; color: #999; margin-top: 12px; text-align: center;">
+      ※変更後は確認メールが送信されます。<br>リンクをクリックすることで変更が完了します。
+    </p>
+  </form>
+
+</div>
+{% endblock %}

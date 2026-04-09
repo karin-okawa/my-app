@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: 32px 16px; text-align: center;">
+
+  <h2 style="font-size: 1.1rem; font-weight: bold; color: #e74c3c; margin-bottom: 24px;">エラー</h2>
+
+  <p style="font-size: 0.9rem; color: #555; margin-bottom: 24px;">{{ error }}</p>
+
+  <a href="{% url 'accounts:email_update' %}" style="color: #9c6d5c; text-decoration: underline; font-size: 0.9rem;">
+    もう一度試す
+  </a>
+
+</div>
+{% endblock %}

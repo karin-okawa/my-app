@@ -4,7 +4,9 @@ from .views import (
     RegistUserView, UserLoginView, UserLogoutView, 
     MyPageView, LogoutDoneView, UserUpdateView, 
     AvatarUpdateView, NicknameUpdateView,
+    EmailUpdateView, EmailUpdateDoneView, EmailConfirmView,
 )
+from django.contrib.auth.views import PasswordChangeView, PasswordChangeDoneView
 
 app_name = 'accounts'
 
@@ -59,4 +61,20 @@ urlpatterns = [
     path('avatar/update/', AvatarUpdateView.as_view(), name='avatar_update'),
     
     path('nickname/update/', NicknameUpdateView.as_view(), name='nickname_update'),
+
+    path('email/update/', EmailUpdateView.as_view(), name='email_update'),
+    
+    path('email/update/done/', EmailUpdateDoneView.as_view(), name='email_update_done'),
+    
+    path('email/confirm/<str:token>/', EmailConfirmView.as_view(), name='email_confirm'),
+
+    path('password/change/', PasswordChangeView.as_view(
+        template_name='accounts/password_change.html',
+        success_url='/accounts/password/change/done/',
+    ), name='password_change'),
+
+    path('password/change/done/', PasswordChangeDoneView.as_view(
+        template_name='accounts/password_change_done.html',
+        extra_context={'hide_nav': True},
+    ), name='password_change_done'),
 ]

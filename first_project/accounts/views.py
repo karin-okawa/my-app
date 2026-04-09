@@ -9,6 +9,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import User
 from django.http import JsonResponse
 
+from django.core.mail import send_mail
+from django.contrib.auth.hashers import check_password
+import uuid
+from django.utils import timezone
+from datetime import timedelta
+
 
 # ユーザー登録
 class RegistUserView(CreateView):
@@ -62,6 +68,13 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self):
         # URLのpkではなく、現在ログインしているユーザー自身を編集対象にする
         return self.request.user
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # テンプレートでuser_objとして参照できるようにする
+        context['user_obj'] = self.request.user
+        return context
+
 
 
 # プロフィール画像更新
@@ -83,4 +96,96 @@ class NicknameUpdateView(LoginRequiredMixin, View):
         if username:
             user.username = username
             user.save()
+        return redirect('accounts:mypage')
+    
+    
+
+# メールアドレス変更画面
+class EmailUpdateView(LoginRequiredMixin, View):
+    template_name = 'accounts/email_update.html'
+
+    def get(self, request, *args, **kwargs):
+        # GETリクエスト時はフォーム画面を表示する
+        return render(request, self.template_name, {'user_obj': request.user})
+
+    def post(self, request, *args, **kwargs):
+        new_email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        # パスワードの確認
+        if not request.user.check_password(password):
+            return render(request, self.template_name, {
+                'user_obj': request.user,
+                'error': 'パスワードが正しくありません'
+            })
+
+        # メールアドレスの重複確認
+        if User.objects.filter(email=new_email).exclude(pk=request.user.pk).exists():
+            return render(request, self.template_name, {
+                'user_obj': request.user,
+                'error': 'このメールアドレスはすでに使用されています'
+            })
+
+        # 確認トークンを生成してセッションに保存する
+        token = str(uuid.uuid4())
+        request.session['email_change_token'] = token
+        request.session['email_change_new'] = new_email
+        request.session['email_change_expires'] = str(timezone.now() + timedelta(minutes=30))
+
+        # 確認メールを送信する
+        confirm_url = request.build_absolute_uri(f'/accounts/email/confirm/{token}/')
+        send_mail(
+            subject='メールアドレス変更の確認',
+            message=f'以下のリンクをクリックしてメールアドレスの変更を完了してください。\n\n{confirm_url}\n\n※このリンクの有効期限は30分です。',
+            from_email=None,
+            recipient_list=[new_email],
+        )
+
+        return redirect('accounts:email_update_done')
+
+
+# メールアドレス変更後の確認画面
+class EmailUpdateDoneView(LoginRequiredMixin, TemplateView):
+    template_name = 'accounts/email_update_done.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 送信先メールアドレスをテンプレートに渡す
+        context['new_email'] = self.request.session.get('email_change_new', '')
+        # ヘッダー・フッターを非表示にする
+        context['hide_nav'] = True
+        return context
+
+
+# メールアドレス変更確認リンクの処理
+class EmailConfirmView(LoginRequiredMixin, View):
+    def get(self, request, token, *args, **kwargs):
+        session_token = request.session.get('email_change_token')
+        new_email = request.session.get('email_change_new')
+        expires_str = request.session.get('email_change_expires')
+
+        # トークンの検証
+        if not session_token or session_token != token:
+            return render(request, 'accounts/email_confirm_error.html', {
+                'error': 'リンクが無効です',
+                'hide_nav': True,  # ヘッダー・フッターを非表示にする
+            })
+
+        # 有効期限の確認
+        if timezone.now() > expires:
+            return render(request, 'accounts/email_confirm_error.html', {
+                'error': 'リンクの有効期限が切れています',
+                'hide_nav': True,  # ヘッダー・フッターを非表示にする
+            })
+                
+
+        # メールアドレスを更新する
+        request.user.email = new_email
+        request.user.save()
+
+        # セッションをクリアする
+        del request.session['email_change_token']
+        del request.session['email_change_new']
+        del request.session['email_change_expires']
+
         return redirect('accounts:mypage')

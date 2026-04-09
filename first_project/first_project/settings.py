@@ -140,3 +140,6 @@ PASSWORD_RESET_TIMEOUT = 1800
 # メディアファイル（アップロードされた画像など）の設定
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# 開発環境用メール設定（コンソールに出力するだけで実際には送信しない）
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

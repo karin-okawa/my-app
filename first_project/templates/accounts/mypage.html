@@ -96,12 +96,12 @@
       <div class="info-label">メールアドレス：</div>
       <div class="info-value">{{ user_obj.email }}</div>
     </div>
-    <a href="{% url 'accounts:user_update' %}" class="edit-link">変更する</a>
+    <a href="{% url 'accounts:email_update' %}" class="edit-link">変更する</a>
   </div>
 
   <!-- パスワード変更ボタン -->
   <div style="margin-top: 32px;">
-    <a href="{% url 'accounts:password_reset' %}" class="btn w-100 py-2" 
+    <a href="{% url 'accounts:password_change' %}" class="btn w-100 py-2" 
        style="background-color: #e8d5c0; color: #5d4037; border-radius: 10px; font-weight: bold; text-decoration: none; display: block; text-align: center;">
       パスワードを変更する
     </a>

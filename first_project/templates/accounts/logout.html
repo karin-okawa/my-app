@@ -1,12 +1,13 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-{% with hide_nav=True %}
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">ログアウトしました。</button>
+<div style="padding: 32px 16px; text-align: center;">
 
-</form>
-{% endwith %}
+  <p style="font-size: 0.9rem; color: #555; margin-bottom: 24px;">ログアウトしました。</p>
+
+  <a href="{% url 'accounts:login' %}" style="color: #9c6d5c; text-decoration: underline; font-size: 0.9rem;">
+    ログイン画面へ
+  </a>
+
+</div>
 {% endblock %}

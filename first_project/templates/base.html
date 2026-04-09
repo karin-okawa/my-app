@@ -303,17 +303,22 @@
               <i class="bi bi-list" style="font-size: 1.5rem;"></i>
             </button>
           </div>
-          
           <div style="border-top: 1px solid #eee; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; background: #f9f9f9;">
             <div style="font-size: 0.8rem; font-weight: bold;">
-              <i class="bi bi-book" style="margin-right: 4px;"></i>自分用
+              <i class="bi bi-book" style="margin-right: 4px;"></i>
+              <!-- 現在選択中の家計簿名を表示する -->
+              {{ current_household.name|default:'家計簿なし' }}
             </div>
             <div style="display: flex; gap: 12px;">
-              <a href="#" style="color: #333;"><i class="bi bi-arrow-left-right"></i></a>
+              <!-- 家計簿切り替えボタン -->
+              <button type="button" id="household-switch-btn" style="color: #333; background: none; border: none; padding: 0; cursor: pointer;">
+                <i class="bi bi-arrow-left-right"></i>
+              </button>
               <a href="#" style="color: #333;"><i class="bi bi-people"></i></a>
             </div>
           </div>
         </header>
+
       {% endif %}
 
       <div class="app-main">
@@ -341,6 +346,132 @@
           </a>
         </div>
       {% endif %}
+
+      <!-- 家計簿切り替えモーダル -->
+      {% if user.is_authenticated %}
+      <div id="household-modal" style="
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 3000;
+        align-items: flex-start;
+        justify-content: center;
+        border-radius: 20px;
+        padding-top: 80px;
+      ">
+        <div style="background: #fff; border-radius: 16px; padding: 20px; width: 85%; max-height: 70%; overflow-y: auto;">
+          
+          <!-- モーダルヘッダー -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <span style="font-weight: bold; color: #5d4037; font-size: 1rem;">家計簿を選択</span>
+            <button type="button" id="household-modal-close" style="background: none; border: none; font-size: 1.2rem; color: #888; cursor: pointer;">✕</button>
+          </div>
+
+          <!-- 家計簿一覧 -->
+          <div id="household-list" style="margin-bottom: 16px;">
+            {% for uha in user_households %}
+            <!-- 1行分のコンテナ -->
+            <div style="display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; gap: 8px;">
+              <!-- 家計簿名（タップで切り替え） -->
+              <form method="post" action="{% url 'home:household_switch' %}" style="flex: 1;">
+                {% csrf_token %}
+                <input type="hidden" name="household_id" value="{{ uha.household_account.id }}">
+                <button type="submit" style="background: none; border: none; font-size: 0.9rem; font-weight: bold; color: {% if current_household.id == uha.household_account.id %}#9c6d5c{% else %}#5d4037{% endif %}; cursor: pointer; text-align: left; padding: 0; width: auto; white-space: nowrap;">
+                  {% if current_household.id == uha.household_account.id %}<i class="bi bi-pin-fill" style="color: #9c6d5c; margin-right: 4px;"></i>{% endif %}{{ uha.household_account.name }}
+                </button>
+              </form>
+              <!-- 編集ボタン -->
+              <button type="button" class="household-edit-btn" 
+                data-id="{{ uha.household_account.id }}"
+                data-name="{{ uha.household_account.name }}"
+                style="background: none; border: none; color: #9c6d5c; cursor: pointer;">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <!-- 削除ボタン -->
+              <button type="button" class="household-delete-btn"
+                data-id="{{ uha.household_account.id }}"
+                data-name="{{ uha.household_account.name }}"
+                style="background: none; border: none; color: #e74c3c; cursor: pointer;">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div><!-- 1行分のコンテナ閉じタグ -->
+            {% empty %}
+            <div style="text-align: center; color: #999; padding: 20px;">家計簿がありません</div>
+            {% endfor %}
+          </div><!-- household-list閉じタグ -->
+
+
+          <!-- 新規作成フォーム -->
+          <form method="post" action="{% url 'home:household_create' %}">
+            {% csrf_token %}
+            <div style="display: flex; gap: 8px;">
+              <input type="text" name="name" placeholder="新しい家計簿名" 
+                    style="flex-grow: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
+              <button type="submit" class="btn" 
+                      style="background-color: #9c6d5c; color: white; border-radius: 8px; padding: 8px 16px; font-weight: bold; border: none;">
+                作成
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div><!-- household-modal閉じタグ -->
+
+      <!-- 家計簿削除確認モーダル -->
+        <div id="household-delete-modal" style="
+          display: none;
+          position: absolute;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: 3002;
+          align-items: center;
+          justify-content: center;
+          border-radius: 20px;
+        ">
+          <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+            <p style="font-weight: bold; color: #333; margin-bottom: 20px;" id="household-delete-message">削除しますか？</p>
+            <div style="display: flex; gap: 12px;">
+              <form method="post" action="{% url 'home:household_delete' %}" style="flex: 1;">
+                {% csrf_token %}
+                <input type="hidden" name="household_id" id="delete-household-id">
+                <button type="submit" class="btn w-100" style="background-color: #e74c3c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">削除</button>
+              </form>
+              <button type="button" id="household-delete-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">キャンセル</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+      <!-- 家計簿名編集モーダル -->
+      <div id="household-edit-modal" style="
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 3001;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+      ">
+        <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+          <p style="font-weight: bold; color: #5d4037; margin-bottom: 16px;">家計簿名を編集してください</p>
+          <form method="post" action="{% url 'home:household_update' %}">
+            {% csrf_token %}
+            <input type="hidden" name="household_id" id="edit-household-id">
+            <input type="text" name="name" id="edit-household-name"
+                  style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; box-sizing: border-box;">
+            <div style="display: flex; gap: 12px;">
+              <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">保存</button>
+              <button type="button" id="household-edit-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">キャンセル</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {% endif %}
+
       <!-- 各ページ固有のパネル（電卓・カテゴリーなど）をここに表示する -->
       {% block extra_panels %}{% endblock %}
 
@@ -350,28 +481,90 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
   
     <script>
-    // 1. 必要な要素（ボタンやメニュー本体）をJavaScriptで操作できるように取得
+    // 必要な要素（ボタンやメニュー本体）をJavaScriptで操作できるように取得
     const toggle = document.getElementById('drawerToggle');
     const drawer = document.getElementById('drawer');
     const overlay = document.getElementById('drawerOverlay');
     const closeBtn = document.getElementById('drawerClose');
 
-    // 2. メニューを開く関数（右側から0の位置までスライドさせ、背景を出す）
+    // メニューを開く関数（右側から0の位置までスライドさせ、背景を出す）
     function openDrawer() {
       drawer.style.right = '0';
       overlay.style.display = 'block';
     }
 
-    // 3. メニューを閉じる関数（右側-70%の位置に隠し、背景を消す）
+    // メニューを閉じる関数（右側-70%の位置に隠し、背景を消す）
     function closeDrawer() {
       drawer.style.right = '-70%';
       overlay.style.display = 'none';
     }
 
-    // 4. 「いつ」その関数を実行するかを指定（クリックされた時）
+    // 「いつ」その関数を実行するかを指定（クリックされた時）
     toggle.addEventListener('click', openDrawer);  // 三本線を押した時
     closeBtn.addEventListener('click', closeDrawer); // 「×」を押した時
     overlay.addEventListener('click', closeDrawer);  // 暗い背景部分を押した時
-  </script>
-</body>
-</html>
+  
+    
+    // 家計簿切り替えモーダルの開閉
+    const householdSwitchBtn = document.getElementById('household-switch-btn');
+    const householdModal = document.getElementById('household-modal');
+    const householdModalClose = document.getElementById('household-modal-close');
+
+    if (householdSwitchBtn) {
+      householdSwitchBtn.addEventListener('click', function() {
+        householdModal.style.display = 'flex';
+      });
+    }
+
+    if (householdModalClose) {
+      householdModalClose.addEventListener('click', function() {
+        householdModal.style.display = 'none';
+      });
+    }
+
+    // 家計簿名編集モーダルの開閉
+    const householdEditModal = document.getElementById('household-edit-modal');
+    const householdEditModalClose = document.getElementById('household-edit-modal-close');
+
+    document.querySelectorAll('.household-edit-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.getElementById('edit-household-id').value = this.dataset.id;
+        document.getElementById('edit-household-name').value = this.dataset.name;
+        householdModal.style.display = 'none';
+        // card-boxに移動してスマホ枠内に収める
+        const cardBox = document.querySelector('.card-box');
+        cardBox.appendChild(householdEditModal);
+        householdEditModal.style.display = 'flex';
+      });
+    });
+
+    if (householdEditModalClose) {
+      householdEditModalClose.addEventListener('click', function() {
+        householdEditModal.style.display = 'none';
+        householdModal.style.display = 'flex';
+      });
+    }
+      
+    // 家計簿削除確認モーダルの開閉
+    const householdDeleteModal = document.getElementById('household-delete-modal');
+    const householdDeleteModalClose = document.getElementById('household-delete-modal-close');
+
+    document.querySelectorAll('.household-delete-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.getElementById('delete-household-id').value = this.dataset.id;
+        document.getElementById('household-delete-message').innerText = `「${this.dataset.name}」を削除しますか？`;
+        householdModal.style.display = 'none';
+        householdDeleteModal.style.display = 'flex';
+      });
+    });
+
+    if (householdDeleteModalClose) {
+      householdDeleteModalClose.addEventListener('click', function() {
+        householdDeleteModal.style.display = 'none';
+        householdModal.style.display = 'flex';
+      });
+    }
+
+    </script>
+    </body>
+    </html>

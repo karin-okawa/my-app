@@ -6,6 +6,10 @@ from .views import (
     TransactionCreateView,
     TransactionUpdateView,
     TransactionDeleteView,
+    HouseholdSwitchView,
+    HouseholdCreateView,
+    HouseholdDeleteView,
+    HouseholdUpdateView,
 )
 
 app_name = 'home'
@@ -30,4 +34,13 @@ urlpatterns = [
 
     # 収支削除URL
     path('delete/<int:pk>/', TransactionDeleteView.as_view(), name='transaction_delete'),
+
+    path('household/switch/', HouseholdSwitchView.as_view(), name='household_switch'),
+    
+    path('household/create/', HouseholdCreateView.as_view(), name='household_create'),
+    
+    path('household/delete/', HouseholdDeleteView.as_view(), name='household_delete'),
+    
+    path('household/update/', HouseholdUpdateView.as_view(), name='household_update'),
+
 ]

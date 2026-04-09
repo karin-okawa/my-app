@@ -41,11 +41,20 @@ from households.models import Transaction
 from .forms import TransactionForm
 
 
-
 from households.models import HouseholdAccount, UserHouseholdAccount
 
+from django.contrib import messages
+
+from django.shortcuts import redirect
+
+import uuid
+
+
+
+
+
 def get_current_household(request):
-# ↑↑↑現在選択中の家計簿を返す関数。セッションに保存されていればそれを使い、なければユーザーの最初の家計簿を返す。
+# 現在選択中の家計簿を返す関数。セッションに保存されていればそれを使い、なければユーザーの最初の家計簿を返す。
     
     # セッションから現在の家計簿IDを取得する
     household_id = request.session.get('current_household_id')
@@ -309,9 +318,7 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         form.instance.household_account = household
         # 登録したユーザーも記録する
         form.instance.user = self.request.user
-        # デバッグ用：保存される内容を確認する
-        print("household:", household)
-        print("user:", self.request.user)
+        
         return super().form_valid(form)
         
                 
@@ -355,3 +362,88 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     def get(self, request, *args, **kwargs):
         # GETリクエストでも即削除してリダイレクトする（確認画面なし）
         return self.delete(request, *args, **kwargs)
+    
+
+# ============================
+# 家計簿切り替えView
+# ============================
+class HouseholdSwitchView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        household_id = request.POST.get('household_id')
+        # ユーザーが所属している家計簿かどうか確認する
+        if UserHouseholdAccount.objects.filter(
+            user=request.user,
+            household_account_id=household_id,
+            status=1
+        ).exists():
+            request.session['current_household_id'] = int(household_id)
+        return redirect('home:home')
+
+
+# ============================
+# 家計簿新規作成View
+# ============================
+class HouseholdCreateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        name = request.POST.get('name', '').strip()
+        if name:
+            household = HouseholdAccount.objects.create(name=name)
+            UserHouseholdAccount.objects.create(
+                user=request.user,
+                household_account=household,
+                status=1,
+                joined_at=timezone.now()
+            )
+            # デフォルトカテゴリーを作成する
+            from households.models import Category
+            default_categories = [
+                {'name': '食費', 'category_type': 'expense', 'color': '#e74c3c', 'order': 1},
+                {'name': '日用品費', 'category_type': 'expense', 'color': '#e67e22', 'order': 2},
+                {'name': '衣服費', 'category_type': 'expense', 'color': '#f1c40f', 'order': 3},
+                {'name': '交通費', 'category_type': 'expense', 'color': '#2ecc71', 'order': 4},
+                {'name': '趣味費', 'category_type': 'expense', 'color': '#3498db', 'order': 5},
+                {'name': '交際費', 'category_type': 'expense', 'color': '#9b59b6', 'order': 6},
+                {'name': '固定費', 'category_type': 'expense', 'color': '#2c3e50', 'order': 7},
+                {'name': 'その他', 'category_type': 'expense', 'color': '#95a5a6', 'order': 8},
+                {'name': '給与', 'category_type': 'income', 'color': '#2ecc71', 'order': 1},
+                {'name': 'その他', 'category_type': 'income', 'color': '#95a5a6', 'order': 2},
+            ]
+            for cat in default_categories:
+                Category.objects.create(household_account=household, **cat)
+            request.session['current_household_id'] = household.id
+        return redirect('home:home')
+
+
+# ============================
+# 家計簿削除View
+# ============================
+class HouseholdDeleteView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        household_id = request.POST.get('household_id')
+        uha = UserHouseholdAccount.objects.filter(
+            user=request.user,
+            household_account_id=household_id,
+            status=1
+        ).first()
+        if uha:
+            uha.household_account.delete()
+            request.session.pop('current_household_id', None)
+        return redirect('home:home')
+
+
+# ============================
+# 家計簿名編集View
+# ============================
+class HouseholdUpdateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        household_id = request.POST.get('household_id')
+        name = request.POST.get('name', '').strip()
+        uha = UserHouseholdAccount.objects.filter(
+            user=request.user,
+            household_account_id=household_id,
+            status=1
+        ).first()
+        if uha and name:
+            uha.household_account.name = name
+            uha.household_account.save()
+        return redirect('home:home')

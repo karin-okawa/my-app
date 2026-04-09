@@ -13,6 +13,7 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 
 
+
 # ②便利ツール
 
  # Python標準ライブラリのカレンダー機能
@@ -41,7 +42,35 @@ from .forms import TransactionForm
 
 
 
+from households.models import HouseholdAccount, UserHouseholdAccount
 
+def get_current_household(request):
+# ↑↑↑現在選択中の家計簿を返す関数。セッションに保存されていればそれを使い、なければユーザーの最初の家計簿を返す。
+    
+    # セッションから現在の家計簿IDを取得する
+    household_id = request.session.get('current_household_id')
+    
+    # ユーザーが所属している家計簿を取得する
+    user_households = UserHouseholdAccount.objects.filter(
+        user=request.user,
+        status=1
+    ).select_related('household_account')
+
+    if not user_households.exists():
+        return None
+
+    # セッションに家計簿IDがある場合はそれを使う
+    if household_id:
+        household = user_households.filter(
+            household_account_id=household_id
+        ).first()
+        if household:
+            return household.household_account
+
+    # セッションになければ最初の家計簿をセッションに保存して返す
+    first_household = user_households.first().household_account
+    request.session['current_household_id'] = first_household.id
+    return first_household
 
 
 # --------------------------------------------
@@ -54,6 +83,17 @@ class HomeView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # 現在選択中の家計簿を取得する
+        household = get_current_household(self.request)
+        context['current_household'] = household
+
+        # ユーザーが所属している全家計簿を取得する（切り替え用）
+        user_households = UserHouseholdAccount.objects.filter(
+            user=self.request.user,
+            status=1
+        ).select_related('household_account')
+        context['user_households'] = user_households
         
         # --- 表示する年月を決定する ---
         # URLに year/month があればそれを使う。なければ今の年月を使う
@@ -87,14 +127,28 @@ class HomeView(LoginRequiredMixin, TemplateView):
             "next_month": next_month,
         })
 
-        # --- その月の収支データを取得 ---
+        # 家計簿がない場合は空のデータを返す
+        if not household:
+            context.update({
+                "income_map": {},
+                "expense_map": {},
+                "transactions": [],
+                "total_income": 0,
+                "total_expense": 0,
+                "total_balance": 0,
+                "income_image_days": set(),
+                "expense_image_days": set(),
+            })
+            return context
+
+        # 現在の家計簿に紐づいたその月の収支データを取得
         qs = Transaction.objects.filter(
-            user=self.request.user,
+            household_account=household,
             date__year=year,
             date__month=month,
         )
 
-        # (日別合計の計算ロジックなどは以前のまま変更なし)
+        # 日別合計の計算ロジック
         income_by_day = qs.filter(tx_type=Transaction.INCOME).annotate(day=ExtractDay("date")).values("day").annotate(total=Sum("amount"))
         expense_by_day = qs.filter(tx_type=Transaction.EXPENSE).annotate(day=ExtractDay("date")).values("day").annotate(total=Sum("amount"))
 
@@ -193,11 +247,16 @@ class DayTransactionJsonView(LoginRequiredMixin, View):
         d = self.kwargs['day']
         
         target_date = date(y, m, d)
+        
+        # 現在選択中の家計簿のデータのみ取得する
+        household = get_current_household(request)
+        
         # DBから指定した日の自分のデータを取得
         transactions = Transaction.objects.filter(
-            user=request.user, 
+            household_account=household,
             date=target_date
-        ).values('id', 'tx_type', 'amount', 'memo', 'image').order_by('-id') # idの大きい順＝新しい順
+        ).values('id', 'tx_type', 'amount', 'memo', 'image').order_by('-id')
+        
         # リストを作成
         transactions_data = []
         for tx in transactions:
@@ -226,6 +285,12 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     template_name = "households/transaction_form.html"
     success_url = reverse_lazy('home:home')
     
+    def get_form_kwargs(self):
+        # フォームに現在の家計簿を渡す
+        kwargs = super().get_form_kwargs()
+        kwargs['household'] = get_current_household(self.request)
+        return kwargs
+    
     def get_initial(self):
     # 初期値に今日を設定
         initial = super().get_initial()
@@ -237,12 +302,13 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def form_valid(self, form):
-        # デバッグ用：送信されたデータを確認する
-        print("POST data:", self.request.POST)
-        print("category:", form.cleaned_data.get('category'))
-        # 保存時にログインユーザーを自動設定
+        # 現在選択中の家計簿を取得して収支に紐づける
+        household = get_current_household(self.request)
+        form.instance.household_account = household
+        # 登録したユーザーも記録する
         form.instance.user = self.request.user
         return super().form_valid(form)
+        
                 
         
         
@@ -255,15 +321,16 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "households/transaction_form.html"
     success_url = reverse_lazy('home:home')
     
-    def get_queryset(self):
-    # 自分のデータだけを対象にする
-        return Transaction.objects.filter(user=self.request.user)
+    def get_form_kwargs(self):
+        # フォームに現在の家計簿を渡す
+        kwargs = super().get_form_kwargs()
+        kwargs['household'] = get_current_household(self.request)
+        return kwargs
     
-    def form_valid(self, form):
-        # デバッグ用：送信されたデータを確認する
-        print("POST data:", self.request.POST)
-        print("category:", form.cleaned_data.get('category'))
-        return super().form_valid(form)
+    def get_queryset(self):
+        # 現在の家計簿に紐づいたデータだけを対象にする
+        household = get_current_household(self.request)
+        return Transaction.objects.filter(household_account=household)
     
 
 # ============================
@@ -276,8 +343,9 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('home:home')
 
     def get_queryset(self):
-        # 自分のデータだけを削除対象にする
-        return Transaction.objects.filter(user=self.request.user)
+        # 現在の家計簿に紐づいたデータだけを対象にする
+        household = get_current_household(self.request)
+        return Transaction.objects.filter(household_account=household)
 
     def get(self, request, *args, **kwargs):
         # GETリクエストでも即削除してリダイレクトする（確認画面なし）

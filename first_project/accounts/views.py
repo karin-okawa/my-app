@@ -9,12 +9,15 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import User
 from django.http import JsonResponse
 
+
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import check_password
 import uuid
 from django.utils import timezone
 from datetime import timedelta
 
+
+from households.models import HouseholdAccount, UserHouseholdAccount
 
 # ユーザー登録
 class RegistUserView(CreateView):
@@ -33,6 +36,17 @@ class UserLoginView(FormView):
         # forms.py でパスワード照合が済んだユーザーを取りだす
         login(self.request, user)
         # ブラウザに「この人はログイン中ですよ」というクッキー（セッション）を保存させる
+        
+        # ログイン時に家計簿がなければ「個人家計簿」を自動作成する
+        if not UserHouseholdAccount.objects.filter(user=user).exists():
+            household = HouseholdAccount.objects.create(name='個人家計簿')
+            UserHouseholdAccount.objects.create(
+                user=user,
+                household_account=household,
+                status=1,
+                joined_at=timezone.now()
+            )
+            
         return super().form_valid(form)
         # 最終的に success_url（ホーム画面など）へリダイレクトさせる
 

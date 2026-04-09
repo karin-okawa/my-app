@@ -21,6 +21,8 @@ import random
 # households/models.py のTransaction・Category・CustomColorモデルを使う
 from .models import Transaction, Category, CustomColor
 
+from home.views import get_current_household
+
 # ============================
 # 収支一覧ページ
 # ============================
@@ -123,11 +125,13 @@ class CategoryListView(LoginRequiredMixin, ListView):
     context_object_name = "categories"
     
     def get_queryset(self):
-        # URLパラメータ type が渡された場合はそれで絞り込む
+        # 現在の家計簿に紐づいたカテゴリーだけを表示する
+        household = get_current_household(self.request)
         category_type = self.request.GET.get('type')
+        qs = Category.objects.filter(household_account=household)
         if category_type in ['income', 'expense']:
-            return Category.objects.filter(category_type=category_type)
-        return Category.objects.all()
+            qs = qs.filter(category_type=category_type)
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -259,22 +263,27 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
         if category_type in ['income', 'expense']:
             initial['category_type'] = category_type
         return initial
-
+        
     def form_valid(self, form):
-        # 常にランダムで色を設定する（新規作成時は毎回ランダム）
+        # 常にランダムで色を設定する（新規作成時は毎回ランダム）    
         preset_colors = [
-          '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
-          '#3498db', '#9c6d5c', '#2c3e50', '#95a5a6', '#9b59b6'
+            '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+            '#3498db', '#9c6d5c', '#2c3e50', '#95a5a6', '#9b59b6'
         ]
         form.instance.color = random.choice(preset_colors)
-        
-        # 同じcategory_typeの中で一番大きいorderの次の番号を設定することで新しいカテゴリーが一覧の最後に追加される
+
+        # 現在の家計簿と紐づける
+        household = get_current_household(self.request)
+        form.instance.household_account = household
+
+        # 同じhousehold_accountとcategory_typeの中で一番大きいorderの次の番号を設定する
         max_order = Category.objects.filter(
+            household_account=household,
             category_type=form.instance.category_type
         ).order_by('-order').values_list('order', flat=True).first()
         form.instance.order = (max_order or 0) + 1
 
-        return super().form_valid(form)
+        return super().form_valid(form)  
 
     def get_success_url(self):
     # 作成成功後はすぐに色選択画面へ遷移する

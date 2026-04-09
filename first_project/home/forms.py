@@ -21,8 +21,14 @@ class TransactionForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # 現在の家計簿をkwargsから受け取る
+        household = kwargs.pop('household', None)
         super().__init__(*args, **kwargs)
-        # カテゴリーの選択肢を全件取得する
-        self.fields['category'].queryset = Category.objects.all()
-        # 金額は必須ではない（写真のみでも登録可能）
         self.fields['amount'].required = False
+        # 家計簿が指定されている場合はその家計簿のカテゴリーだけを表示する
+        if household:
+            self.fields['category'].queryset = Category.objects.filter(
+                household_account=household
+            )
+        else:
+            self.fields['category'].queryset = Category.objects.all()

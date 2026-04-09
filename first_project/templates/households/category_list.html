@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
+
+<style>
+  /* カテゴリー一覧画面ではapp-mainをスクロール可能にする */
+  .app-main {
+    overflow-y: auto !important;
+  }
+  .custom-phone-frame {
+    height: auto !important;
+  }
+</style>
+
 <div class="custom-phone-frame">
   <div class="p-4">
 
@@ -40,7 +51,7 @@
     </div>
 
     <!-- ドラッグ&ドロップで並び替え可能なカテゴリー一覧 -->
-    <div id="category-list" style="padding: 0; margin: 0; overflow: hidden;">
+    <div id="category-list" style="padding: 0; margin: 0;">
       {% for category in categories %}
       <!-- 各行をラップするコンテナ（スライド用） -->
       <div style="overflow: hidden; border-bottom: 1px solid #eee; position: relative;">
@@ -83,7 +94,7 @@
           </div>
 
           <!-- 右側に隠れている削除ボタン -->
-          <a href="..." class="delete-btn" style="
+          <button type="button" class="delete-btn" data-id="{{ category.pk }}" data-name="{{ category.name }}" style="
             position: absolute;
             right: -70px;
             top: 8px;
@@ -97,10 +108,11 @@
             font-weight: bold;
             font-size: 0.9rem;
             white-space: nowrap;
-            text-decoration: none;
+            border: none;
             transition: right 0.2s ease;
             border-radius: 10px;
-          ">削除</a>
+            cursor: pointer;
+          ">削除</button>
 
         </div>
       </div>
@@ -188,5 +200,40 @@
 
   // スクリプトをページに追加して読み込みを開始する
   document.head.appendChild(script);
+
+
+  // 削除ボタンを押した時に確認モーダルを表示する
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const categoryId = this.dataset.id;
+      const categoryName = this.dataset.name;
+      const cardBox = document.querySelector('.card-box');
+
+      // モーダルを動的に作成する
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
+
+      modal.innerHTML = `
+        <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+          <p style="font-weight: bold; color: #333; margin-bottom: 20px;">「${categoryName}」を削除してよろしいですか？</p>
+          <div style="display: flex; gap: 12px;">
+            <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
+            <form method="post" action="/households/categories/${categoryId}/delete/" style="flex: 1;">
+              <input type="hidden" name="csrfmiddlewaretoken" value="${document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1]}">
+              <button type="submit" style="width: 100%; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">削除</button>
+            </form>
+          </div>
+        </div>
+      `;
+
+      // キャンセルボタンでモーダルを閉じる
+      modal.querySelector('#modal-cancel-btn').addEventListener('click', function() {
+        modal.remove();
+      });
+
+      cardBox.appendChild(modal);
+    });
+  });
+
 </script>
 {% endblock %}

@@ -165,8 +165,22 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
     model = Category
     # 使用するテンプレート
     template_name = "households/category_confirm_delete.html"
-    # 削除成功後 → カテゴリー一覧へ戻る
-    success_url = reverse_lazy('households:category_list')
+    
+    def post(self, request, *args, **kwargs):
+        # 削除前にcategory_typeをインスタンス変数として保存しておく
+        obj = self.get_object()
+        self.category_type = obj.category_type
+        return super().post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        # 削除したカテゴリーの収支タイプでリダイレクト先を決める
+        return f"{reverse_lazy('households:category_list')}?type={self.category_type}"
+
+    def get_queryset(self):
+        # 現在の家計簿のカテゴリーだけを削除対象にする
+        from home.views import get_current_household
+        household = get_current_household(self.request)
+        return Category.objects.filter(household_account=household) 
     
 
 class CategoryReorderView(LoginRequiredMixin, View):

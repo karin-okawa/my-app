@@ -125,6 +125,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
             "prev_month": prev_month,
             "next_year": next_year,
             "next_month": next_month,
+            "current_day": today.day if (today.year == year and today.month == month) else None,
         })
 
         # 家計簿がない場合は空のデータを返す
@@ -255,20 +256,21 @@ class DayTransactionJsonView(LoginRequiredMixin, View):
         transactions = Transaction.objects.filter(
             household_account=household,
             date=target_date
-        ).values('id', 'tx_type', 'amount', 'memo', 'image').order_by('-id')
+        ).select_related('category').order_by('-id')
         
         # リストを作成
         transactions_data = []
         for tx in transactions:
-           transactions_data.append({
-                'id': tx['id'], 
-                'amount_str': f"{tx['amount']}円" if tx['amount'] else '',
-                'is_income': tx['tx_type'] == Transaction.INCOME,
-                'memo': tx['memo'],
-                # 画像があるかどうかのフラグを追加する
-                'has_image': bool(tx['image']),
-                # 金額があるかどうかのフラグを追加する
-                'has_amount': bool(tx['amount']),
+            # カテゴリー名とメモを組み合わせて表示する（辞書の外で定義する）
+            category_name = tx.category.name if tx.category else '未分類'
+            memo_text = f'（{tx.memo}）' if tx.memo else ''
+            transactions_data.append({
+                'id': tx.id, 
+                'amount_str': f"{tx.amount}円" if tx.amount else '',
+                'is_income': tx.tx_type == Transaction.INCOME,
+                'memo': category_name + memo_text,
+                'has_image': bool(tx.image),
+                'has_amount': bool(tx.amount),
             })
         
         # 辞書形式にして 'transactions' というキーで返す
@@ -307,6 +309,9 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         form.instance.household_account = household
         # 登録したユーザーも記録する
         form.instance.user = self.request.user
+        # デバッグ用：保存される内容を確認する
+        print("household:", household)
+        print("user:", self.request.user)
         return super().form_valid(form)
         
                 

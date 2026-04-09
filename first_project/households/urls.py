@@ -1,9 +1,11 @@
 from django.urls import path
 from . import views
-# households/views.py にあるビュー（CBV）を読み込む
-from .views import TransactionListView, TransactionCreateView, DayTransactionsJsonView, TransactionUpdateView, CategoryListView, CategoryCreateView, CategoryUpdateView, CategoryDeleteView
-
-
+from .views import (
+    TransactionListView, TransactionCreateView, DayTransactionsJsonView, 
+    TransactionUpdateView, CategoryListView, CategoryCreateView, 
+    CategoryUpdateView, CategoryDeleteView, CategoryReorderView,
+    CategoryColorView
+)
 
 
 # URLの名前空間を households にする

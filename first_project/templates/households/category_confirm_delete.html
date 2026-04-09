@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .delete-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px;
+  }
+</style>
+
+<div class="delete-container">
+
+  <!-- 戻るボタン -->
+  <div style="margin-bottom: 8px;">
+    <a href="javascript:history.back()" style="color: #888; text-decoration: none; font-size: 0.9rem;">
+      ← 戻る
+    </a>
+  </div>
+
+  <!-- タイトル -->
+  <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 24px;">カテゴリーの削除</h2>
+
+  <p style="text-align: center; font-size: 0.9rem; color: #555; margin-bottom: 24px;">
+    「{{ object.name }}」を削除してよろしいですか？
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div style="display: flex; gap: 12px;">
+      <a href="javascript:history.back()" class="btn" style="
+        flex: 1;
+        background-color: #f0f0f0;
+        color: #333;
+        border-radius: 50px;
+        font-weight: bold;
+        padding: 10px;
+        text-align: center;
+        text-decoration: none;
+      ">キャンセル</a>
+      <button type="submit" class="btn" style="
+        flex: 1;
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 50px;
+        font-weight: bold;
+        padding: 10px;
+        border: none;
+      ">削除</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

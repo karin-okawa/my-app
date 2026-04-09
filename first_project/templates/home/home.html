@@ -180,13 +180,10 @@
       <div style="display: flex; align-items: center; gap: 8px;">
         {% if tx.category %}
         <div style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ tx.category.color }}; flex-shrink: 0;"></div>
-        <span style="font-size: 0.85rem; color: #5d4037; font-weight: bold;">{{ tx.category.name }}</span>
+        <span style="font-size: 0.85rem; color: #5d4037; font-weight: bold;">{{ tx.category.name }}{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
         {% else %}
         <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #ccc; flex-shrink: 0;"></div>
-        <span style="font-size: 0.85rem; color: #999;">未分類</span>
-        {% endif %}
-        {% if tx.memo %}
-        <span style="font-size: 0.75rem; color: #999;">（{{ tx.memo }}）</span>
+        <span style="font-size: 0.85rem; color: #999;">未分類{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
         {% endif %}
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">

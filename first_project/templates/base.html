@@ -314,7 +314,7 @@
               <button type="button" id="household-switch-btn" style="color: #333; background: none; border: none; padding: 0; cursor: pointer;">
                 <i class="bi bi-arrow-left-right"></i>
               </button>
-              <a href="#" style="color: #333;"><i class="bi bi-people"></i></a>
+              <button type="button" id="member-btn" style="color: #333; background: none; border: none; padding: 0; cursor: pointer;"><i class="bi bi-people"></i></button>
             </div>
           </div>
         </header>
@@ -336,7 +336,7 @@
             <i class="bi bi-pencil-square d-block"></i>
             <span style="font-size: 10px; display: block;">入力</span>
           </a>
-          <a href="#" class="nav-item" style="text-decoration: none; color: #333; text-align: center;">
+          <a href="{% url 'home:graph' %}" class="nav-item" style="text-decoration: none; color: #333; text-align: center;">
             <i class="bi bi-pie-chart d-block"></i>
             <span style="font-size: 10px; display: block;">グラフ</span>
           </a>
@@ -418,6 +418,34 @@
         </div>
       </div><!-- household-modal閉じタグ -->
 
+
+      <!-- 家計簿名編集モーダル -->
+        <div id="household-edit-modal" style="
+          display: none;
+          position: absolute;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: 3001;
+          align-items: center;
+          justify-content: center;
+          border-radius: 20px;
+        ">
+          <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+            <p style="font-weight: bold; color: #5d4037; margin-bottom: 16px;">家計簿名を編集してください</p>
+            <form method="post" action="{% url 'home:household_update' %}">
+              {% csrf_token %}
+              <input type="hidden" name="household_id" id="edit-household-id">
+              <input type="text" name="name" id="edit-household-name"
+                    style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; box-sizing: border-box;">
+              <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">保存</button>
+                <button type="button" id="household-edit-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">キャンセル</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+
       <!-- 家計簿削除確認モーダル -->
         <div id="household-delete-modal" style="
           display: none;
@@ -441,32 +469,80 @@
             </div>
           </div>
         </div>
-      </div>
-      
 
-      <!-- 家計簿名編集モーダル -->
-      <div id="household-edit-modal" style="
+    
+      <!-- メンバー一覧・招待リンクモーダル -->
+      <div id="member-modal" style="
         display: none;
         position: absolute;
         inset: 0;
         background: rgba(0,0,0,0.5);
-        z-index: 3001;
-        align-items: center;
+        z-index: 3000;
+        align-items: flex-start;
         justify-content: center;
         border-radius: 20px;
+        padding-top: 80px;
       ">
-        <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
-          <p style="font-weight: bold; color: #5d4037; margin-bottom: 16px;">家計簿名を編集してください</p>
-          <form method="post" action="{% url 'home:household_update' %}">
-            {% csrf_token %}
-            <input type="hidden" name="household_id" id="edit-household-id">
-            <input type="text" name="name" id="edit-household-name"
-                  style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; box-sizing: border-box;">
-            <div style="display: flex; gap: 12px;">
-              <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">保存</button>
-              <button type="button" id="household-edit-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">キャンセル</button>
+        <div style="background: #fff; border-radius: 16px; padding: 20px; width: 85%;">
+          
+          <!-- モーダルヘッダー -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <span style="font-weight: bold; color: #5d4037; font-size: 1rem;">メンバー</span>
+            <button type="button" id="member-modal-close" style="background: none; border: none; font-size: 1.2rem; color: #888; cursor: pointer;">✕</button>
+          </div>
+
+          <!-- メンバー一覧 -->
+          <div style="margin-bottom: 16px;">
+            {% if current_household %}
+            {% for uha in current_household.userhouseholdaccount_set.all %}
+            {% if uha.status == 1 %}
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #eee;">
+              <!-- アイコン -->
+              <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #e0d5d0; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                {% if uha.user.avatar %}
+                <img src="{{ uha.user.avatar.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                <i class="bi bi-person-fill" style="font-size: 1rem; color: #9c6d5c;"></i>
+                {% endif %}
+              </div>
+              <!-- ニックネーム -->
+              <span style="font-size: 0.9rem; font-weight: bold; color: #5d4037;">{{ uha.user.username }}</span>
+              <!-- 自分の場合は「あなた」と表示する -->
+              {% if uha.user == request.user %}
+              <span style="font-size: 0.75rem; color: #999;">（あなた）</span>
+              {% endif %}
             </div>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+          </div>
+
+          <!-- 招待リンクコピーボタン -->
+          <form id="invite-form" method="post" action="{% url 'home:household_invite' %}">
+            {% csrf_token %}
+            <input type="hidden" name="household_id" value="{{ current_household.id }}">
+            <button type="button" id="invite-copy-btn" class="btn w-100 py-2"
+                    style="background-color: #9c6d5c; color: white; border-radius: 10px; font-weight: bold; border: none;">
+              招待リンクをコピー
+            </button>
           </form>
+          <p style="font-size: 0.7rem; color: #999; text-align: center; margin-top: 6px;">
+            ※招待リンクは一度使用すると失効し、有効期限は30分です
+          </p>
+
+          <!-- 招待URLを表示するエリア（最初は非表示） -->
+          <div id="invite-url-area" style="display: none; margin-top: 8px;">
+            <input type="text" id="invite-url-input" readonly
+                  style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.75rem; box-sizing: border-box; color: #555;">
+            <p style="font-size: 0.7rem; color: #999; text-align: center; margin-top: 4px;">上のURLを長押しして手動でコピーしてください</p>
+          </div>
+
+          <!-- キャンセルボタン -->
+          <button type="button" id="member-modal-cancel" class="btn w-100 mt-2"
+                  style="background-color: #f0f0f0; color: #333; border-radius: 10px; font-weight: bold; border: none; padding: 10px;">
+            キャンセル
+          </button>
+
         </div>
       </div>
 
@@ -562,6 +638,73 @@
       householdDeleteModalClose.addEventListener('click', function() {
         householdDeleteModal.style.display = 'none';
         householdModal.style.display = 'flex';
+      });
+    }
+
+
+    // メンバー一覧モーダルの開閉
+    const memberBtn = document.getElementById('member-btn');
+    const memberModal = document.getElementById('member-modal');
+    const memberModalClose = document.getElementById('member-modal-close');
+    const memberModalCancel = document.getElementById('member-modal-cancel');
+
+    if (memberBtn) {
+      memberBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const cardBox = document.querySelector('.card-box');
+        cardBox.appendChild(memberModal);
+        memberModal.style.display = 'flex';
+      });
+    }
+
+    if (memberModalClose) {
+      memberModalClose.addEventListener('click', function() {
+        memberModal.style.display = 'none';
+      });
+    }
+
+    if (memberModalCancel) {
+      memberModalCancel.addEventListener('click', function() {
+        memberModal.style.display = 'none';
+      });
+    }
+
+    
+    // 招待リンクをコピーするボタン
+    const inviteCopyBtn = document.getElementById('invite-copy-btn');
+    if (inviteCopyBtn) {
+      inviteCopyBtn.addEventListener('click', function() {
+        const form = document.getElementById('invite-form');
+        const formData = new FormData(form);
+        fetch("{% url 'home:household_invite' %}", {
+          method: 'POST',
+          body: formData,
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.invite_url) {
+            // URLを入力欄に表示する
+            const urlInput = document.getElementById('invite-url-input');
+            const urlArea = document.getElementById('invite-url-area');
+            urlInput.value = data.invite_url;
+            urlArea.style.display = 'block';
+            urlInput.select();
+
+            // コピーを試みる
+            try {
+              document.execCommand('copy');
+              inviteCopyBtn.innerText = 'コピーしました！';
+              inviteCopyBtn.style.backgroundColor = '#2ecc71';
+              setTimeout(() => {
+                inviteCopyBtn.innerText = '招待リンクをコピー';
+                inviteCopyBtn.style.backgroundColor = '#9c6d5c';
+              }, 2000);
+            } catch (err) {
+              inviteCopyBtn.innerText = '下のURLをコピーしてください';
+            }
+          }
+        })
+        .catch(err => console.error('エラー:', err));
       });
     }
 

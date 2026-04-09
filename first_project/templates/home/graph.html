@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .graph-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .graph-fixed {
+    flex-shrink: 0;
+  }
+
+  .graph-scroll {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+
+  .type-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .type-btn.active {
+    background-color: #9c6d5c;
+    color: white;
+  }
+
+  .type-btn.inactive {
+    background-color: #f0f0f0;
+    color: #888;
+  }
+</style>
+
+<div class="graph-container">
+
+  <!-- 上部固定エリア -->
+  <div class="graph-fixed">
+
+    <!-- 年月ナビゲーション -->
+    <div class="d-flex justify-content-center align-items-center" style="gap: 20px; padding: 6px 0;">
+      <a href="{% url 'home:graph_with_month' prev_year prev_month %}"
+         class="btn btn-sm btn-outline-secondary"
+         style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
+        ◁
+      </a>
+      <h2 class="mb-0" style="color: #5d4037; font-weight: bold; font-size: 1.1rem;">
+        {{ year }}年{{ month }}月
+      </h2>
+      <a href="{% url 'home:graph_with_month' next_year next_month %}"
+         class="btn btn-sm btn-outline-secondary"
+         style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
+        ▷
+      </a>
+    </div>
+
+    <!-- 円グラフ -->
+    <div style="display: flex; justify-content: center; padding: 8px 0;">
+      <canvas id="pieChart" width="160" height="160" style="max-width: 160px; max-height: 160px;"></canvas>
+    </div>
+
+    <!-- 支出・収入切り替えボタン -->
+    <div style="display: flex; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin: 0 16px 8px;">
+      <button type="button" class="type-btn active" id="btn-expense" onclick="switchType('expense')">支出</button>
+      <button type="button" class="type-btn inactive" id="btn-income" onclick="switchType('income')">収入</button>
+    </div>
+
+  </div><!-- graph-fixed閉じタグ -->
+
+  <!-- 下部スクロールエリア（内訳一覧） -->
+  <div class="graph-scroll">
+
+    <!-- 支出内訳 -->
+    <div id="expense-list">
+      <!-- 合計 -->
+      <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 2px solid #eee; font-weight: bold;">
+        <span style="color: #5d4037;">合計</span>
+        <span style="color: #a24141;">{{ total_expense|floatformat:0 }}円</span>
+      </div>
+      {% for item in expense_data %}
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #eee;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <!-- カテゴリーの色の丸 -->
+          <div style="width: 12px; height: 12px; border-radius: 50%; background-color: {{ item.color }}; flex-shrink: 0;"></div>
+          <span style="font-size: 0.9rem; color: #5d4037;">{{ item.name }}</span>
+        </div>
+        <span style="font-size: 0.9rem; font-weight: bold; color: #a24141;">{{ item.total|floatformat:0 }}円</span>
+      </div>
+      {% empty %}
+      <div style="text-align: center; color: #999; padding: 20px; font-size: 0.85rem;">この月の支出はまだありません</div>
+      {% endfor %}
+    </div>
+
+    <!-- 収入内訳（最初は非表示） -->
+    <div id="income-list" style="display: none;">
+      <!-- 合計 -->
+      <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 2px solid #eee; font-weight: bold;">
+        <span style="color: #5d4037;">合計</span>
+        <span style="color: #2c587c;">{{ total_income|floatformat:0 }}円</span>
+      </div>
+      {% for item in income_data %}
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #eee;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 12px; height: 12px; border-radius: 50%; background-color: {{ item.color }}; flex-shrink: 0;"></div>
+          <span style="font-size: 0.9rem; color: #5d4037;">{{ item.name }}</span>
+        </div>
+        <span style="font-size: 0.9rem; font-weight: bold; color: #2c587c;">{{ item.total|floatformat:0 }}円</span>
+      </div>
+      {% empty %}
+      <div style="text-align: center; color: #999; padding: 20px; font-size: 0.85rem;">この月の収入はまだありません</div>
+      {% endfor %}
+    </div>
+
+  </div><!-- graph-scroll閉じタグ -->
+
+</div><!-- graph-container閉じタグ -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+<script>
+  // 支出データをDjangoから受け取る
+  const expenseData = [
+    {% for item in expense_data %}
+    { name: "{{ item.name }}", color: "{{ item.color }}", total: {{ item.total }} },
+    {% endfor %}
+  ];
+
+  // 収入データをDjangoから受け取る
+  const incomeData = [
+    {% for item in income_data %}
+    { name: "{{ item.name }}", color: "{{ item.color }}", total: {{ item.total }} },
+    {% endfor %}
+  ];
+
+  let currentChart = null;
+
+  // 円グラフを描画する関数
+  function drawChart(data) {
+    const ctx = document.getElementById('pieChart').getContext('2d');
+
+    if (currentChart) {
+      currentChart.destroy();
+    }
+
+    if (data.length === 0) {
+      currentChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['データなし'],
+          datasets: [{
+            data: [1],
+            backgroundColor: ['#eee'],
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false },
+          },
+          cutout: '0%',
+        }
+      });
+      return;
+    }
+
+    // 合計を計算する
+    const total = data.reduce((sum, d) => sum + d.total, 0);
+
+    currentChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: data.map(d => d.name),
+        datasets: [{
+          data: data.map(d => d.total),
+          backgroundColor: data.map(d => d.color),
+          borderWidth: 2,
+          borderColor: '#fff',
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const value = context.parsed;
+                return ` ${context.label}: ¥${value.toLocaleString()}`;
+              }
+            }
+          },
+          // カテゴリー名をグラフ上に表示するプラグイン
+          datalabels: {
+            display: function(context) {
+              // 割合が10%以上の場合のみ表示する
+              const value = context.dataset.data[context.dataIndex];
+              return (value / total) >= 0.1;
+            },
+            formatter: function(value, context) {
+              return context.chart.data.labels[context.dataIndex];
+            },
+            color: '#fff',
+            font: {
+              size: 10,
+              weight: 'bold',
+            },
+          }
+        },
+      },
+      plugins: [ChartDataLabels],
+    });
+  }
+
+  // 支出・収入を切り替える関数
+  function switchType(type) {
+    const expenseList = document.getElementById('expense-list');
+    const incomeList = document.getElementById('income-list');
+    const btnExpense = document.getElementById('btn-expense');
+    const btnIncome = document.getElementById('btn-income');
+
+    if (type === 'expense') {
+      expenseList.style.display = 'block';
+      incomeList.style.display = 'none';
+      btnExpense.className = 'type-btn active';
+      btnIncome.className = 'type-btn inactive';
+      drawChart(expenseData);
+    } else {
+      expenseList.style.display = 'none';
+      incomeList.style.display = 'block';
+      btnExpense.className = 'type-btn inactive';
+      btnIncome.className = 'type-btn active';
+      drawChart(incomeData);
+    }
+  }
+
+  // ページ読み込み時に支出グラフを表示する
+  drawChart(expenseData);
+</script>
+
+{% endblock %}

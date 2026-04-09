@@ -210,9 +210,14 @@ class CategoryColorView(LoginRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         # 現在編集中のカテゴリーの収支タイプを取得する
         category_type = self.object.category_type
-        # 同じ収支タイプのカテゴリーで使われている色を重複なしで取得する
+        # 現在の家計簿の同じ収支タイプのカテゴリーで使われている色だけを取得する
+        from home.views import get_current_household
+        household = get_current_household(self.request)
         used_colors = list(
-            Category.objects.filter(category_type=category_type)
+            Category.objects.filter(
+                category_type=category_type,
+                household_account=household
+            )
             .values_list('color', flat=True)
             .distinct()
         )

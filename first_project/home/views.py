@@ -49,6 +49,8 @@ from django.shortcuts import redirect
 
 import uuid
 
+import hashlib
+
 
 
 
@@ -447,3 +449,209 @@ class HouseholdUpdateView(LoginRequiredMixin, View):
             uha.household_account.name = name
             uha.household_account.save()
         return redirect('home:home')
+    
+    
+
+
+# ============================
+# 招待リンク発行View
+# ============================
+class HouseholdInviteView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        household_id = request.POST.get('household_id')
+        
+        # ユーザーが所属している家計簿かどうか確認する
+        uha = UserHouseholdAccount.objects.filter(
+            user=request.user,
+            household_account_id=household_id,
+            status=1
+        ).first()
+        
+        if not uha:
+            from django.http import JsonResponse
+            return JsonResponse({'error': '権限がありません'}, status=403)
+        
+        # 招待トークンを生成する
+        token = str(uuid.uuid4())
+        # トークンをハッシュ化して保存する
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        
+        # 有効期限を30分後に設定する
+        expires_at = timezone.now() + timezone.timedelta(minutes=30)
+        
+        # 既存の招待レコードを更新するか新規作成する
+        UserHouseholdAccount.objects.filter(
+            household_account_id=household_id,
+            status=2  # 招待中のものを削除する
+        ).delete()
+        
+        # 招待用のレコードを作成する
+        UserHouseholdAccount.objects.create(
+            user=request.user,
+            household_account_id=household_id,
+            invitation_token_hash=token_hash,
+            expires_at=expires_at,
+            status=2  # 招待中
+        )
+        
+        # 招待URLを生成してJSONで返す
+        invite_url = request.build_absolute_uri(
+            f'/home/household/join/{token}/'
+        )
+        
+        from django.http import JsonResponse
+        return JsonResponse({'invite_url': invite_url})
+
+
+# ============================
+# 招待リンクで家計簿に参加するView
+# ============================
+class HouseholdJoinView(LoginRequiredMixin, View):
+    def get(self, request, token, *args, **kwargs):
+        # トークンをハッシュ化して検索する
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        
+        # 有効な招待レコードを検索する
+        uha = UserHouseholdAccount.objects.filter(
+            invitation_token_hash=token_hash,
+            status=2,
+            expires_at__gt=timezone.now()
+        ).first()
+        
+        if not uha:
+            # 無効または期限切れの場合はエラーページへ
+            return render(request, 'home/invite_error.html', {
+                'error': '招待リンクが無効または期限切れです'
+            })
+        
+        # すでに参加している場合はそのままホームへ
+        if UserHouseholdAccount.objects.filter(
+            user=request.user,
+            household_account=uha.household_account,
+            status=1
+        ).exists():
+            request.session['current_household_id'] = uha.household_account.id
+            return redirect('home:home')
+        
+        # 新しいメンバーとして追加する
+        UserHouseholdAccount.objects.create(
+            user=request.user,
+            household_account=uha.household_account,
+            status=1,
+            joined_at=timezone.now()
+        )
+        
+        # 招待レコードを無効化する（一度使用したら失効）
+        uha.invitation_token_hash = None
+        uha.status = 1
+        uha.save()
+        
+        # 参加した家計簿をセッションに保存する
+        request.session['current_household_id'] = uha.household_account.id
+        
+        return redirect('home:home')
+    
+    
+# ============================
+# グラフ画面View
+# ============================
+class GraphView(LoginRequiredMixin, TemplateView):
+    template_name = "home/graph.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # 現在選択中の家計簿を取得する
+        household = get_current_household(self.request)
+        context['current_household'] = household
+
+        # 表示する年月を決定する
+        today = timezone.now()
+        year = self.kwargs.get('year', today.year)
+        month = self.kwargs.get('month', today.month)
+
+        # 前月・翌月を計算する
+        if month == 1:
+            prev_year, prev_month = year - 1, 12
+        else:
+            prev_year, prev_month = year, month - 1
+
+        if month == 12:
+            next_year, next_month = year + 1, 1
+        else:
+            next_year, next_month = year, month + 1
+
+        context.update({
+            'year': year,
+            'month': month,
+            'prev_year': prev_year,
+            'prev_month': prev_month,
+            'next_year': next_year,
+            'next_month': next_month,
+        })
+
+        if not household:
+            context.update({
+                'expense_data': [],
+                'income_data': [],
+                'total_expense': 0,
+                'total_income': 0,
+            })
+            return context
+
+        # その月の収支データを取得する
+        qs = Transaction.objects.filter(
+            household_account=household,
+            date__year=year,
+            date__month=month,
+        )
+
+        # 支出のカテゴリー別集計
+        from django.db.models import Sum
+        expense_by_category = qs.filter(
+            tx_type=Transaction.EXPENSE
+        ).values(
+            'category__name', 'category__color'
+        ).annotate(
+            total=Sum('amount')
+        ).order_by('-total')
+
+        # 収入のカテゴリー別集計
+        income_by_category = qs.filter(
+            tx_type=Transaction.INCOME
+        ).values(
+            'category__name', 'category__color'
+        ).annotate(
+            total=Sum('amount')
+        ).order_by('-total')
+
+        # テンプレートに渡すデータを整形する
+        expense_data = [
+            {
+                'name': row['category__name'] or '未分類',
+                'color': row['category__color'] or '#95a5a6',
+                'total': row['total'] or 0,
+            }
+            for row in expense_by_category
+        ]
+
+        income_data = [
+            {
+                'name': row['category__name'] or '未分類',
+                'color': row['category__color'] or '#95a5a6',
+                'total': row['total'] or 0,
+            }
+            for row in income_by_category
+        ]
+
+        total_expense = sum(d['total'] for d in expense_data)
+        total_income = sum(d['total'] for d in income_data)
+
+        context.update({
+            'expense_data': expense_data,
+            'income_data': income_data,
+            'total_expense': total_expense,
+            'total_income': total_income,
+        })
+
+        return context

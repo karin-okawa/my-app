@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+  /* 掲示板画面ではapp-mainをスクロール可能にする */
+  .app-main {
+    overflow-y: auto !important;
+  }
+</style>
+
 <div class="container mt-3" id="main-content" style="position: relative;">
   <ul class="nav nav-tabs nav-fill mb-3" id="postTab" role="tablist">
     <li class="nav-item" role="presentation">
@@ -30,10 +37,9 @@
   </div>
 </div>
 
-<div style="position: fixed; 
-            bottom: 150px; 
-            left: 50%; 
-            transform: translateX(120px); 
+<div style="position: absolute; 
+            bottom: 70px; 
+            right: 16px; 
             z-index: 1000;">
   <button type="button" 
      class="btn shadow-lg" 
@@ -168,38 +174,95 @@
   }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const charts = document.querySelectorAll('.post-chart');
-    charts.forEach(canvas => {
-      const rawData = canvas.getAttribute('data-values');
-      if (!rawData || rawData === 'null' || rawData === '{}') return;
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // 円グラフを描画する
+  const charts = document.querySelectorAll('.post-chart');
+  charts.forEach(canvas => {
+    const postId = canvas.getAttribute('data-id');
+    const postData = window.postData && window.postData[postId];
+    if (!postData || !postData.values || Object.keys(postData.values).length === 0) return;
 
-      try {
-        const categoryData = JSON.parse(rawData);
-        new Chart(canvas, {
-          type: 'pie',
-          data: {
-            labels: Object.keys(categoryData),
-            datasets: [{
-              data: Object.values(categoryData),
-              backgroundColor: ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bfbc0', '#a0c4ff', '#bdb2ff', '#ffc6ff'],
-              borderWidth: 1
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
-            }
+    try {
+      const labels = Object.keys(postData.values);
+      const values = Object.values(postData.values);
+      const defaultColors = ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bfbc0', '#a0c4ff', '#bdb2ff', '#ffc6ff'];
+      const colors = labels.map((label, i) => (postData.colors && postData.colors[label]) || defaultColors[i % defaultColors.length]);
+
+      new Chart(canvas, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true, position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
           }
-        });
-      } catch (e) {
-        console.error("グラフ描画エラー:", e);
-      }
+        }
+      });
+    } catch (e) {
+      console.error("グラフ描画エラー:", e);
+    }
+  });
+
+  // いいねボタンの処理
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const postId = this.dataset.id;
+      const countEl = this.querySelector('.like-count');
+      
+      fetch(`/posts/${postId}/like/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.cookie.split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1]
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        countEl.innerText = data.count;
+        this.style.color = data.liked ? '#e74c3c' : '#888';
+      })
+      .catch(err => console.error('エラー:', err));
     });
   });
+
+  // 削除ボタンの処理
+  document.querySelectorAll('.post-delete-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const postId = this.dataset.id;
+      const cardBox = document.querySelector('.card-box');
+      
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
+      
+      modal.innerHTML = `
+        <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+          <p style="font-weight: bold; color: #333; margin-bottom: 20px;">削除してよろしいですか？</p>
+          <div style="display: flex; gap: 12px;">
+            <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
+            <a href="/posts/${postId}/delete/" style="flex: 1; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center;">削除</a>
+          </div>
+        </div>
+      `;
+      
+      modal.querySelector('#modal-cancel-btn').addEventListener('click', function() {
+        modal.remove();
+      });
+      
+      cardBox.appendChild(modal);
+    });
+  });
+});
 </script>
 {% endblock %}

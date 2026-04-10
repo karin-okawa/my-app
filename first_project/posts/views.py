@@ -28,6 +28,10 @@ from django.db.models import Sum
 
 from .forms import PostForm
 
+from django.views.generic import DeleteView
+from django.http import JsonResponse
+from django.views import View
+
 
 
 
@@ -75,28 +79,68 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         post_type = form.cleaned_data['post_type']
         tx_type = Transaction.INCOME if post_type == 'income' else Transaction.EXPENSE
         
-        # --- カテゴリごとの内訳を集計 ---
-        # 指定年月の自分のデータを取得
+        # 現在の家計簿を取得する
+        from home.views import get_current_household
+        household = get_current_household(self.request)
+        
+        # 指定年月の現在の家計簿のデータを取得する
         qs = Transaction.objects.filter(
-            user=self.request.user,
+            household_account=household,
             date__year=year,
             date__month=month,
             tx_type=tx_type
-        )
+        ).select_related('category')
         
-        # カテゴリごとに合計金額を計算して辞書形式にする
-        # 例: {'食費': 30000, '日用品': 5000}
+        # カテゴリごとに合計金額と色を計算する
         category_totals = {}
+        category_colors = {}
         total_sum = 0
         
         for item in qs:
-            cat_name = item.category.name # カテゴリ名を取得
-            amount = item.amount
-            category_totals[cat_name] = category_totals.get(cat_name, 0) + amount
-            total_sum += amount
+            if item.category:
+                cat_name = item.category.name
+                cat_color = item.category.color
+            else:
+                cat_name = '未分類'
+                cat_color = '#95a5a6'
+            if item.amount:
+                category_totals[cat_name] = category_totals.get(cat_name, 0) + item.amount
+                category_colors[cat_name] = cat_color
+                total_sum += item.amount
         
-        # モデルに保存
         form.instance.total_amount = total_sum
-        form.instance.category_data = category_totals # これがグラフの元データになります
+        form.instance.category_data = category_totals
+        # カテゴリーの色情報も保存する
+        form.instance.category_colors = category_colors
         
         return super().form_valid(form)
+        
+
+# いいね機能
+class PostLikeView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        post = Post.objects.get(pk=pk)
+        # すでにいいねしている場合は取り消す、していない場合は追加する
+        if request.user in post.likes.all():
+            post.likes.remove(request.user)
+            liked = False
+        else:
+            post.likes.add(request.user)
+            liked = True
+        return JsonResponse({
+            'liked': liked,
+            'count': post.number_of_likes()
+        })
+
+# 投稿削除
+class PostDeleteView(LoginRequiredMixin, DeleteView):
+    model = Post
+    success_url = reverse_lazy('posts:post_list')
+
+    def get_queryset(self):
+        # 自分の投稿だけを削除対象にする
+        return Post.objects.filter(user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        # GETリクエストでも即削除する
+        return self.delete(request, *args, **kwargs)

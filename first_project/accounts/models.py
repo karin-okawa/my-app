@@ -35,6 +35,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     # リマインダー時間
     reminder_time = models.TimeField(null=True, blank=True)
+    # リマインダー通知のON/OFF
+    reminder_enabled = models.BooleanField(default=False)
+    # 励ましメッセージのON/OFF
+    encourage_enabled = models.BooleanField(default=False)
     # 作成日時・更新日時
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

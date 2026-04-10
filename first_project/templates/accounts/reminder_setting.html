@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .reminder-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  /* トグルスイッチのスタイル */
+  .toggle-group {
+    display: flex;
+    gap: 4px;
+  }
+
+  .toggle-btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .toggle-btn.on-active {
+    background-color: #e8d5c0;
+    color: #9c6d5c;
+  }
+
+  .toggle-btn.off-active {
+    background-color: #e8d5c0;
+    color: #9c6d5c;
+  }
+
+  .toggle-btn.inactive {
+    background-color: #f0f0f0;
+    color: #aaa;
+  }
+
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .setting-label {
+    font-size: 0.9rem;
+    color: #5d4037;
+    font-weight: bold;
+  }
+</style>
+
+<div class="reminder-container">
+
+  <!-- 戻るボタン -->
+  <div style="margin-bottom: 8px;">
+    <a href="{% url 'home:home' %}" style="color: #888; text-decoration: none; font-size: 0.9rem;">
+      ← 戻る
+    </a>
+  </div>
+
+  <!-- タイトル -->
+  <h2 style="font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 20px;">リマインダー設定</h2>
+
+  <form method="post" id="reminder-form">
+    {% csrf_token %}
+
+    <!-- リマインダー通知 ON/OFF -->
+    <div class="setting-row">
+      <span class="setting-label">・通知</span>
+      <div class="toggle-group">
+        <button type="button" class="toggle-btn {% if user_obj.reminder_enabled %}on-active{% else %}inactive{% endif %}"
+                id="reminder-on-btn" onclick="setReminder(true)">ON</button>
+        <button type="button" class="toggle-btn {% if not user_obj.reminder_enabled %}off-active{% else %}inactive{% endif %}"
+                id="reminder-off-btn" onclick="setReminder(false)">OFF</button>
+      </div>
+      <input type="hidden" name="reminder_enabled" id="reminder-enabled-input" value="{% if user_obj.reminder_enabled %}on{% endif %}">
+    </div>
+
+    <!-- 時刻設定 -->
+    <div class="setting-row" id="time-row" style="{% if not user_obj.reminder_enabled %}opacity: 0.4;{% endif %}">
+      <span class="setting-label">・時刻</span>
+      <div style="position: relative;">
+
+        <input type="text" id="time-display-btn" 
+          value="{% if user_obj.reminder_time %}{{ user_obj.reminder_time|time:'H:i' }}{% else %}21:00{% endif %}"
+          placeholder="00:00"
+          maxlength="5"
+          style="
+            background: none;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 6px 16px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #5d4037;
+            width: 90px;
+            text-align: center;
+          ">
+
+        <!-- 時刻選択プルダウン -->
+        <div id="time-picker" style="
+          display: none;
+          position: absolute;
+          right: 0;
+          top: 40px;
+          background: #fff;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          z-index: 100;
+          width: 120px;
+          max-height: 200px;
+          overflow-y: auto;
+        ">
+          {% for hour in "0123456789" %}{% endfor %}
+        </div>
+      </div>
+      <input type="hidden" name="reminder_time" id="reminder-time-input" 
+             value="{% if user_obj.reminder_time %}{{ user_obj.reminder_time|time:'H:i' }}{% else %}21:00{% endif %}">
+    </div>
+
+    <!-- 励ましメッセージ ON/OFF -->
+    <div class="setting-row" style="margin-top: 16px;">
+      <div>
+        <span class="setting-label">・励ましメッセージ</span>
+        <div style="font-size: 0.7rem; color: #999; margin-top: 2px;">＊励ましメッセージはランダムな時間に送られます。</div>
+      </div>
+      <div class="toggle-group">
+        <button type="button" class="toggle-btn {% if user_obj.encourage_enabled %}on-active{% else %}inactive{% endif %}"
+                id="encourage-on-btn" onclick="setEncourage(true)">ON</button>
+        <button type="button" class="toggle-btn {% if not user_obj.encourage_enabled %}off-active{% else %}inactive{% endif %}"
+                id="encourage-off-btn" onclick="setEncourage(false)">OFF</button>
+      </div>
+      <input type="hidden" name="encourage_enabled" id="encourage-enabled-input" value="{% if user_obj.encourage_enabled %}on{% endif %}">
+    </div>
+
+    <!-- 保存ボタン -->
+    <div style="margin-top: 32px;">
+      <button type="submit" class="btn w-100 py-2"
+              style="background-color: #9c6d5c; color: white; border-radius: 10px; font-weight: bold; border: none;">
+        保存する
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  // 時刻の選択肢を生成する（0時〜23時、1分刻み→30分刻み）
+  const timePicker = document.getElementById('time-picker');
+  const timeDisplayBtn = document.getElementById('time-display-btn');
+  const reminderTimeInput = document.getElementById('reminder-time-input');
+
+  // 30分刻みで時刻の選択肢を生成する
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      const hStr = String(h).padStart(2, '0');
+      const mStr = String(m).padStart(2, '0');
+      const timeStr = `${hStr}:${mStr}`;
+      const item = document.createElement('div');
+      item.style.cssText = 'padding: 10px 16px; cursor: pointer; font-size: 0.9rem; color: #5d4037;';
+      item.innerText = timeStr;
+      // 現在選択中の時刻をハイライトする
+      if (timeStr === reminderTimeInput.value) {
+        item.style.fontWeight = 'bold';
+        item.style.backgroundColor = '#f9f0ea';
+      }
+      item.addEventListener('click', function() {
+        reminderTimeInput.value = timeStr;
+        timeDisplayBtn.value = timeStr;
+        timePicker.style.display = 'none';
+        });
+    
+      timePicker.appendChild(item);
+    }
+  }
+
+  // 自動的にHH:MM形式に変換する
+  timeDisplayBtn.addEventListener('input', function() {
+    // カーソル位置を保存する
+    const cursorPos = this.selectionStart;
+    
+    // コロンと数字以外を除去する
+    let val = this.value.replace(/[^0-9]/g, '');
+    
+    // 最大4文字に制限する
+    val = val.slice(0, 4);
+    
+    // 2文字以上の場合はコロンを挿入する
+    if (val.length >= 3) {
+        val = val.slice(0, 2) + ':' + val.slice(2);
+    }
+    
+    this.value = val;
+    reminderTimeInput.value = val;
+  });
+
+  // フォーカスが外れた時にHH:MM形式かチェックする
+  timeDisplayBtn.addEventListener('blur', function() {
+    let val = this.value.replace(/[^0-9]/g, '');
+    
+    // 3文字の場合は先頭に0を追加して4文字にする
+    if (val.length === 3) {
+        val = '0' + val;
+    }
+    
+    // 4文字の場合はHH:MM形式に変換する
+    if (val.length === 4) {
+        const h = val.slice(0, 2);
+        const m = val.slice(2, 4);
+        const formatted = `${h}:${m}`;
+        const timeRegex = /^([01][0-9]|2[0-3]):([0-5][0-9])$/;
+        if (timeRegex.test(formatted)) {
+        this.value = formatted;
+        reminderTimeInput.value = formatted;
+        return;
+        }
+    }
+    
+    // 不正な形式の場合は元の値に戻す
+    const timeRegex = /^([01]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    if (!timeRegex.test(this.value)) {
+        this.value = reminderTimeInput.value || '21:00';
+    }
+  });
+
+  // 時刻ボタンをタップするとプルダウンを表示する
+  timeDisplayBtn.addEventListener('click', function() {
+    timePicker.style.display = timePicker.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // 他の場所をタップするとプルダウンを閉じる
+  document.addEventListener('click', function(e) {
+    if (!timeDisplayBtn.contains(e.target) && !timePicker.contains(e.target)) {
+      timePicker.style.display = 'none';
+    }
+  });
+
+  // リマインダーのON/OFFを切り替える
+  function setReminder(enabled) {
+    document.getElementById('reminder-enabled-input').value = enabled ? 'on' : '';
+    document.getElementById('reminder-on-btn').className = `toggle-btn ${enabled ? 'on-active' : 'inactive'}`;
+    document.getElementById('reminder-off-btn').className = `toggle-btn ${enabled ? 'inactive' : 'off-active'}`;
+    document.getElementById('time-row').style.opacity = enabled ? '1' : '0.4';
+  }
+
+  // 励ましメッセージのON/OFFを切り替える
+  function setEncourage(enabled) {
+    document.getElementById('encourage-enabled-input').value = enabled ? 'on' : '';
+    document.getElementById('encourage-on-btn').className = `toggle-btn ${enabled ? 'on-active' : 'inactive'}`;
+    document.getElementById('encourage-off-btn').className = `toggle-btn ${enabled ? 'inactive' : 'off-active'}`;
+  }
+</script>
+
+{% endblock %}

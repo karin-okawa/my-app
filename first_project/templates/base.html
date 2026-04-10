@@ -292,7 +292,9 @@
             <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
               <a href="{% url 'accounts:mypage' %}" style="text-decoration: none; color: #333;">マイページ</a>
             </li>
-            
+            <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
+              <a href="{% url 'accounts:reminder_setting' %}" style="text-decoration: none; color: #333;">リマインダー設定</a>
+            </li>
           </ul>
         </div>
 
@@ -545,10 +547,32 @@
 
         </div>
       </div>
-
       {% endif %}
 
-      <!-- 各ページ固有のパネル（電卓・カテゴリーなど）をここに表示する -->
+      <!-- 通知バナー -->
+      {% if user.is_authenticated %}
+      <div id="notification-banner" style="
+        display: none;
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 85%;
+        background: rgba(255,255,255,0.95);
+        border-radius: 12px;
+        padding: 12px 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 4000;
+        text-align: center;
+        font-size: 0.85rem;
+        color: #5d4037;
+        font-weight: bold;
+        line-height: 1.5;
+      ">
+      </div>
+      {% endif %}
+
+      <!-- 各ページ固有のパネルをここに表示する -->
       {% block extra_panels %}{% endblock %}
 
     </div><!-- card-box閉じタグ -->
@@ -707,6 +731,78 @@
         .catch(err => console.error('エラー:', err));
       });
     }
+
+    {% if user.is_authenticated %}
+    // バナー通知を表示する関数
+    function showBanner(message) {
+      const banner = document.getElementById('notification-banner');
+      banner.innerText = message;
+      banner.style.display = 'block';
+      // 30秒後に自動的に消える
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 30000);
+    }
+
+    // リマインダーの設定をDjangoから受け取る
+    const reminderEnabled = {{ user.reminder_enabled|lower }};
+    // reminder_timeをHH:MM形式で渡す
+    const reminderTime = "{% if user.reminder_time %}{{ user.reminder_time|time:'H:i' }}{% endif %}";
+    const encourageEnabled = {{ user.encourage_enabled|lower }};
+
+    // リマインダー通知の監視
+    if (reminderEnabled && reminderTime) {
+      setInterval(() => {
+        const now = new Date();
+        const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        if (currentTime === reminderTime) {
+          showBanner('家計簿を入力して\n今日もかけいをまもろう！');
+        }
+      }, 60000); // 1分ごとに確認する
+    }
+
+    // 励ましメッセージの設定
+    if (encourageEnabled) {
+      // 就寝時間（0時〜5時）を避けたランダムな時間を生成する
+      const messages = [
+        '今日も一日頑張ってえらいね！\n家計簿をつけてくれるの待ってるよ〜',
+        '毎日コツコツが大事だよ！\n今日の収支を記録しよう！',
+        'お金の管理上手になってきてるね！\n今日も記録してみよう！',
+        '家計簿をつけると未来が変わる！\n今日も一緒に頑張ろう！',
+        'お疲れ様！今日の出費を\nチェックしてみよう！',
+      ];
+
+      // ページ読み込み時にランダムな時間を設定する（就寝時間を避ける）
+      const sessionKey = 'encourage_shown_date';
+      const today = new Date().toDateString();
+      const shownDate = sessionStorage.getItem(sessionKey);
+
+      if (shownDate !== today) {
+        // 今日まだ表示していない場合はランダムな時間後に表示する
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        // 6時〜23時の範囲でランダムな待機時間を設定する（分単位）
+        let waitMinutes;
+        if (currentHour >= 6 && currentHour < 23) {
+          // 現在時刻から23時までの残り時間内でランダムに設定する
+          const remainingMinutes = (23 - currentHour) * 60 - now.getMinutes();
+          waitMinutes = Math.floor(Math.random() * Math.min(remainingMinutes, 180)) + 10;
+        } else {
+          // 就寝時間帯はスキップする
+          waitMinutes = null;
+        }
+
+        if (waitMinutes !== null) {
+          setTimeout(() => {
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            showBanner(randomMessage);
+            sessionStorage.setItem(sessionKey, today);
+          }, waitMinutes * 60 * 1000);
+        }
+      }
+    }
+    {% endif %}
 
     </script>
     </body>

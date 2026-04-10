@@ -224,3 +224,27 @@ class EmailConfirmView(LoginRequiredMixin, View):
         del request.session['email_change_expires']
 
         return redirect('accounts:mypage')
+    
+
+# リマインダー設定画面
+class ReminderSettingView(LoginRequiredMixin, View):
+    template_name = 'accounts/reminder_setting.html'
+
+    def get(self, request, *args, **kwargs):
+        # 現在の設定を表示する
+        return render(request, self.template_name, {'user_obj': request.user})
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        # リマインダーのON/OFFを保存する
+        user.reminder_enabled = request.POST.get('reminder_enabled') == 'on'
+        # 励ましメッセージのON/OFFを保存する
+        user.encourage_enabled = request.POST.get('encourage_enabled') == 'on'
+        # リマインダー時刻を保存する
+        reminder_time = request.POST.get('reminder_time', '').strip()
+        if reminder_time:
+            user.reminder_time = reminder_time
+        else:
+            user.reminder_time = None
+        user.save()
+        return redirect('accounts:reminder_setting')

@@ -1,27 +1,62 @@
-<div class="card mb-3" style="border-radius: 12px; border: none; shadow: 0 2px 5px rgba(0,0,0,0.05);">
-  <div class="card-body">
+<div class="card mb-3" style="border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+  <div class="card-body" style="padding: 12px;">
+
+    <!-- ユーザー情報 -->
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <strong style="color: #5d4037;">@{{ post.user.username }}</strong>
-      <small class="text-muted">{{ post.created_at|date:"Y/m/d H:i" }}</small>
-    </div>
-    
-    <div style="background: #f8f9fa; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
-      <h6 class="mb-1" style="font-weight: bold;">{{ post.year }}年{{ post.month }}月の{{ post.get_post_type_display }}</h6>
-      <span class="badge bg-light text-dark" style="border: 1px solid #ddd;">{{ post.household_size }}人暮らし</span>
-    </div>
-
-    <p class="card-text">{{ post.memo }}</p>
-
-        <div style="max-width: 250px; margin: 0 auto 15px;">
-          <canvas id="chart-{{ post.id }}" 
-                  data-values='{{ post.category_data|safe }}' 
-                  class="post-chart"></canvas>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <!-- ユーザーアイコン -->
+        <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #e0d5d0; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          {% if post.user.avatar %}
+          <img src="{{ post.user.avatar.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+          {% else %}
+          <i class="bi bi-person-fill" style="font-size: 1rem; color: #9c6d5c;"></i>
+          {% endif %}
         </div>
+        <strong style="color: #5d4037; font-size: 0.9rem;">{{ post.user.username }}</strong>
+      </div>
+      <!-- わたしの投稿タブの場合は削除ボタンを表示する -->
+      {% if post.user == request.user %}
+      <button type="button" class="post-delete-btn" data-id="{{ post.id }}"
+              style="background: none; border: none; color: #ccc; cursor: pointer; padding: 0;">
+        <i class="bi bi-trash"></i>
+      </button>
+      {% endif %}
+    </div>
 
-    <div class="d-flex justify-content-end">
-      <button class="btn btn-link btn-sm p-0 text-decoration-none" style="color: #5d4037;">
-        いいね！ 👍 <span>{{ post.number_of_likes }}</span>
+    <!-- 期間・世帯人数 -->
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; font-size: 0.8rem;">
+      <span style="font-weight: bold; color: #5d4037;">{{ post.year }}年{{ post.month }}月の{{ post.get_post_type_display }}</span>
+      <span class="ms-2" style="color: #888;">{{ post.household_size }}人暮らし</span>
+    </div>
+
+    <!-- 円グラフ -->
+    <div style="max-width: 180px; margin: 0 auto 10px;">
+      <canvas id="chart-{{ post.id }}" 
+        class="post-chart"
+        data-id="{{ post.id }}">
+      </canvas>
+      <script>
+        window.postData = window.postData || {};
+        window.postData[{{ post.id }}] = {
+          values: {{ post.category_data|safe }},
+          colors: {{ post.category_colors|safe }}
+        };
+      </script>
+    </div>
+
+    <!-- メモ -->
+    {% if post.memo %}
+    <p style="font-size: 0.85rem; color: #555; margin-bottom: 8px;">{{ post.memo }}</p>
+    {% endif %}
+
+    <!-- いいねボタン -->
+    <div class="d-flex justify-content-between align-items-center">
+      <small style="color: #aaa; font-size: 0.75rem;">{{ post.created_at|date:"Y/m/d" }}</small>
+      <button class="like-btn btn btn-sm" data-id="{{ post.id }}"
+              style="background: none; border: 1px solid #ddd; border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: {% if request.user in post.likes.all %}#e74c3c{% else %}#888{% endif %}; cursor: pointer;">
+        <i class="bi bi-hand-thumbs-up{% if request.user in post.likes.all %}-fill{% endif %}"></i> いいね！ <span class="like-count">{{ post.number_of_likes }}</span>
       </button>
     </div>
+
   </div>
 </div>

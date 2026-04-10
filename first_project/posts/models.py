@@ -20,6 +20,9 @@ class Post(models.Model):
     # カテゴリごとの内訳を保存するフィールド（例：{"食費": 5000, "交際費": 2000}）
     category_data = models.JSONField(default=dict, verbose_name="カテゴリ別内訳")
     
+    # カテゴリーの色情報を保存するフィールド
+    category_colors = models.JSONField(default=dict, verbose_name="カテゴリー色情報")
+    
     # いいね機能（誰がいいねしたかを記録）
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)
     

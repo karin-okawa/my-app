@@ -83,18 +83,20 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         year = int(form.cleaned_data['year'])
         month = int(form.cleaned_data['month'])
         post_type = form.cleaned_data['post_type']
+        # post_typeを文字列として保持する（'income' または 'expense'）
+        tx_type_str = post_type
         tx_type = Transaction.INCOME if post_type == 'income' else Transaction.EXPENSE
         
+        # 現在の家計簿を取得する
+        from home.views import get_current_household
+        household = get_current_household(self.request)
+
         # 家計簿名を保存する（入力がなければ現在の家計簿名を使う）
         household_name = form.cleaned_data.get('household_name', '').strip()
         if not household_name:
             form.instance.household_name = household.name if household else ''
         else:
             form.instance.household_name = household_name
-                
-        # 現在の家計簿を取得する
-        from home.views import get_current_household
-        household = get_current_household(self.request)
         
         # 指定年月の現在の家計簿のデータを取得する
         qs = Transaction.objects.filter(
@@ -120,11 +122,30 @@ class PostCreateView(LoginRequiredMixin, CreateView):
                 category_totals[cat_name] = category_totals.get(cat_name, 0) + item.amount
                 category_colors[cat_name] = cat_color
                 total_sum += item.amount
-        
+
+        # カテゴリーの順番をorderフィールドの順番に揃える
+        from households.models import Category
+        ordered_categories = Category.objects.filter(
+            household_account=household,
+            category_type=tx_type_str
+        ).order_by('order').values_list('name', flat=True)
+
+        # 順番通りに並び替えた辞書を作成する
+        ordered_totals = {}
+        ordered_colors = {}
+        for cat_name in ordered_categories:
+            if cat_name in category_totals:
+                ordered_totals[cat_name] = category_totals[cat_name]
+                ordered_colors[cat_name] = category_colors[cat_name]
+        # 未分類は最後に追加する
+        if '未分類' in category_totals:
+            ordered_totals['未分類'] = category_totals['未分類']
+            ordered_colors['未分類'] = '#95a5a6'
+
+        # モデルに保存する
         form.instance.total_amount = total_sum
-        form.instance.category_data = category_totals
-        # カテゴリーの色情報も保存する
-        form.instance.category_colors = category_colors
+        form.instance.category_data = ordered_totals
+        form.instance.category_colors = ordered_colors
         # 現在の家計簿を投稿に紐づける
         form.instance.household = household
         

@@ -82,7 +82,7 @@
       <!-- 合計 -->
       <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 2px solid #eee; font-weight: bold;">
         <span style="color: #5d4037;">合計</span>
-        <span style="color: #a24141;">{{ total_expense|floatformat:0 }}円</span>
+        <span style="color: #5d4037;">{{ total_expense|floatformat:0 }}円</span>
       </div>
       {% for item in expense_data %}
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #eee;">
@@ -91,7 +91,7 @@
           <div style="width: 12px; height: 12px; border-radius: 50%; background-color: {{ item.color }}; flex-shrink: 0;"></div>
           <span style="font-size: 0.9rem; color: #5d4037;">{{ item.name }}</span>
         </div>
-        <span style="font-size: 0.9rem; font-weight: bold; color: #a24141;">{{ item.total|floatformat:0 }}円</span>
+        <span style="font-size: 0.9rem; font-weight: bold; color: #5d4037;">{{ item.total|floatformat:0 }}円</span>
       </div>
       {% empty %}
       <div style="text-align: center; color: #999; padding: 20px; font-size: 0.85rem;">この月の支出はまだありません</div>
@@ -103,7 +103,7 @@
       <!-- 合計 -->
       <div style="display: flex; justify-content: space-between; padding: 10px 16px; border-bottom: 2px solid #eee; font-weight: bold;">
         <span style="color: #5d4037;">合計</span>
-        <span style="color: #2c587c;">{{ total_income|floatformat:0 }}円</span>
+        <span style="color: #5d4037;">{{ total_income|floatformat:0 }}円</span>
       </div>
       {% for item in income_data %}
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid #eee;">
@@ -111,7 +111,7 @@
           <div style="width: 12px; height: 12px; border-radius: 50%; background-color: {{ item.color }}; flex-shrink: 0;"></div>
           <span style="font-size: 0.9rem; color: #5d4037;">{{ item.name }}</span>
         </div>
-        <span style="font-size: 0.9rem; font-weight: bold; color: #2c587c;">{{ item.total|floatformat:0 }}円</span>
+        <span style="font-size: 0.9rem; font-weight: bold; color: #5d4037;">{{ item.total|floatformat:0 }}円</span>
       </div>
       {% empty %}
       <div style="text-align: center; color: #999; padding: 20px; font-size: 0.85rem;">この月の収入はまだありません</div>

@@ -606,24 +606,24 @@ class GraphView(LoginRequiredMixin, TemplateView):
             date__month=month,
         )
 
-        # 支出のカテゴリー別集計
         from django.db.models import Sum
+        # 支出のカテゴリー別集計
         expense_by_category = qs.filter(
             tx_type=Transaction.EXPENSE
         ).values(
-            'category__name', 'category__color'
+            'category__name', 'category__color', 'category__order'
         ).annotate(
             total=Sum('amount')
-        ).order_by('-total')
+        ).order_by('category__order')
 
         # 収入のカテゴリー別集計
         income_by_category = qs.filter(
             tx_type=Transaction.INCOME
         ).values(
-            'category__name', 'category__color'
+            'category__name', 'category__color', 'category__order'
         ).annotate(
             total=Sum('amount')
-        ).order_by('-total')
+        ).order_by('category__order')
 
         # テンプレートに渡すデータを整形する
         expense_data = [

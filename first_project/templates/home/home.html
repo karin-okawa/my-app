@@ -212,6 +212,52 @@
 
 </div><!-- home-container閉じタグ -->
 
+<script>
+// 0時になったら今日の日付のハイライトを自動で切り替える
+function updateTodayHighlight() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentDay = now.getDate();
+
+  // 表示中の年月を取得する
+  const displayYear = {{ year }};
+  const displayMonth = {{ month }};
+
+  // 全てのtodayクラスを一旦削除する
+  document.querySelectorAll('.today').forEach(el => {
+    el.classList.remove('today');
+  });
+
+  // 表示中の月が今月の場合のみ今日のマスにtodayクラスを追加する
+  if (displayYear === currentYear && displayMonth === currentMonth) {
+    document.querySelectorAll('.day-number').forEach(el => {
+      if (parseInt(el.innerText) === currentDay) {
+        el.closest('td').classList.add('today');
+      }
+    });
+  }
+}
+
+// 0時に切り替わるまでの残り時間を計算してタイマーをセットする
+function scheduleNextDayUpdate() {
+  const now = new Date();
+  // 次の0時までのミリ秒を計算する
+  const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const msUntilMidnight = nextMidnight - now;
+
+  setTimeout(() => {
+    // 0時になったらハイライトを更新する
+    updateTodayHighlight();
+    // 次の日のために再度タイマーをセットする
+    scheduleNextDayUpdate();
+  }, msUntilMidnight);
+}
+
+// ページ読み込み時にタイマーをスタートする
+scheduleNextDayUpdate();
+</script>
+
 <div id="sheetBackdrop" class="sheet-backdrop"></div>
 <div id="daySheet" class="day-sheet">
   <div class="sheet-header">
@@ -299,6 +345,7 @@
 
   document.getElementById('sheetCancel').addEventListener('click', closeSheet);
   backdrop.addEventListener('click', closeSheet);
+
 </script>
 
 {% endblock %}

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from households.models import HouseholdAccount
 
 class Post(models.Model):
     """
@@ -22,6 +23,18 @@ class Post(models.Model):
     
     # カテゴリーの色情報を保存するフィールド
     category_colors = models.JSONField(default=dict, verbose_name="カテゴリー色情報")
+    
+    # 投稿時の家計簿名（公開用・変更可能）
+    household_name = models.CharField(max_length=50, blank=True, verbose_name="家計簿名")
+    
+    # 投稿に家計簿を紐づけるフィールド
+    household = models.ForeignKey(
+        HouseholdAccount,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="家計簿"
+    )
     
     # いいね機能（誰がいいねしたかを記録）
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)

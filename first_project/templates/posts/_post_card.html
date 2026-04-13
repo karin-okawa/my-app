@@ -23,10 +23,13 @@
       {% endif %}
     </div>
 
-    <!-- 期間・世帯人数 -->
+    <!-- 期間・世帯人数・家計簿名 -->
     <div style="background: #f8f9fa; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; font-size: 0.8rem;">
       <span style="font-weight: bold; color: #5d4037;">{{ post.year }}年{{ post.month }}月の{{ post.get_post_type_display }}</span>
       <span class="ms-2" style="color: #888;">{{ post.household_size }}人暮らし</span>
+      {% if post.household_name %}
+      <span class="ms-2" style="color: #aaa;">｜{{ post.household_name }}</span>
+      {% endif %}
     </div>
 
     <!-- 円グラフ -->

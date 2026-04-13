@@ -58,9 +58,14 @@ class PostForm(forms.ModelForm):
     
     class Meta:
         model = Post
-        # 表示する順番通りに並べています
-        fields = ['year', 'month', 'post_type', 'household_size', 'memo']
+        fields = ['year', 'month', 'post_type', 'household_size', 'household_name', 'memo']
         widgets = {
+            # 家計簿名入力欄のデザイン設定
+            'household_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '家計簿名',
+                'style': 'border-radius: 10px; border: 1px solid #ddd; padding: 8px 12px; font-size: 0.9rem;',
+            }),
             # メモ入力欄のデザイン設定
             'memo': forms.Textarea(attrs={
                 'class': 'form-control', 

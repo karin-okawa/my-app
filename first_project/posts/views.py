@@ -51,7 +51,13 @@ class PostListView(LoginRequiredMixin, ListView):
         context['form'] = PostForm() 
         
         # 「わたしの投稿」タブに表示するため、ログイン中ユーザーの投稿だけを最新順で取得
-        context['my_posts'] = Post.objects.filter(user=self.request.user).order_by('-id')
+        # 現在の家計簿に紐づいた自分の投稿だけを取得する
+        from home.views import get_current_household
+        household = get_current_household(self.request)
+        context['my_posts'] = Post.objects.filter(
+            user=self.request.user,
+            household=household
+        ).order_by('-id')
         
         # 準備したすべてのデータをHTMLに送る
         return context
@@ -79,6 +85,13 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         post_type = form.cleaned_data['post_type']
         tx_type = Transaction.INCOME if post_type == 'income' else Transaction.EXPENSE
         
+        # 家計簿名を保存する（入力がなければ現在の家計簿名を使う）
+        household_name = form.cleaned_data.get('household_name', '').strip()
+        if not household_name:
+            form.instance.household_name = household.name if household else ''
+        else:
+            form.instance.household_name = household_name
+                
         # 現在の家計簿を取得する
         from home.views import get_current_household
         household = get_current_household(self.request)
@@ -112,6 +125,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         form.instance.category_data = category_totals
         # カテゴリーの色情報も保存する
         form.instance.category_colors = category_colors
+        # 現在の家計簿を投稿に紐づける
+        form.instance.household = household
         
         return super().form_valid(form)
         

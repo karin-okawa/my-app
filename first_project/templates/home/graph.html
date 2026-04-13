@@ -165,7 +165,7 @@
             legend: { display: false },
             tooltip: { enabled: false },
           },
-          cutout: '0%',
+          cutout: '50%',
         }
       });
       return;
@@ -175,7 +175,7 @@
     const total = data.reduce((sum, d) => sum + d.total, 0);
 
     currentChart = new Chart(ctx, {
-      type: 'pie',
+      type: 'doughnut',
       data: {
         labels: data.map(d => d.name),
         datasets: [{
@@ -186,6 +186,7 @@
         }]
       },
       options: {
+        cutout: '30%',
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -199,7 +200,6 @@
           // カテゴリー名をグラフ上に表示するプラグイン
           datalabels: {
             display: function(context) {
-              // 割合が10%以上の場合のみ表示する
               const value = context.dataset.data[context.dataIndex];
               return (value / total) >= 0.1;
             },
@@ -208,9 +208,13 @@
             },
             color: '#fff',
             font: {
-              size: 10,
+              size: 12,
               weight: 'bold',
             },
+            // ラベルをグラフの外側寄りに配置する
+            anchor: 'end',
+            align: 'start',
+            offset: 10,
           }
         },
       },

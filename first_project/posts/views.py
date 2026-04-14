@@ -1,94 +1,70 @@
-# 画面を表示するためのショートカット機能をインポート
-from django.shortcuts import render
+# ①Django標準機能
+from django.shortcuts import render  # 画面描画関数のインポート
+from django.views.generic import ListView, CreateView, DeleteView  # 汎用ビュークラスのインポート
+from django.contrib.auth.mixins import LoginRequiredMixin  # ログイン必須Mixinのインポート
+from django.urls import reverse_lazy  # 名前付きURLパターンからURLを動的に生成する関数のインポート
+from django.http import JsonResponse  # JSONレスポンス生成クラスのインポート
+from django.views import View  # Viewの基本クラスのインポート
+from django.db.models import Sum  # DB集計用（合計）関数のインポート
+from django.utils import timezone  # タイムゾーン対応の日時取得モジュールのインポート
 
-# 一覧画面（リスト）を簡単に作るための機能をインポート
-from django.views.generic import ListView
+# ②このアプリ内のモデルとフォーム
+from .models import Post  # このアプリ内の投稿モデルのインポート
+from .forms import PostForm  # このアプリ内のフォームクラスのインポート
 
-# ログインしていない人がページを開けないように制限する機能をインポート
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-# 掲示板のデータを保存する「Post」モデルを読み込み
-from .models import Post
-
-# 新規作成画面（フォーム）を簡単に作るための機能をインポート
-from django.views.generic import CreateView
-
-# 処理が終わった後に別のページへ移動（リダイレクト）させるための機能をインポート
-from django.urls import reverse_lazy
-
-# 掲示板投稿用の入力フォーム設定を読み込み
-from .forms import PostForm
-
-# 家計簿アプリ側の収支データ（Transaction）を参照するためにインポート
-from households.models import Transaction
-
-# データベース内の数値を合計（足し算）するための機能をインポート
-from django.db.models import Sum
+# ③他アプリのモデルと関数
+from households.models import Transaction, Category  # 家計簿アプリのモデルのインポート
+from home.views import get_current_household  # 現在選択中の家計簿を取得する関数のインポート
 
 
-from .forms import PostForm
-
-from django.views.generic import DeleteView
-from django.http import JsonResponse
-from django.views import View
-
-
-
-
-# --- 掲示板の一覧（みんなの投稿・わたしの投稿）を表示するクラス ---
+# ============================
+# 掲示板一覧ビュー
+# ============================
 class PostListView(LoginRequiredMixin, ListView):
-    # どのデータを表示対象にするか（掲示板のPostモデル）
     model = Post
     template_name = 'posts/post_list.html'
     context_object_name = 'all_posts'
 
-    # HTMLに渡すデータ（ context ）を準備するメソッド
     def get_context_data(self, **kwargs):
-        # まずは親クラスが持っている標準的なデータ（全件リストなど）を取得
         context = super().get_context_data(**kwargs)
-        
-        # モーダル内の入力項目（年・月など）を表示するための空フォームを渡す
-        context['form'] = PostForm() 
-        
-        # 「わたしの投稿」タブに表示するため、ログイン中ユーザーの投稿だけを最新順で取得
-        # 現在の家計簿に紐づいた自分の投稿だけを取得する
-        from home.views import get_current_household
+        # モーダル内の入力項目を表示するための空フォームを渡す
+        context['form'] = PostForm()
+        # 現在の年月をデフォルト値として渡す
+        now = timezone.now()
+        context['current_year'] = now.year
+        context['current_month'] = now.month
+        # 現在の家計簿に紐づいた自分の投稿だけを最新順で取得する
         household = get_current_household(self.request)
         context['my_posts'] = Post.objects.filter(
             user=self.request.user,
             household=household
         ).order_by('-id')
-        
-        # 準備したすべてのデータをHTMLに送る
         return context
-    
 
-# --- 家計簿レポートを新しく投稿するためのクラス ---
+
+# ============================
+# 投稿新規作成ビュー
+# ============================
 class PostCreateView(LoginRequiredMixin, CreateView):
-    # どのモデルにデータを保存するか
     model = Post
-    # どのフォームを使って入力を受け付けるか
     form_class = PostForm
-    # 入力画面に使用するHTMLファイルを指定
     template_name = 'posts/post_form.html'
-    # 投稿が無事に完了した後に自動で移動する先（掲示板の一覧画面）を指定
+    # 投稿完了後は掲示板一覧へ戻る
     success_url = reverse_lazy('posts:post_list')
 
-    # 入力された内容を保存する直前に実行される処理
     def form_valid(self, form):
-        # 投稿者に自分をセット
+        # 投稿者に自分をセットする
         form.instance.user = self.request.user
-        
-        # フォームから年・月・区分を取得
+
+        # フォームから年・月・収支区分を取得する
         year = int(form.cleaned_data['year'])
         month = int(form.cleaned_data['month'])
         post_type = form.cleaned_data['post_type']
         # post_typeを文字列として保持する（'income' または 'expense'）
         tx_type_str = post_type
         tx_type = Transaction.INCOME if post_type == 'income' else Transaction.EXPENSE
-        
+
         # 現在の家計簿を取得する
-        from home.views import get_current_household
         household = get_current_household(self.request)
 
         # 家計簿名を保存する（入力がなければ現在の家計簿名を使う）
@@ -97,20 +73,20 @@ class PostCreateView(LoginRequiredMixin, CreateView):
             form.instance.household_name = household.name if household else ''
         else:
             form.instance.household_name = household_name
-        
-        # 指定年月の現在の家計簿のデータを取得する
+
+        # 指定年月の現在の家計簿の収支データを取得する
         qs = Transaction.objects.filter(
             household_account=household,
             date__year=year,
             date__month=month,
             tx_type=tx_type
         ).select_related('category')
-        
-        # カテゴリごとに合計金額と色を計算する
+
+        # カテゴリーごとに合計金額と色を計算する
         category_totals = {}
         category_colors = {}
         total_sum = 0
-        
+
         for item in qs:
             if item.category:
                 cat_name = item.category.name
@@ -124,7 +100,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
                 total_sum += item.amount
 
         # カテゴリーの順番をorderフィールドの順番に揃える
-        from households.models import Category
         ordered_categories = Category.objects.filter(
             household_account=household,
             category_type=tx_type_str
@@ -142,17 +117,19 @@ class PostCreateView(LoginRequiredMixin, CreateView):
             ordered_totals['未分類'] = category_totals['未分類']
             ordered_colors['未分類'] = '#95a5a6'
 
-        # モデルに保存する
+        # 集計結果をモデルに保存する
         form.instance.total_amount = total_sum
         form.instance.category_data = ordered_totals
         form.instance.category_colors = ordered_colors
         # 現在の家計簿を投稿に紐づける
         form.instance.household = household
-        
-        return super().form_valid(form)
-        
 
-# いいね機能
+        return super().form_valid(form)
+
+
+# ============================
+# いいねビュー
+# ============================
 class PostLikeView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         post = Post.objects.get(pk=pk)
@@ -168,9 +145,13 @@ class PostLikeView(LoginRequiredMixin, View):
             'count': post.number_of_likes()
         })
 
-# 投稿削除
+
+# ============================
+# 投稿削除ビュー
+# ============================
 class PostDeleteView(LoginRequiredMixin, DeleteView):
     model = Post
+    # 削除後は掲示板一覧へ戻る
     success_url = reverse_lazy('posts:post_list')
 
     def get_queryset(self):
@@ -178,5 +159,5 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
         return Post.objects.filter(user=self.request.user)
 
     def get(self, request, *args, **kwargs):
-        # GETリクエストでも即削除する
+        # GETリクエストでも即削除する（確認画面なし）
         return self.delete(request, *args, **kwargs)

@@ -1,7 +1,8 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
 <style>
+  /* ユーザー情報変更画面全体のスタイル */
   .update-container {
     display: flex;
     flex-direction: column;
@@ -11,6 +12,7 @@
   }
 </style>
 
+<!-- ユーザー情報変更画面 -->
 <div class="update-container">
 
   <!-- 戻るボタン -->
@@ -21,17 +23,23 @@
   </div>
 
   <!-- タイトル -->
-  <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 24px;">メールアドレスの変更</h2>
+  <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 24px;">ユーザー情報の変更</h2>
 
+  <!-- ユーザー情報変更フォーム -->
   <form method="post">
-    {% csrf_token %}
+    {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
+
+    <!-- メールアドレス入力欄 -->
     <div style="margin-bottom: 16px;">
       <label style="font-size: 0.85rem; color: #888; font-weight: bold; display: block; margin-bottom: 6px;">新しいメールアドレス</label>
+      {# 現在のメールアドレスを初期値として表示 #}
       <input type="email" name="email" value="{{ user_obj.email }}"
-             style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
+        style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
     </div>
+
+    <!-- 保存ボタン -->
     <button type="submit" class="btn w-100 py-2"
-            style="background-color: #9c6d5c; color: white; border-radius: 10px; font-weight: bold; border: none;">
+      style="background-color: #9c6d5c; color: white; border-radius: 10px; font-weight: bold; border: none;">
       保存する
     </button>
   </form>

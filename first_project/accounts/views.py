@@ -1,42 +1,47 @@
-from django.shortcuts import render, redirect
-from django.views.generic import(
+# ①Django標準機能
+from django.shortcuts import render, redirect  # 画面描画とリダイレクトのインポート
+from django.views.generic import (  # 汎用ビュークラスのインポート
     CreateView, FormView, View, UpdateView, DetailView, TemplateView
 )
-from django.urls import reverse_lazy
-from django.contrib.auth import login, logout
-from .forms import RegistForm, UserLoginForm
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import User
-from django.http import JsonResponse
+from django.contrib.auth import login, logout  # ログイン・ログアウト関数のインポート
+from django.contrib.auth.mixins import LoginRequiredMixin  # ログイン必須Mixinのインポート
+from django.urls import reverse_lazy  # 名前付きURLパターンからURLを動的に生成する関数のインポート
+from django.http import JsonResponse  # JSONレスポンス生成クラスのインポート
+from django.core.mail import send_mail  # メール送信関数のインポート
+from django.utils import timezone  # タイムゾーン対応の日時取得モジュールのインポート
+from django.utils.dateparse import parse_datetime  # 文字列から日時オブジェクトへの変換関数のインポート
+
+# ②このアプリ内のモデルとフォーム
+from .forms import RegistForm, UserLoginForm  # このアプリ内のフォームクラスのインポート
+from .models import User  # このアプリ内のユーザーモデルのインポート
+
+# ③その他のライブラリ
+from django.contrib.auth.hashers import check_password  # パスワードハッシュ照合関数のインポート
+import uuid  # ランダムなトークン生成モジュールのインポート
+from datetime import timedelta  # 時間差分を扱うクラスのインポート
+
+# ④他アプリのモデル
+from households.models import HouseholdAccount, UserHouseholdAccount, Category  # 家計簿アプリのモデルのインポート
 
 
-from django.core.mail import send_mail
-from django.contrib.auth.hashers import check_password
-import uuid
-from django.utils import timezone
-from datetime import timedelta
-
-
-from households.models import HouseholdAccount, UserHouseholdAccount
-
-# ユーザー登録
+# ユーザー登録ビュー
 class RegistUserView(CreateView):
     template_name = 'accounts/regist.html'
     form_class = RegistForm
     success_url = reverse_lazy('accounts:login')
 
-# ログイン 
+
+# ログインビュー
 class UserLoginView(FormView):
     template_name = 'accounts/login.html'
     form_class = UserLoginForm
     success_url = reverse_lazy('home:home')
-    
+
     def form_valid(self, form):
+        # forms.pyでパスワード照合が済んだユーザーを取り出す
         user = form.cleaned_data['user']
-        # forms.py でパスワード照合が済んだユーザーを取りだす
         login(self.request, user)
-        # ブラウザに「この人はログイン中ですよ」というクッキー（セッション）を保存させる
-        
+
         # ログイン時に家計簿がなければ「個人家計簿」を自動作成する
         if not UserHouseholdAccount.objects.filter(user=user).exists():
             household = HouseholdAccount.objects.create(name='個人家計簿')
@@ -46,7 +51,6 @@ class UserLoginView(FormView):
                 status=1,
                 joined_at=timezone.now()
             )
-            
             # デフォルトカテゴリーを作成する
             default_categories = [
                 # 支出カテゴリー
@@ -67,43 +71,46 @@ class UserLoginView(FormView):
                     household_account=household,
                     **cat
                 )
-            
-        return super().form_valid(form)
-        # 最終的に success_url（ホーム画面など）へリダイレクトさせる
 
-# マイページ（詳細表示） 
+        # 最終的にsuccess_url（ホーム画面）へリダイレクトさせる
+        return super().form_valid(form)
+
+
+# マイページビュー（ログインユーザー自身の情報を表示）
 class MyPageView(LoginRequiredMixin, DetailView):
     model = User
     template_name = 'accounts/mypage.html'
     context_object_name = 'user_obj'
-   
+
     def get_object(self):
-        # URLのpkではなく、現在ログインしているユーザー自身を編集対象にする
+        # URLのpkではなく、現在ログインしているユーザー自身を表示対象にする
         return self.request.user
-    
-# ログアウト処理（実行のみ）
+
+
+# ログアウト処理ビュー（実行のみ）
 class UserLogoutView(View):
     def post(self, request, *args, **kwargs):
         logout(request)
         return redirect('accounts:logout_done')
-    
-# ログアウト完了画面（表示のみ）
+
+
+# ログアウト完了画面ビュー（表示のみ）
 class LogoutDoneView(TemplateView):
-    template_name ='accounts/logout.html'
-    
-# プロフィール編集
+    template_name = 'accounts/logout.html'
+
+
+# ユーザー情報編集ビュー
 class UserUpdateView(LoginRequiredMixin, UpdateView):
-    # ログイン済みユーザーのみアクセス可能にするMixin
     model = User
     template_name = 'accounts/user_update.html'
-    # 編集を許可するフィールドを指定する
-    fields = ['username', 'email'] 
-    success_url = reverse_lazy('accounts:mypage') # マイページへ戻す
+    # 編集を許可するフィールドの指定
+    fields = ['username', 'email']
+    success_url = reverse_lazy('accounts:mypage')
 
     def get_object(self):
         # URLのpkではなく、現在ログインしているユーザー自身を編集対象にする
         return self.request.user
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # テンプレートでuser_objとして参照できるようにする
@@ -111,31 +118,30 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-
-# プロフィール画像更新
+# プロフィール画像更新ビュー
 class AvatarUpdateView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        # アップロードされた画像をユーザーのavatarに保存する
         user = request.user
         if 'avatar' in request.FILES:
+            # アップロードされた画像をユーザーのavatarに保存する
             user.avatar = request.FILES['avatar']
             user.save()
         return redirect('accounts:mypage')
 
-# ニックネーム更新
+
+# ニックネーム更新ビュー
 class NicknameUpdateView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        # 送信されたニックネームを保存する
         user = request.user
+        # 送信されたニックネームを取得し、前後の空白を除去する
         username = request.POST.get('username', '').strip()
         if username:
             user.username = username
             user.save()
         return redirect('accounts:mypage')
-    
-    
 
-# メールアドレス変更画面
+
+# メールアドレス変更ビュー
 class EmailUpdateView(LoginRequiredMixin, View):
     template_name = 'accounts/email_update.html'
 
@@ -144,6 +150,7 @@ class EmailUpdateView(LoginRequiredMixin, View):
         return render(request, self.template_name, {'user_obj': request.user})
 
     def post(self, request, *args, **kwargs):
+        # 入力値の取得と前後の空白除去
         new_email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
 
@@ -167,19 +174,22 @@ class EmailUpdateView(LoginRequiredMixin, View):
         request.session['email_change_new'] = new_email
         request.session['email_change_expires'] = str(timezone.now() + timedelta(minutes=30))
 
-        # 確認メールを送信する
-        confirm_url = request.build_absolute_uri(f'/accounts/email/confirm/{token}/')
-        send_mail(
-            subject='メールアドレス変更の確認',
-            message=f'以下のリンクをクリックしてメールアドレスの変更を完了してください。\n\n{confirm_url}\n\n※このリンクの有効期限は30分です。',
-            from_email=None,
-            recipient_list=[new_email],
-        )
+        # 確認メールを送信する（エラーが出ても次の画面に進む）
+        try:
+            confirm_url = request.build_absolute_uri(f'/accounts/email/confirm/{token}/')
+            send_mail(
+                subject='メールアドレス変更の確認',
+                message=f'以下のリンクをクリックしてメールアドレスの変更を完了してください。\n\n{confirm_url}\n\n※このリンクの有効期限は30分です。',
+                from_email=None,
+                recipient_list=[new_email],
+            )
+        except Exception as e:
+            print("メール送信エラー:", e)
 
         return redirect('accounts:email_update_done')
 
 
-# メールアドレス変更後の確認画面
+# メールアドレス変更後の確認画面ビュー
 class EmailUpdateDoneView(LoginRequiredMixin, TemplateView):
     template_name = 'accounts/email_update_done.html'
 
@@ -192,9 +202,10 @@ class EmailUpdateDoneView(LoginRequiredMixin, TemplateView):
         return context
 
 
-# メールアドレス変更確認リンクの処理
+# メールアドレス変更確認リンクの処理ビュー
 class EmailConfirmView(LoginRequiredMixin, View):
     def get(self, request, token, *args, **kwargs):
+        # セッションから確認用データを取得する
         session_token = request.session.get('email_change_token')
         new_email = request.session.get('email_change_new')
         expires_str = request.session.get('email_change_expires')
@@ -206,27 +217,27 @@ class EmailConfirmView(LoginRequiredMixin, View):
                 'hide_nav': True,  # ヘッダー・フッターを非表示にする
             })
 
-        # 有効期限の確認
+        # 有効期限の確認（文字列を日時オブジェクトに変換してから比較する）
+        expires = parse_datetime(expires_str)
         if timezone.now() > expires:
             return render(request, 'accounts/email_confirm_error.html', {
                 'error': 'リンクの有効期限が切れています',
                 'hide_nav': True,  # ヘッダー・フッターを非表示にする
             })
-                
 
         # メールアドレスを更新する
         request.user.email = new_email
         request.user.save()
 
-        # セッションをクリアする
+        # 使用済みセッションデータの削除
         del request.session['email_change_token']
         del request.session['email_change_new']
         del request.session['email_change_expires']
 
         return redirect('accounts:mypage')
-    
 
-# リマインダー設定画面
+
+# リマインダー設定ビュー
 class ReminderSettingView(LoginRequiredMixin, View):
     template_name = 'accounts/reminder_setting.html'
 
@@ -240,7 +251,7 @@ class ReminderSettingView(LoginRequiredMixin, View):
         user.reminder_enabled = request.POST.get('reminder_enabled') == 'on'
         # 励ましメッセージのON/OFFを保存する
         user.encourage_enabled = request.POST.get('encourage_enabled') == 'on'
-        # リマインダー時刻を保存する
+        # リマインダー時刻を保存する（未入力の場合はNoneを設定）
         reminder_time = request.POST.get('reminder_time', '').strip()
         if reminder_time:
             user.reminder_time = reminder_time

@@ -1,66 +1,33 @@
 # ①DjangoのView関連
-
- # Djangoの「テンプレートを表示するだけ」のView（HTMLを返すため）
-from django.views.generic import TemplateView, ListView, CreateView, UpdateView, View, DeleteView
-
- # ログインしていないユーザーをログイン画面へ飛ばすMixin
-from django.contrib.auth.mixins import LoginRequiredMixin
-
- # URLの名前からURLを取得するための関数
-from django.urls import reverse_lazy
-
- # 指定された日付の収支データをJSONに変換してブラウザに返す
-from django.http import JsonResponse
-
-
+from django.views.generic import TemplateView, ListView, CreateView, UpdateView, View, DeleteView  # 汎用ビュークラスのインポート
+from django.contrib.auth.mixins import LoginRequiredMixin  # ログイン必須Mixinのインポート
+from django.urls import reverse_lazy  # 名前付きURLパターンからURLを動的に生成する関数のインポート
+from django.http import JsonResponse  # JSONレスポンス生成クラスのインポート
 
 # ②便利ツール
-
- # Python標準ライブラリのカレンダー機能
-import calendar
-
- # 日付で絞り込むために date を使う
-from datetime import date
-
- # 日付を自動で合わせるために使う
-from django.utils import timezone
-
- # DB集計用（合計）
-from django.db.models import Sum
-
- # 日付（DateField）から「日（1〜31）」だけを取り出すための関数
-from django.db.models.functions import ExtractDay
-
+import calendar  # Python標準ライブラリのカレンダー機能
+from datetime import date  # 日付で絞り込むためのdateクラスのインポート
+from django.utils import timezone  # タイムゾーン対応の日時取得モジュールのインポート
+from django.db.models import Sum  # DB集計用（合計）関数のインポート
+from django.db.models.functions import ExtractDay  # 日付から「日（1〜31）」だけを取り出す関数のインポート
+import uuid  # ランダムなトークン生成モジュールのインポート
+import hashlib  # ハッシュ化モジュールのインポート
 
 # ③自分のアプリのモデルとフォーム
-
- # households/models.py に定義してある Transaction モデルを使う
-from households.models import Transaction
-
- # home専用のTransactionFormを読み込む
-from .forms import TransactionForm
-
-
-from households.models import HouseholdAccount, UserHouseholdAccount
-
-from django.contrib import messages
-
-from django.shortcuts import redirect
-
-import uuid
-
-import hashlib
-
-
-
+from households.models import Transaction, HouseholdAccount, UserHouseholdAccount, Category  # 家計簿アプリのモデルのインポート
+from .forms import TransactionForm  # このアプリ内のフォームクラスのインポート
+from django.contrib import messages  # フラッシュメッセージ機能のインポート
+from django.shortcuts import redirect, render  # リダイレクトと画面描画関数のインポート
 
 
 def get_current_household(request):
-# 現在選択中の家計簿を返す関数。セッションに保存されていればそれを使い、なければユーザーの最初の家計簿を返す。
-    
+    """
+    現在選択中の家計簿を返す関数。
+    セッションに保存されていればそれを使い、なければユーザーの最初の家計簿を返す。
+    """
     # セッションから現在の家計簿IDを取得する
     household_id = request.session.get('current_household_id')
-    
+
     # ユーザーが所属している家計簿を取得する
     user_households = UserHouseholdAccount.objects.filter(
         user=request.user,
@@ -84,17 +51,15 @@ def get_current_household(request):
     return first_household
 
 
-# --------------------------------------------
+# ============================
 # ホーム画面（カレンダー表示）
-# --------------------------------------------
-# home/views.py
-
+# ============================
 class HomeView(LoginRequiredMixin, TemplateView):
     template_name = "home/home.html"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         # 現在選択中の家計簿を取得する
         household = get_current_household(self.request)
         context['current_household'] = household
@@ -105,15 +70,13 @@ class HomeView(LoginRequiredMixin, TemplateView):
             status=1
         ).select_related('household_account')
         context['user_households'] = user_households
-        
-        # --- 表示する年月を決定する ---
-        # URLに year/month があればそれを使う。なければ今の年月を使う
+
+        # URLにyear/monthがあればそれを使い、なければ今の年月を使う
         today = timezone.now()
         year = self.kwargs.get('year', today.year)
         month = self.kwargs.get('month', today.month)
 
-        # --- 「前月」と「翌月」を計算する ---
-        # カレンダーの ◁ ▷ ボタンのリンク先を作るために必要
+        # 前月・翌月を計算する（カレンダーの◁▷ボタンのリンク先に使用）
         if month == 1:
             prev_year, prev_month = year - 1, 12
         else:
@@ -153,14 +116,14 @@ class HomeView(LoginRequiredMixin, TemplateView):
             })
             return context
 
-        # 現在の家計簿に紐づいたその月の収支データを取得
+        # 現在の家計簿に紐づいたその月の収支データを取得する
         qs = Transaction.objects.filter(
             household_account=household,
             date__year=year,
             date__month=month,
         )
 
-        # 日別合計の計算ロジック
+        # 日別合計の計算
         income_by_day = qs.filter(tx_type=Transaction.INCOME).annotate(day=ExtractDay("date")).values("day").annotate(total=Sum("amount"))
         expense_by_day = qs.filter(tx_type=Transaction.EXPENSE).annotate(day=ExtractDay("date")).values("day").annotate(total=Sum("amount"))
 
@@ -171,7 +134,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
         transactions = qs.order_by('-date', '-created_at').select_related('category')
         context['transactions'] = transactions
 
-        # その月の収入・支出・合計を計算する
+        # その月の収入・支出・差引残高を計算する
         total_income = qs.filter(tx_type=Transaction.INCOME).aggregate(total=Sum('amount'))['total'] or 0
         total_expense = qs.filter(tx_type=Transaction.EXPENSE).aggregate(total=Sum('amount'))['total'] or 0
         total_balance = total_income - total_expense
@@ -179,7 +142,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context['total_expense'] = total_expense
         context['total_balance'] = total_balance
 
-        # 収入カテゴリーで画像がアップロードされている日を取得する
+        # 収入レコードで画像がアップロードされている日を取得する
         income_image_days = qs.filter(
             image__isnull=False,
             tx_type=Transaction.INCOME
@@ -189,7 +152,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
             day=ExtractDay("date")
         ).values_list("day", flat=True).distinct()
 
-        # 支出カテゴリーで画像がアップロードされている日を取得する
+        # 支出レコードで画像がアップロードされている日を取得する
         expense_image_days = qs.filter(
             image__isnull=False,
             tx_type=Transaction.EXPENSE
@@ -201,30 +164,28 @@ class HomeView(LoginRequiredMixin, TemplateView):
 
         # それぞれセットとして保持する
         context["income_image_days"] = set(income_image_days)
-        context["expense_image_days"] = set(expense_image_days) 
+        context["expense_image_days"] = set(expense_image_days)
 
         return context
-
 
 
 # ============================
 # 日別収支一覧ページ
 # ============================
-
 class DayTransactionListView(LoginRequiredMixin, ListView):
     """
-    その日（YYYY/MM/DD）の収支(Transaction)だけを一覧表示するView
+    その日（YYYY/MM/DD）の収支(Transaction)だけを一覧表示するビュー
     ・ログインユーザーのデータだけ
     ・指定日付のデータだけ
     """
     model = Transaction
     template_name = "home/day_list.html"
     context_object_name = "transactions"
-    
+
     def get_queryset(self):
         """
-        URLから受け取った year/month/day を使って日付を作り、
-        その日付のTransactionだけを取ってくる
+        URLから受け取ったyear/month/dayを使って日付を作り、
+        その日付のTransactionだけを取得する
         """
         y = int(self.kwargs["year"])
         m = int(self.kwargs["month"])
@@ -239,7 +200,7 @@ class DayTransactionListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         """
-        テンプレで「何日の日別詳細か」を表示できるようにする
+        テンプレートで「何日の日別詳細か」を表示できるようにする
         """
         context = super().get_context_data(**kwargs)
         context["year"] = int(self.kwargs["year"])
@@ -247,9 +208,9 @@ class DayTransactionListView(LoginRequiredMixin, ListView):
         context["day"] = int(self.kwargs["day"])
         return context
 
-    
+
 # ============================
-# 日別収支データのJSON返却View
+# 日別収支データのJSON返却ビュー
 # ============================
 class DayTransactionJsonView(LoginRequiredMixin, View):
 
@@ -257,61 +218,60 @@ class DayTransactionJsonView(LoginRequiredMixin, View):
         y = self.kwargs['year']
         m = self.kwargs['month']
         d = self.kwargs['day']
-        
+
         target_date = date(y, m, d)
-        
+
         # 現在選択中の家計簿のデータのみ取得する
         household = get_current_household(request)
-        
-        # DBから指定した日の自分のデータを取得
+
+        # 指定した日の収支データを取得する
         transactions = Transaction.objects.filter(
             household_account=household,
             date=target_date
         ).select_related('category').order_by('-id')
-        
-        # リストを作成
+
+        # JSONに変換するリストを作成する
         transactions_data = []
         for tx in transactions:
-            # カテゴリー名とメモを組み合わせて表示する（辞書の外で定義する）
+            # カテゴリー名とメモを組み合わせて表示する
             category_name = tx.category.name if tx.category else '未分類'
             memo_text = f'（{tx.memo}）' if tx.memo else ''
             transactions_data.append({
-                'id': tx.id, 
+                'id': tx.id,
                 'amount_str': f"{tx.amount}円" if tx.amount else '',
                 'is_income': tx.tx_type == Transaction.INCOME,
                 'memo': category_name + memo_text,
                 'has_image': bool(tx.image),
                 'has_amount': bool(tx.amount),
             })
-        
-        # 辞書形式にして 'transactions' というキーで返す
+
+        # 辞書形式にして'transactions'というキーで返す
         return JsonResponse({'transactions': transactions_data})
-        
 
 
 # ============================
-# 収支登録ページ
+# 収支登録ビュー
 # ============================
 class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
     template_name = "households/transaction_form.html"
     success_url = reverse_lazy('home:home')
-    
+
     def get_form_kwargs(self):
         # フォームに現在の家計簿を渡す
         kwargs = super().get_form_kwargs()
         kwargs['household'] = get_current_household(self.request)
         return kwargs
-    
+
     def get_initial(self):
-    # 初期値に今日を設定
+        # 日付の初期値を設定する（URLパラメーターがあればその日付、なければ今日）
         initial = super().get_initial()
         date_str = self.request.GET.get('date')
         if date_str:
             initial['date'] = date_str
         else:
-            initial['date'] = timezone.now().date()  # 今日の日付をデフォルトに
+            initial['date'] = timezone.now().date()
         return initial
 
     def form_valid(self, form):
@@ -320,38 +280,34 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         form.instance.household_account = household
         # 登録したユーザーも記録する
         form.instance.user = self.request.user
-        
         return super().form_valid(form)
-        
-                
-        
-        
+
+
 # ============================
-# 収支編集ページ
+# 収支編集ビュー
 # ============================
 class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     model = Transaction
     form_class = TransactionForm
     template_name = "households/transaction_form.html"
     success_url = reverse_lazy('home:home')
-    
+
     def get_form_kwargs(self):
         # フォームに現在の家計簿を渡す
         kwargs = super().get_form_kwargs()
         kwargs['household'] = get_current_household(self.request)
         return kwargs
-    
+
     def get_queryset(self):
         # 現在の家計簿に紐づいたデータだけを対象にする
         household = get_current_household(self.request)
         return Transaction.objects.filter(household_account=household)
-    
+
 
 # ============================
-# 収支削除処理
+# 収支削除ビュー
 # ============================
 class TransactionDeleteView(LoginRequiredMixin, DeleteView):
-    # 収支を削除する
     model = Transaction
     # 削除後はホーム画面へ戻る
     success_url = reverse_lazy('home:home')
@@ -364,10 +320,10 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     def get(self, request, *args, **kwargs):
         # GETリクエストでも即削除してリダイレクトする（確認画面なし）
         return self.delete(request, *args, **kwargs)
-    
+
 
 # ============================
-# 家計簿切り替えView
+# 家計簿切り替えビュー
 # ============================
 class HouseholdSwitchView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
@@ -378,17 +334,19 @@ class HouseholdSwitchView(LoginRequiredMixin, View):
             household_account_id=household_id,
             status=1
         ).exists():
+            # セッションに選択した家計簿IDを保存する
             request.session['current_household_id'] = int(household_id)
         return redirect('home:home')
 
 
 # ============================
-# 家計簿新規作成View
+# 家計簿新規作成ビュー
 # ============================
 class HouseholdCreateView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         name = request.POST.get('name', '').strip()
         if name:
+            # 家計簿とユーザーの紐付けレコードを作成する
             household = HouseholdAccount.objects.create(name=name)
             UserHouseholdAccount.objects.create(
                 user=request.user,
@@ -397,7 +355,6 @@ class HouseholdCreateView(LoginRequiredMixin, View):
                 joined_at=timezone.now()
             )
             # デフォルトカテゴリーを作成する
-            from households.models import Category
             default_categories = [
                 {'name': '食費', 'category_type': 'expense', 'color': '#e74c3c', 'order': 1},
                 {'name': '日用品費', 'category_type': 'expense', 'color': '#e67e22', 'order': 2},
@@ -412,119 +369,118 @@ class HouseholdCreateView(LoginRequiredMixin, View):
             ]
             for cat in default_categories:
                 Category.objects.create(household_account=household, **cat)
+            # 作成した家計簿をセッションに保存する
             request.session['current_household_id'] = household.id
         return redirect('home:home')
 
 
 # ============================
-# 家計簿削除View
+# 家計簿削除ビュー
 # ============================
 class HouseholdDeleteView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         household_id = request.POST.get('household_id')
-        uha = UserHouseholdAccount.objects.filter(
-            user=request.user,
-            household_account_id=household_id,
-            status=1
-        ).first()
-        if uha:
-            uha.household_account.delete()
-            request.session.pop('current_household_id', None)
-        return redirect('home:home')
-
-
-# ============================
-# 家計簿名編集View
-# ============================
-class HouseholdUpdateView(LoginRequiredMixin, View):
-    def post(self, request, *args, **kwargs):
-        household_id = request.POST.get('household_id')
-        name = request.POST.get('name', '').strip()
-        uha = UserHouseholdAccount.objects.filter(
-            user=request.user,
-            household_account_id=household_id,
-            status=1
-        ).first()
-        if uha and name:
-            uha.household_account.name = name
-            uha.household_account.save()
-        return redirect('home:home')
-    
-    
-
-
-# ============================
-# 招待リンク発行View
-# ============================
-class HouseholdInviteView(LoginRequiredMixin, View):
-    def post(self, request, *args, **kwargs):
-        household_id = request.POST.get('household_id')
-        
         # ユーザーが所属している家計簿かどうか確認する
         uha = UserHouseholdAccount.objects.filter(
             user=request.user,
             household_account_id=household_id,
             status=1
         ).first()
-        
+        if uha:
+            # 家計簿本体を削除し、セッションからIDを削除する
+            uha.household_account.delete()
+            request.session.pop('current_household_id', None)
+        return redirect('home:home')
+
+
+# ============================
+# 家計簿名編集ビュー
+# ============================
+class HouseholdUpdateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        household_id = request.POST.get('household_id')
+        name = request.POST.get('name', '').strip()
+        # ユーザーが所属している家計簿かどうか確認する
+        uha = UserHouseholdAccount.objects.filter(
+            user=request.user,
+            household_account_id=household_id,
+            status=1
+        ).first()
+        if uha and name:
+            # 家計簿名を更新して保存する
+            uha.household_account.name = name
+            uha.household_account.save()
+        return redirect('home:home')
+
+
+# ============================
+# 招待リンク発行ビュー
+# ============================
+class HouseholdInviteView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        household_id = request.POST.get('household_id')
+
+        # ユーザーが所属している家計簿かどうか確認する
+        uha = UserHouseholdAccount.objects.filter(
+            user=request.user,
+            household_account_id=household_id,
+            status=1
+        ).first()
+
         if not uha:
-            from django.http import JsonResponse
             return JsonResponse({'error': '権限がありません'}, status=403)
-        
-        # 招待トークンを生成する
+
+        # 招待トークンを生成してハッシュ化する
         token = str(uuid.uuid4())
-        # トークンをハッシュ化して保存する
         token_hash = hashlib.sha256(token.encode()).hexdigest()
-        
+
         # 有効期限を30分後に設定する
         expires_at = timezone.now() + timezone.timedelta(minutes=30)
-        
-        # 既存の招待レコードを更新するか新規作成する
+
+        # 既存の招待中レコードを削除する
         UserHouseholdAccount.objects.filter(
             household_account_id=household_id,
-            status=2  # 招待中のものを削除する
+            status=2
         ).delete()
-        
-        # 招待用のレコードを作成する
+
+        # 招待用のレコードを作成する（status=2は招待中を意味する）
         UserHouseholdAccount.objects.create(
             user=request.user,
             household_account_id=household_id,
             invitation_token_hash=token_hash,
             expires_at=expires_at,
-            status=2  # 招待中
+            status=2
         )
-        
+
         # 招待URLを生成してJSONで返す
         invite_url = request.build_absolute_uri(
             f'/home/household/join/{token}/'
         )
-        
-        from django.http import JsonResponse
         return JsonResponse({'invite_url': invite_url})
 
 
 # ============================
-# 招待リンクで家計簿に参加するView
+# 招待リンクで家計簿に参加するビュー
 # ============================
 class HouseholdJoinView(LoginRequiredMixin, View):
     def get(self, request, token, *args, **kwargs):
         # トークンをハッシュ化して検索する
         token_hash = hashlib.sha256(token.encode()).hexdigest()
-        
-        # 有効な招待レコードを検索する
+
+        # 有効な招待レコードを検索する（期限切れは除外）
         uha = UserHouseholdAccount.objects.filter(
             invitation_token_hash=token_hash,
             status=2,
             expires_at__gt=timezone.now()
         ).first()
-        
+
         if not uha:
             # 無効または期限切れの場合はエラーページへ
             return render(request, 'home/invite_error.html', {
                 'error': '招待リンクが無効または期限切れです'
             })
-        
-        # すでに参加している場合はそのままホームへ
+
+        # すでに参加している場合はそのままホームへリダイレクトする
         if UserHouseholdAccount.objects.filter(
             user=request.user,
             household_account=uha.household_account,
@@ -532,7 +488,7 @@ class HouseholdJoinView(LoginRequiredMixin, View):
         ).exists():
             request.session['current_household_id'] = uha.household_account.id
             return redirect('home:home')
-        
+
         # 新しいメンバーとして追加する
         UserHouseholdAccount.objects.create(
             user=request.user,
@@ -540,20 +496,20 @@ class HouseholdJoinView(LoginRequiredMixin, View):
             status=1,
             joined_at=timezone.now()
         )
-        
+
         # 招待レコードを無効化する（一度使用したら失効）
         uha.invitation_token_hash = None
         uha.status = 1
         uha.save()
-        
+
         # 参加した家計簿をセッションに保存する
         request.session['current_household_id'] = uha.household_account.id
-        
+
         return redirect('home:home')
-    
-    
+
+
 # ============================
-# グラフ画面View
+# グラフ画面ビュー
 # ============================
 class GraphView(LoginRequiredMixin, TemplateView):
     template_name = "home/graph.html"
@@ -590,6 +546,7 @@ class GraphView(LoginRequiredMixin, TemplateView):
             'next_month': next_month,
         })
 
+        # 家計簿がない場合は空のデータを返す
         if not household:
             context.update({
                 'expense_data': [],
@@ -606,7 +563,6 @@ class GraphView(LoginRequiredMixin, TemplateView):
             date__month=month,
         )
 
-        from django.db.models import Sum
         # 支出のカテゴリー別集計
         expense_by_category = qs.filter(
             tx_type=Transaction.EXPENSE
@@ -644,6 +600,7 @@ class GraphView(LoginRequiredMixin, TemplateView):
             for row in income_by_category
         ]
 
+        # 支出・収入の合計を計算する
         total_expense = sum(d['total'] for d in expense_data)
         total_income = sum(d['total'] for d in income_data)
 

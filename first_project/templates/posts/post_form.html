@@ -1,12 +1,15 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
+<!-- 家計簿レポート投稿画面 -->
 <div class="container mt-4" style="max-width: 600px;">
   <h2 class="mb-4" style="color: #5d4037; font-weight: bold; text-align: center;">家計簿レポートを投稿</h2>
 
+  <!-- 投稿フォーム -->
   <form method="post" class="card p-4 shadow-sm" style="border-radius: 15px; border: none;">
-    {% csrf_token %}
+    {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
 
+    <!-- 対象年月の選択 -->
     <div class="row mb-3">
       <div class="col">
         <label class="form-label small text-muted">対象の年</label>
@@ -18,38 +21,44 @@
       </div>
     </div>
 
+    <!-- 収支タイプの選択（収入 or 支出） -->
     <div class="mb-4 text-center">
       <label class="form-label d-block small text-muted">どちらのデータを共有しますか？</label>
       <div class="btn-group w-100" role="group">
+        {# 収支タイプのラジオボタンをループして表示 #}
         {% for radio in form.post_type %}
-          {{ radio.tag }}
-          <label class="btn btn-outline-primary" for="{{ radio.id_for_label }}" 
-                 style="border-color: #9c6d5c; color: #9c6d5c;">
-            {{ radio.choice_label }}
-          </label>
+        {{ radio.tag }}
+        <label class="btn btn-outline-primary" for="{{ radio.id_for_label }}"
+          style="border-color: #9c6d5c; color: #9c6d5c;">
+          {{ radio.choice_label }}
+        </label>
         {% endfor %}
       </div>
     </div>
 
+    <!-- 世帯人数の選択 -->
     <div class="mb-3">
       <label class="form-label small text-muted">世帯人数</label>
       {{ form.household_size }}
     </div>
 
+    <!-- メモ入力欄 -->
     <div class="mb-4">
       <label class="form-label small text-muted">一言メモ（工夫した点など）</label>
       {{ form.memo }}
     </div>
 
+    <!-- 送信・キャンセルボタン -->
     <div class="d-grid gap-2">
-      <button type="submit" class="btn btn-primary" style="background-color: #9c6d5c; border: none; padding: 12px; border-radius: 10px; font-weight: bold;">
+      <button type="submit" class="btn btn-primary"
+        style="background-color: #9c6d5c; border: none; padding: 12px; border-radius: 10px; font-weight: bold;">
         家計簿を投稿する
       </button>
+      <!-- キャンセルボタン（掲示板一覧へ戻る） -->
       <a href="{% url 'posts:post_list' %}" class="btn btn-link text-muted mt-2">キャンセル</a>
     </div>
   </form>
 </div>
-
 
 <style>
   /* フォームコントロールの共通デザイン */
@@ -59,16 +68,16 @@
     padding: 10px !important;
     width: 100%;
   }
-  
+  /* フォーカス時のデザイン */
   textarea:focus, input:focus {
     border-color: #9c6d5c !important;
     box-shadow: 0 0 0 0.2rem rgba(156, 109, 92, 0.1) !important;
     outline: none;
   }
-
   /* プレースホルダーの色 */
   ::placeholder {
     color: #ccc;
   }
 </style>
+
 {% endblock %}

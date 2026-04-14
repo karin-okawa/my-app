@@ -1,13 +1,12 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
+<!-- ログアウト完了画面 -->
 <div style="padding: 32px 16px; text-align: center;">
-
   <p style="font-size: 0.9rem; color: #555; margin-bottom: 24px;">ログアウトしました。</p>
-
+  <!-- ログイン画面へ戻るリンク -->
   <a href="{% url 'accounts:login' %}" style="color: #9c6d5c; text-decoration: underline; font-size: 0.9rem;">
     ログイン画面へ
   </a>
-
 </div>
 {% endblock %}

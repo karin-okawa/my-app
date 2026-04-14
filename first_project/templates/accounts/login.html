@@ -1,13 +1,16 @@
-{% extends "base.html" %}
-{% block title %}ログイン - かけいまもるくん{% endblock %}
+{% extends "base.html" %} {# base.htmlを継承 #}
+
+{% block title %}ログイン - かけいまもるくん{% endblock %} {# ページタイトルの設定 #}
 
 {% block content %}
 <style>
+  /* メインエリアのスクロール設定 */
   .app-main {
     overflow-y: auto !important;
   }
 </style>
 
+<!-- ログイン画面 -->
 <div style="display: flex; flex-direction: column; height: 100%; padding: 24px 20px;">
 
   <!-- ロゴ -->
@@ -17,41 +20,45 @@
 
   <!-- ログインフォーム -->
   <form method="POST">
-    {% csrf_token %}
+    {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
 
+    {# フォームエラーがある場合のみ表示 #}
     {% if form.errors %}
+    <!-- エラーメッセージ -->
     <div style="background: #fdecea; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.85rem; color: #e74c3c;">
       {{ form.non_field_errors }}
     </div>
     {% endif %}
 
-    <!-- メールアドレス -->
+    <!-- メールアドレス入力欄 -->
     <div style="margin-bottom: 16px;">
       <label style="font-size: 0.85rem; color: #5d4037; font-weight: bold; display: block; margin-bottom: 6px;">メールアドレス</label>
       <input type="email" name="email" required
-             style="width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; outline: none;">
+        style="width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; outline: none;">
     </div>
 
-    <!-- パスワード -->
+    <!-- パスワード入力欄 -->
     <div style="margin-bottom: 24px;">
       <label style="font-size: 0.85rem; color: #5d4037; font-weight: bold; display: block; margin-bottom: 6px;">パスワード</label>
       <input type="password" name="password" required
-             style="width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; outline: none;">
+        style="width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; outline: none;">
     </div>
 
     <!-- ログインボタン -->
     <button type="submit"
-            style="width: 100%; padding: 12px; background-color: #9c6d5c; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer;">
+      style="width: 100%; padding: 12px; background-color: #9c6d5c; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer;">
       ログイン
     </button>
   </form>
 
-  <!-- リンク -->
+  <!-- 新規登録リンク -->
   <div style="text-align: center; margin-top: 20px;">
     <a href="{% url 'accounts:regist' %}" style="font-size: 0.85rem; color: #9c6d5c; text-decoration: none;">
       新規アカウント登録
     </a>
   </div>
+
+  <!-- パスワードリセットリンク -->
   <div style="text-align: center; margin-top: 10px;">
     <a href="{% url 'accounts:password_reset' %}" style="font-size: 0.85rem; color: #aaa; text-decoration: none;">
       パスワードをお忘れの方はこちら

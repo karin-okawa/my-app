@@ -1,31 +1,28 @@
-<!-- templates/households/transaction_list.html -->
+{# 収支一覧画面 #}
 
+<!-- タイトル -->
 <h1>収支一覧</h1>
 
-<!-- 新規登録ページへ -->
-<p><a href="{% url 'households:new' %}">＋収支を登録する</a></p>
+<!-- 新規登録ページへのリンク -->
+<p><a href="{% url 'households:create' %}">＋収支を登録する</a></p>
 
-<!--
-  views.py で context_object_name="transactions" にしているので
-  テンプレート側では transactions として受け取れる
--->
+<!-- 収支一覧 -->
+{# views.pyでcontext_object_name="transactions"と設定しているためtransactionsとして受け取る #}
 <ul>
   {% for t in transactions %}
-    <li>
-      <!-- 日付 / 収支区分（choicesの日本語） / 金額 -->
-      {{ t.date }} / {{ t.get_tx_type_display }} / {{ t.amount }}円
-
-      <!-- 画像がある場合だけ🖼️を表示 -->
-      {% if t.image %} 🖼️ {% endif %}
-
-      <!-- メモがある場合だけ表示 -->
-      {% if t.memo %} - {{ t.memo }}{% endif %}
-    </li>
+  <li>
+    <!-- 日付 / 収支区分 / 金額 -->
+    {{ t.date }} / {{ t.get_tx_type_display }} / {{ t.amount }}円
+    {# 画像がある場合のみアイコンを表示 #}
+    {% if t.image %}<i class="bi bi-image"></i>{% endif %}
+    {# メモがある場合のみ表示 #}
+    {% if t.memo %} - {{ t.memo }}{% endif %}
+  </li>
+  {# データが0件の場合のメッセージ #}
   {% empty %}
-    <!-- データが0件の場合 -->
-    <li>まだ収支が登録されていません</li>
+  <li>まだ収支が登録されていません</li>
   {% endfor %}
 </ul>
 
-<!-- homeに戻る（home側のURL名に合わせて必要なら変更してね） -->
+<!-- ホームへ戻るリンク -->
 <p><a href="{% url 'home:home' %}">ホームに戻る</a></p>

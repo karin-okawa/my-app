@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
 <style>
@@ -56,6 +56,7 @@
   }
 </style>
 
+<!-- マイページ -->
 <div class="mypage-container">
 
   <!-- 戻るボタン -->
@@ -68,16 +69,17 @@
   <!-- タイトル -->
   <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 20px;">マイページ</h2>
 
-  <!-- プロフィール画像 -->
+  <!-- プロフィール画像エリア -->
   <div style="text-align: center; margin-bottom: 8px;">
     <div class="avatar-circle">
+      {# アバター画像がある場合は表示、ない場合はデフォルトアイコンを表示 #}
       {% if user_obj.avatar %}
       <img src="{{ user_obj.avatar.url }}" style="width: 100%; height: 100%; object-fit: cover;">
       {% else %}
       <i class="bi bi-person-fill" style="font-size: 2.5rem; color: #9c6d5c;"></i>
       {% endif %}
     </div>
-    <!-- プロフィール画像編集ボタン -->
+    <!-- プロフィール画像編集ボタン（クリックでモーダルを開く） -->
     <button type="button" id="avatar-edit-btn" class="edit-link" style="margin-top: 6px; display: block; margin-left: auto; margin-right: auto;">編集する</button>
   </div>
 
@@ -85,8 +87,10 @@
   <div class="info-row">
     <div>
       <div class="info-label">ニックネーム：</div>
+      {# views.pyから渡されたユーザーオブジェクトのニックネームを表示 #}
       <div class="info-value" id="nickname-display">{{ user_obj.username }}</div>
     </div>
+    <!-- ニックネーム編集ボタン（クリックでモーダルを開く） -->
     <button type="button" id="nickname-edit-btn" class="edit-link">編集する</button>
   </div>
 
@@ -94,6 +98,7 @@
   <div class="info-row">
     <div>
       <div class="info-label">メールアドレス：</div>
+      {# views.pyから渡されたユーザーオブジェクトのメールアドレスを表示 #}
       <div class="info-value">{{ user_obj.email }}</div>
     </div>
     <a href="{% url 'accounts:email_update' %}" class="edit-link">変更する</a>
@@ -101,13 +106,13 @@
 
   <!-- パスワード変更ボタン -->
   <div style="margin-top: 32px;">
-    <a href="{% url 'accounts:password_change' %}" class="btn w-100 py-2" 
+    <a href="{% url 'accounts:password_change' %}" class="btn w-100 py-2"
        style="background-color: #e8d5c0; color: #5d4037; border-radius: 10px; font-weight: bold; text-decoration: none; display: block; text-align: center;">
       パスワードを変更する
     </a>
   </div>
 
-  <!-- ログアウトボタン -->
+  <!-- ログアウトボタン（クリックで確認モーダルを開く） -->
   <div style="margin-top: 12px;">
     <button type="button" id="logout-btn" class="btn w-100 py-2"
        style="background-color: #e74c3c; color: white; border-radius: 10px; font-weight: bold; border: none;">
@@ -126,11 +131,12 @@
     </div>
     <!-- 画像アップロードフォーム -->
     <form method="post" enctype="multipart/form-data" action="{% url 'accounts:avatar_update' %}">
-      {% csrf_token %}
-      <label for="avatar-input" class="btn w-100 py-2" 
+      {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
+      <label for="avatar-input" class="btn w-100 py-2"
              style="background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; cursor: pointer;">
         アップロード
       </label>
+      {# ファイル選択後に保存ボタンを表示する（初期状態は非表示） #}
       <input type="file" id="avatar-input" name="avatar" accept="image/*" style="display: none;">
       <button type="submit" id="avatar-submit-btn" class="btn w-100 py-2 mt-2"
               style="background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; display: none;">
@@ -145,8 +151,9 @@
   <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
     <p style="font-weight: bold; color: #5d4037; margin-bottom: 16px;">ニックネームを編集してください</p>
     <form method="post" action="{% url 'accounts:nickname_update' %}">
-      {% csrf_token %}
-      <input type="text" name="username" value="{{ user_obj.username }}" 
+      {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
+      {# 現在のニックネームを初期値として表示 #}
+      <input type="text" name="username" value="{{ user_obj.username }}"
              style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem;">
       <div style="display: flex; gap: 12px;">
         <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px;">保存</button>
@@ -163,7 +170,7 @@
     <div style="display: flex; gap: 12px;">
       <!-- ログアウト実行フォーム -->
       <form method="post" action="{% url 'accounts:logout' %}" style="flex: 1;">
-        {% csrf_token %}
+        {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
         <button type="submit" class="btn w-100" style="background-color: #e74c3c; color: white; border-radius: 50px; font-weight: bold; padding: 10px;">ログアウト</button>
       </form>
       <button type="button" id="logout-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px;">キャンセル</button>
@@ -172,48 +179,48 @@
 </div>
 
 <script>
-const cardBox = document.querySelector('.card-box');
+  const cardBox = document.querySelector('.card-box');
 
-// プロフィール画像モーダルの開閉
-document.getElementById('avatar-edit-btn').addEventListener('click', function() {
-  const modal = document.getElementById('avatar-modal');
-  cardBox.appendChild(modal);
-  modal.style.display = 'flex';
-});
+  // プロフィール画像モーダルの開閉
+  document.getElementById('avatar-edit-btn').addEventListener('click', function() {
+    const modal = document.getElementById('avatar-modal');
+    cardBox.appendChild(modal);
+    modal.style.display = 'flex';
+  });
 
-document.getElementById('avatar-modal-close').addEventListener('click', function() {
-  document.getElementById('avatar-modal').style.display = 'none';
-});
+  document.getElementById('avatar-modal-close').addEventListener('click', function() {
+    document.getElementById('avatar-modal').style.display = 'none';
+  });
 
-// 画像選択時に保存ボタンを表示する
-document.getElementById('avatar-input').addEventListener('change', function() {
-  const submitBtn = document.getElementById('avatar-submit-btn');
-  if (this.files.length > 0) {
-    submitBtn.style.display = 'block';
-  }
-});
+  // 画像選択時に保存ボタンを表示する
+  document.getElementById('avatar-input').addEventListener('change', function() {
+    const submitBtn = document.getElementById('avatar-submit-btn');
+    if (this.files.length > 0) {
+      submitBtn.style.display = 'block';
+    }
+  });
 
-// ニックネームモーダルの開閉
-document.getElementById('nickname-edit-btn').addEventListener('click', function() {
-  const modal = document.getElementById('nickname-modal');
-  cardBox.appendChild(modal);
-  modal.style.display = 'flex';
-});
+  // ニックネームモーダルの開閉
+  document.getElementById('nickname-edit-btn').addEventListener('click', function() {
+    const modal = document.getElementById('nickname-modal');
+    cardBox.appendChild(modal);
+    modal.style.display = 'flex';
+  });
 
-document.getElementById('nickname-modal-close').addEventListener('click', function() {
-  document.getElementById('nickname-modal').style.display = 'none';
-});
+  document.getElementById('nickname-modal-close').addEventListener('click', function() {
+    document.getElementById('nickname-modal').style.display = 'none';
+  });
 
-// ログアウトモーダルの開閉
-document.getElementById('logout-btn').addEventListener('click', function() {
-  const modal = document.getElementById('logout-modal');
-  cardBox.appendChild(modal);
-  modal.style.display = 'flex';
-});
+  // ログアウトモーダルの開閉
+  document.getElementById('logout-btn').addEventListener('click', function() {
+    const modal = document.getElementById('logout-modal');
+    cardBox.appendChild(modal);
+    modal.style.display = 'flex';
+  });
 
-document.getElementById('logout-modal-close').addEventListener('click', function() {
-  document.getElementById('logout-modal').style.display = 'none';
-});
+  document.getElementById('logout-modal-close').addEventListener('click', function() {
+    document.getElementById('logout-modal').style.display = 'none';
+  });
 </script>
 
 {% endblock %}

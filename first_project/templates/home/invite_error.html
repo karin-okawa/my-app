@@ -1,9 +1,12 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
+<!-- 招待リンクエラー画面 -->
 <div style="padding: 32px 16px; text-align: center;">
   <h2 style="font-size: 1.1rem; font-weight: bold; color: #e74c3c; margin-bottom: 16px;">エラー</h2>
+  {# views.pyから渡されたエラーメッセージを表示 #}
   <p style="font-size: 0.9rem; color: #555; margin-bottom: 24px;">{{ error }}</p>
+  <!-- ホームへ戻るリンク -->
   <a href="{% url 'home:home' %}" style="color: #9c6d5c; text-decoration: underline; font-size: 0.9rem;">
     ホームへ戻る
   </a>

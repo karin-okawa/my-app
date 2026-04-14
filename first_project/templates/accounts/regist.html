@@ -1,11 +1,27 @@
-{% extends 'base.html' %}
-{% block title %}新規登録 - かけいまもるくん{% endblock %}
+{% extends 'base.html' %} {# base.htmlを継承 #}
+
+{% block title %}新規登録 - かけいまもるくん{% endblock %} {# ページタイトルの設定 #}
 
 {% block content %}
 <style>
+  /* メインエリアのスクロール設定 */
   .app-main { overflow-y: auto !important; }
+
+  /* 入力フィールドの共通スタイル */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px !important;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    outline: none;
+  }
 </style>
 
+<!-- 新規アカウント登録画面 -->
 <div style="display: flex; flex-direction: column; height: 100%; padding: 24px 20px;">
 
   <!-- タイトル -->
@@ -13,14 +29,18 @@
     <h1 style="font-size: 1.5rem; font-weight: bold; color: #5d4037;">新規アカウント登録</h1>
   </div>
 
+  <!-- 登録フォーム -->
   <form method="POST">
-    {% csrf_token %}
+    {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
+
+    {# フォームの各フィールドをループして表示 #}
     {% for field in form %}
     <div style="margin-bottom: 16px;">
       <label style="font-size: 0.85rem; color: #5d4037; font-weight: bold; display: block; margin-bottom: 6px;">
         {{ field.label }}
       </label>
       {{ field }}
+      {# バリデーションエラーがある場合のみ表示 #}
       {% if field.errors %}
       <div style="font-size: 0.8rem; color: #e74c3c; margin-top: 4px;">
         {{ field.errors }}
@@ -29,31 +49,17 @@
     </div>
     {% endfor %}
 
+    <!-- 登録ボタン -->
     <button type="submit"
-            style="width: 100%; padding: 12px; background-color: #9c6d5c; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 8px;">
-      登録する
+      style="width: 100%; padding: 12px; background-color: #9c6d5c; color: white; border: none; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 8px;">
+      登録
     </button>
   </form>
 
-  <form method="POST">
-  {% csrf_token %}
-  <style>
-    input[type="text"],
-    input[type="email"],
-    input[type="password"] {
-        width: 100%;
-        padding: 12px 14px;
-        border: 1px solid #ddd;
-        border-radius: 10px !important;
-        font-size: 0.95rem;
-        box-sizing: border-box;
-        outline: none;
-    }
-  </style>
-
+  <!-- ログイン画面へ戻るリンク -->
   <div style="text-align: center; margin-top: 16px;">
     <a href="{% url 'accounts:login' %}" style="font-size: 0.85rem; color: #aaa; text-decoration: none;">
-      ログイン画面に戻る
+      ログイン画面へ
     </a>
   </div>
 

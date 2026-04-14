@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
 <style>
@@ -8,7 +8,10 @@
   }
 </style>
 
+<!-- 掲示板一覧画面 -->
 <div class="container mt-3" id="main-content" style="position: relative;">
+
+  <!-- タブメニュー（みんなの投稿・わたしの投稿） -->
   <ul class="nav nav-tabs nav-fill mb-3" id="postTab" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" style="color: #5d4037; font-weight: bold;">みんなの投稿</button>
@@ -19,57 +22,68 @@
   </ul>
 
   <div class="tab-content" id="postTabContent">
+
+    <!-- みんなの投稿タブ -->
     <div class="tab-pane fade show active" id="all" role="tabpanel">
+      {# 全投稿をループして投稿カードを表示する #}
       {% for post in all_posts %}
         {% include "posts/_post_card.html" with post=post %}
+      {# 投稿がない場合のメッセージ #}
       {% empty %}
         <p class="text-center mt-5 text-muted">まだ投稿がありません</p>
       {% endfor %}
     </div>
 
+    <!-- わたしの投稿タブ -->
     <div class="tab-pane fade" id="my" role="tabpanel">
+      {# 自分の投稿をループして投稿カードを表示する #}
       {% for post in my_posts %}
         {% include "posts/_post_card.html" with post=post %}
+      {# 自分の投稿がない場合のメッセージ #}
       {% empty %}
         <p class="text-center mt-5 text-muted">自分の投稿はまだありません</p>
       {% endfor %}
     </div>
+
   </div>
 </div>
 
-<div style="position: absolute; 
-            bottom: 70px; 
-            right: 16px; 
-            z-index: 1000;">
-  <button type="button" 
-     class="btn shadow-lg" 
-     data-bs-toggle="modal" 
+<!-- 新規投稿ボタン（画面右下に固定表示） -->
+<div style="position: absolute; bottom: 70px; right: 16px; z-index: 1000;">
+  <button type="button"
+     class="btn shadow-lg"
+     data-bs-toggle="modal"
      data-bs-target="#postModal"
      style="width: 60px; height: 60px; border-radius: 50%; background-color: #9c6d5c; color: white; border: 2px solid white; font-size: 30px; display: flex; align-items: center; justify-content: center;">
     +
   </button>
 </div>
 
+<!-- 新規投稿モーダル -->
 <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" style="max-width: 360px; margin: 1.75rem auto;"> 
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 360px; margin: 1.75rem auto;">
     <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; max-height: 80vh;">
-      
+
+      <!-- モーダルヘッダー -->
       <div class="modal-header" style="border: none; padding: 15px 15px 0 15px;">
         <h5 class="modal-title w-100 text-center" id="postModalLabel" style="color: #5d4037; font-weight: bold; font-size: 1rem;">家計簿レポートを投稿</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
+      <!-- モーダル本体 -->
       <div class="modal-body" style="padding: 15px; overflow-y: auto;">
         <form method="post" action="{% url 'posts:post_create' %}">
-          {% csrf_token %}
-          
+          {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
+
+          <!-- 対象年月の選択 -->
           <div class="row gx-2 mb-3">
             <div class="col-6">
               <label class="form-label small text-muted mb-1">年</label>
               <div class="custom-scroll-select">
+                {# 現在の年をデフォルト選択にする #}
                 <select name="year" class="form-select scroll-box">
                   {% for val, label in form.year.field.choices %}
-                    <option value="{{ val }}" {% if forloop.first %}selected{% endif %}>{{ label }}</option>
+                  <option value="{{ val }}" {% if val == current_year|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
                   {% endfor %}
                 </select>
               </div>
@@ -77,37 +91,42 @@
             <div class="col-6">
               <label class="form-label small text-muted mb-1">月</label>
               <div class="custom-scroll-select">
+                {# 現在の月をデフォルト選択にする #}
                 <select name="month" class="form-select scroll-box">
                   {% for val, label in form.month.field.choices %}
-                    <option value="{{ val }}" {% if val == current_month %}selected{% endif %}>{{ label }}</option>
+                  <option value="{{ val }}" {% if val == current_month %}selected{% endif %}>{{ label }}</option>
                   {% endfor %}
                 </select>
               </div>
             </div>
           </div>
 
+          <!-- 収支タイプの選択（収入 or 支出） -->
           <div class="mb-3">
             <label class="form-label d-block small text-muted text-center mb-2">どちらのデータを共有しますか？</label>
             <div class="btn-group w-100" role="group">
+              {# 収支タイプのラジオボタンをループして表示 #}
               {% for radio in form.post_type %}
-                <input type="radio" 
-                       class="btn-check" 
-                       name="{{ form.post_type.name }}" 
-                       id="modal_{{ radio.id_for_label }}" 
-                       value="{{ radio.data.value }}" 
-                       {% if radio.data.selected %}checked{% endif %}>
-                <label class="btn btn-outline-custom py-2" for="modal_{{ radio.id_for_label }}">
-                  {{ radio.choice_label }}
-                </label>
+              <input type="radio"
+                     class="btn-check"
+                     name="{{ form.post_type.name }}"
+                     id="modal_{{ radio.id_for_label }}"
+                     value="{{ radio.data.value }}"
+                     {% if radio.data.selected %}checked{% endif %}>
+              <label class="btn btn-outline-custom py-2" for="modal_{{ radio.id_for_label }}">
+                {{ radio.choice_label }}
+              </label>
               {% endfor %}
             </div>
           </div>
 
+          <!-- 世帯人数の選択 -->
           <div class="mb-3 text-start">
             <label class="form-label small text-muted mb-1">世帯人数</label>
             {{ form.household_size }}
           </div>
 
+          <!-- 家計簿名の入力欄 -->
           <div class="mb-3 text-start">
             <label class="form-label small text-muted mb-1">家計簿名</label>
             <input type="text" name="household_name" id="household-name-input"
@@ -116,6 +135,7 @@
                   placeholder="家計簿名">
           </div>
 
+          <!-- メモ入力欄 -->
           <div class="mb-4 text-start">
             <label class="form-label small text-muted mb-1">一言メモ</label>
             <div style="width: 100%;">
@@ -123,8 +143,10 @@
             </div>
           </div>
 
+          <!-- 送信ボタン -->
           <div class="d-grid">
-            <button type="submit" class="btn btn-primary" style="background-color: #9c6d5c; border: none; padding: 10px; border-radius: 10px; font-weight: bold;">
+            <button type="submit" class="btn btn-primary"
+              style="background-color: #9c6d5c; border: none; padding: 10px; border-radius: 10px; font-weight: bold;">
               投稿する
             </button>
           </div>
@@ -135,8 +157,6 @@
 </div>
 
 <style>
-  /* --- モーダル内のデザイン調整 --- */
-
   /* 収入・支出ボタンのカスタム色 */
   .btn-outline-custom {
     color: #9c6d5c;
@@ -145,29 +165,30 @@
     font-weight: bold;
     background-color: transparent;
   }
+  /* 選択中のボタンのスタイル */
   .btn-check:checked + .btn-outline-custom {
     background-color: #9c6d5c !important;
     color: white !important;
     border-color: #9c6d5c !important;
   }
 
-  /* セレクトボックス（プルダウン）のはみ出し防止とスクロール設定 */
+  /* セレクトボックスのデフォルト矢印を非表示にする */
   .scroll-box {
-    appearance: none; 
+    appearance: none;
     -webkit-appearance: none;
     cursor: pointer;
   }
 
-  /* PCで見た際にプルダウンが枠を超えて表示されるのを防ぐための強制設定 */
+  /* モーダルコンテンツのスクロールとはみ出し防止 */
   #postModal .modal-content {
-    max-height: 80vh; 
-    overflow-y: auto; 
+    max-height: 80vh;
+    overflow-y: auto;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   }
 
-  /* 入力フォーム全般の幅を枠内に収める */
-  #postModal .modal-content input, 
-  #postModal .modal-content select, 
+  /* モーダル内の入力フォームを枠内に収める */
+  #postModal .modal-content input,
+  #postModal .modal-content select,
   #postModal .modal-content textarea {
     width: 100% !important;
     max-width: 100% !important;
@@ -175,132 +196,139 @@
     font-size: 16px; /* スマホでの自動ズーム防止 */
   }
 
-  /* 一言メモ欄の微調整 */
+  /* 一言メモ欄のデザイン */
   #postModal textarea {
     border-radius: 10px;
     border: 1px solid #ced4da;
   }
 </style>
 
-
+{# Chart.jsとデータラベルプラグインの読み込み #}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  
-  // 円グラフを描画する
-  const charts = document.querySelectorAll('.post-chart');
-  charts.forEach(canvas => {
-    const postId = canvas.getAttribute('data-id');
-    const postData = window.postData && window.postData[postId];
-    if (!postData || !postData.values || Object.keys(postData.values).length === 0) return;
+  document.addEventListener('DOMContentLoaded', function() {
 
-    try {
-      const labels = Object.keys(postData.values);
-      const values = Object.values(postData.values);
-      const defaultColors = ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bfbc0', '#a0c4ff', '#bdb2ff', '#ffc6ff'];
-      const colors = labels.map((label, i) => (postData.colors && postData.colors[label]) || defaultColors[i % defaultColors.length]);
+    // 投稿カードの円グラフを描画する
+    const charts = document.querySelectorAll('.post-chart');
+    charts.forEach(canvas => {
+      const postId = canvas.getAttribute('data-id');
+      const postData = window.postData && window.postData[postId];
+      if (!postData || !postData.values || Object.keys(postData.values).length === 0) return;
 
-      new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: values,
-            backgroundColor: colors,
-            borderWidth: 1
-          }]
-        },
-        options: {
-          cutout: '30%',
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            datalabels: {
-              display: function(context) {
-                // 全体の10%以上の場合のみ表示する
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const value = context.dataset.data[context.dataIndex];
-                return (value / total) >= 0.1;
-              },
-              formatter: function(value, context) {
-                return context.chart.data.labels[context.dataIndex];
-              },
-              color: '#fff',
-              font: {
-                size: 12,
-                weight: 'bold',
-              },
-              anchor: 'end',
-              align: 'start',
-              offset: 10,
+      try {
+        const labels = Object.keys(postData.values);
+        const values = Object.values(postData.values);
+        // カテゴリーの色が設定されていない場合のデフォルトカラー
+        const defaultColors = ['#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bfbc0', '#a0c4ff', '#bdb2ff', '#ffc6ff'];
+        const colors = labels.map((label, i) => (postData.colors && postData.colors[label]) || defaultColors[i % defaultColors.length]);
+
+        new Chart(canvas, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: values,
+              backgroundColor: colors,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            cutout: '30%',
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              datalabels: {
+                // 全体の10%以上の場合のみラベルを表示する
+                display: function(context) {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const value = context.dataset.data[context.dataIndex];
+                  return (value / total) >= 0.1;
+                },
+                formatter: function(value, context) {
+                  return context.chart.data.labels[context.dataIndex];
+                },
+                color: '#fff',
+                font: {
+                  size: 12,
+                  weight: 'bold',
+                },
+                anchor: 'end',
+                align: 'start',
+                offset: 10,
+              }
             }
+          },
+          plugins: [ChartDataLabels],
+        });
+      } catch (e) {
+        console.error("グラフ描画エラー:", e);
+      }
+    });
+
+    // モーダルが開いた時に現在の家計簿名をデフォルト値として設定する
+    document.querySelector('[data-bs-target="#postModal"]').addEventListener('click', function() {
+      const householdName = "{{ current_household.name|default:'' }}";
+      document.getElementById('household-name-input').value = householdName;
+    });
+
+    // いいねボタンの処理
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const postId = this.dataset.id;
+        const countEl = this.querySelector('.like-count');
+
+        fetch(`/posts/${postId}/like/`, {
+          method: 'POST',
+          headers: {
+            // DjangoのCSRF対策トークンをクッキーから取得して送る
+            'X-CSRFToken': document.cookie.split('; ')
+              .find(row => row.startsWith('csrftoken='))
+              ?.split('=')[1]
           }
-        },
-        plugins: [ChartDataLabels],
+        })
+        .then(res => res.json())
+        .then(data => {
+          // いいね数とボタンの色を更新する
+          countEl.innerText = data.count;
+          this.style.color = data.liked ? '#e74c3c' : '#888';
+        })
+        .catch(err => console.error('エラー:', err));
       });
-    } catch (e) {
-      console.error("グラフ描画エラー:", e);
-    }
-  });
-
-
-  // モーダルが開いた時に家計簿名をデフォルト設定する
-  document.querySelector('[data-bs-target="#postModal"]').addEventListener('click', function() {
-    // 現在の家計簿名をヘッダーから取得してデフォルト値にする
-    const householdName = "{{ current_household.name|default:'' }}";
-    document.getElementById('household-name-input').value = householdName;
-  });
-
-  // いいねボタンの処理
-  document.querySelectorAll('.like-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const postId = this.dataset.id;
-      const countEl = this.querySelector('.like-count');
-      
-      fetch(`/posts/${postId}/like/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': document.cookie.split('; ')
-            .find(row => row.startsWith('csrftoken='))
-            ?.split('=')[1]
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        countEl.innerText = data.count;
-        this.style.color = data.liked ? '#e74c3c' : '#888';
-      })
-      .catch(err => console.error('エラー:', err));
     });
-  });
 
-  // 削除ボタンの処理
-  document.querySelectorAll('.post-delete-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const postId = this.dataset.id;
-      const cardBox = document.querySelector('.card-box');
-      
-      const modal = document.createElement('div');
-      modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
-      
-      modal.innerHTML = `
-        <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
-          <p style="font-weight: bold; color: #333; margin-bottom: 20px;">削除してよろしいですか？</p>
-          <div style="display: flex; gap: 12px;">
-            <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
-            <a href="/posts/${postId}/delete/" style="flex: 1; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center;">削除</a>
+    // 削除ボタンの処理（確認モーダルを表示する）
+    document.querySelectorAll('.post-delete-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const postId = this.dataset.id;
+        const cardBox = document.querySelector('.card-box');
+
+        // 確認モーダルを動的に作成する
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
+
+        modal.innerHTML = `
+          <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+            <p style="font-weight: bold; color: #333; margin-bottom: 20px;">削除してよろしいですか？</p>
+            <div style="display: flex; gap: 12px;">
+              <!-- キャンセルボタン -->
+              <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
+              <!-- 削除実行リンク -->
+              <a href="/posts/${postId}/delete/" style="flex: 1; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center;">削除</a>
+            </div>
           </div>
-        </div>
-      `;
-      
-      modal.querySelector('#modal-cancel-btn').addEventListener('click', function() {
-        modal.remove();
+        `;
+
+        // キャンセルボタンでモーダルを閉じる
+        modal.querySelector('#modal-cancel-btn').addEventListener('click', function() {
+          modal.remove();
+        });
+
+        cardBox.appendChild(modal);
       });
-      
-      cardBox.appendChild(modal);
     });
   });
-});
 </script>
+
 {% endblock %}

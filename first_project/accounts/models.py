@@ -1,12 +1,15 @@
-from django.db import models
-from django.contrib.auth.models import(
-    # ユーザー生成処理を書くためのクラス、パスワードのハッシュ化やログイン機能などを持つクラス、権限（is_superuserやgroupsなど）を持たせるためのクラス
+from django.db import models  # Djangoのモデルモジュールのインポート
+from django.contrib.auth.models import (
+    # ユーザー生成・パスワードハッシュ化・権限管理のための各ベースクラス
     BaseUserManager, AbstractBaseUser, PermissionsMixin
 )
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy  # 名前付きURLパターンからURLを動的に生成する関数のインポート
 
-# ユーザーを作る方法を定義するクラス（今回はcreate_user)
+
+# ユーザー生成ロジックを定義するマネジャークラス
 class UserManager(BaseUserManager):
+
+    # 一般ユーザー作成メソッド
     def create_user(self, username, email, password):
         if not email:
             raise ValueError('メールアドレスを入力してください')
@@ -14,38 +17,45 @@ class UserManager(BaseUserManager):
             raise ValueError('パスワードを入力してください')
         user = self.model(
             username=username,
-            # メールアドレスの表記ゆれを整える関数（大文字→小文字など）
-            email=self.normalize_email(email)     
+            # メールアドレスの正規化（表記ゆれの修正）
+            email=self.normalize_email(email)
         )
-        # パスワードをハッシュ化して保存する
+        # パスワードのハッシュ化および設定
         user.set_password(password)
-        # DBに保存する
+        # データベースへの保存
         user.save()
         return user
 
-# Userが実際のユーザーモデル本体を表す（メールログイン対応） 
-# AbstractBaseUserはログイン機能・パスワードハッシュなどを提供
-# PermissionsMixinはis_superuser,groups,user_permissionsを提供し、管理画面の権限システムを使えるようにしてくれるクラス
+
+# 実際のユーザーモデル本体（メールアドレスでのログインに対応）
 class User(AbstractBaseUser, PermissionsMixin):
+    # ユーザー名
     username = models.CharField(max_length=25)
+    # メールアドレス（一意性を確保）
     email = models.EmailField(max_length=100, unique=True)
+    # アカウントの有効状態
     is_active = models.BooleanField(default=True)
+    # 管理画面へのアクセス権限
     is_staff = models.BooleanField(default=False)
     # プロフィール画像
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    # リマインダー時間
+    # リマインダー通知時間
     reminder_time = models.TimeField(null=True, blank=True)
-    # リマインダー通知のON/OFF
+    # リマインダー通知の有効化フラグ
     reminder_enabled = models.BooleanField(default=False)
-    # 励ましメッセージのON/OFF
+    # 励ましメッセージ機能の有効化フラグ
     encourage_enabled = models.BooleanField(default=False)
-    # 作成日時・更新日時
+    # レコードの作成日時
     created_at = models.DateTimeField(auto_now_add=True)
+    # レコードの最終更新日時
     updated_at = models.DateTimeField(auto_now=True)
-
+    # ログインに使用する識別フィールドの指定
     USERNAME_FIELD = 'email'
+    # ユーザー作成時に必須となるフィールド
     REQUIRED_FIELDS = ['username']
+    # カスタムマネジャーの適用
     objects = UserManager()
 
+    # オブジェクト詳細ページのURLを返却するメソッド
     def get_absolute_url(self):
         return reverse_lazy('home:home')

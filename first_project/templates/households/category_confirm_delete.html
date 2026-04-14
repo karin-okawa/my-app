@@ -1,7 +1,8 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
 <style>
+  /* カテゴリー削除確認画面全体のスタイル */
   .delete-container {
     display: flex;
     flex-direction: column;
@@ -11,6 +12,7 @@
   }
 </style>
 
+<!-- カテゴリー削除確認画面 -->
 <div class="delete-container">
 
   <!-- 戻るボタン -->
@@ -23,13 +25,16 @@
   <!-- タイトル -->
   <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 24px;">カテゴリーの削除</h2>
 
+  {# 削除対象のカテゴリー名を表示 #}
   <p style="text-align: center; font-size: 0.9rem; color: #555; margin-bottom: 24px;">
     「{{ object.name }}」を削除してよろしいですか？
   </p>
 
+  <!-- 削除確認フォーム -->
   <form method="post">
-    {% csrf_token %}
+    {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
     <div style="display: flex; gap: 12px;">
+      <!-- キャンセルボタン（前の画面に戻る） -->
       <a href="javascript:history.back()" class="btn" style="
         flex: 1;
         background-color: #f0f0f0;
@@ -40,6 +45,7 @@
         text-align: center;
         text-decoration: none;
       ">キャンセル</a>
+      <!-- 削除実行ボタン -->
       <button type="submit" class="btn" style="
         flex: 1;
         background-color: #e74c3c;

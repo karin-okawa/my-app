@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
 <style>
-  /* 1. ブラウザ全体のスクロールを禁止 */
+  /* ブラウザ全体のスクロールを禁止 */
   html, body {
     overflow: hidden !important;
     height: 100% !important;
@@ -12,7 +12,7 @@
     background-color: #f0f2f5;
   }
 
-  /* 2. スマホ枠 */
+  /* スマホ枠のスタイル */
   .custom-phone-frame {
     max-width: 500px;
     margin: 0 auto;
@@ -25,18 +25,19 @@
     box-sizing: border-box;
   }
 
-  /* 3. 収支ボタン */
-  .btn-outline-custom { 
-    color: #9c6d5c !important; 
-    border: 2px solid #9c6d5c !important; 
-    font-weight: bold !important; 
+  /* 収入・支出切り替えボタンのスタイル */
+  .btn-outline-custom {
+    color: #9c6d5c !important;
+    border: 2px solid #9c6d5c !important;
+    font-weight: bold !important;
   }
-  .btn-check:checked + .btn-outline-custom { 
-    background-color: #9c6d5c !important; 
-    color: white !important; 
+  /* 選択中のボタンのスタイル */
+  .btn-check:checked + .btn-outline-custom {
+    background-color: #9c6d5c !important;
+    color: white !important;
   }
 
-  /* 4. 電卓パネル（スマホ枠の底） */
+  /* 電卓パネル（スマホ枠の底から出てくる） */
   .calculator-panel {
     position: absolute;
     bottom: -100%;
@@ -48,50 +49,55 @@
     z-index: 2000;
     border-radius: 20px 20px 0 0;
   }
+  /* 電卓パネルが表示された時の状態 */
   .calculator-panel.show {
     bottom: 0;
   }
 
-  /* 5. ノート風デザイン */
-  .note-row { 
-    border-bottom: 1px solid #eee; 
-    padding: 15px 0; 
+  /* ノート風デザインの行スタイル */
+  .note-row {
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
     position: relative;
     z-index: 10;
   }
+  /* ノート風デザインのラベルスタイル */
   .note-label { font-size: 0.9rem; color: #888; font-weight: bold; min-width: 80px; }
-  
-  .note-input-wrapper input, 
-  .note-input-wrapper textarea { 
-    border: none !important; 
-    box-shadow: none !important; 
-    background: transparent !important; 
-    text-align: right; 
-    width: 100%; 
-    font-weight: bold; 
-    color: #5d4037; 
+
+  /* ノート風デザインの入力欄スタイル */
+  .note-input-wrapper input,
+  .note-input-wrapper textarea {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    text-align: right;
+    width: 100%;
+    font-weight: bold;
+    color: #5d4037;
   }
 
-  /* 6. 電卓ボタンのスタイル */
-  .calculator-grid { 
-    display: grid; 
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 1px; 
-    background: #ddd; 
+  /* 電卓ボタンのグリッドレイアウト */
+  .calculator-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: #ddd;
   }
-  .calc-btn { 
-    height: 65px; 
-    background: white; 
-    border: none; 
-    font-size: 1.5rem; 
-    color: #5d4037; 
+  /* 電卓ボタンの共通スタイル */
+  .calc-btn {
+    height: 65px;
+    background: white;
+    border: none;
+    font-size: 1.5rem;
+    color: #5d4037;
   }
+  /* 演算子ボタンのスタイル */
   .operator-btn {
     color: #9c6d5c !important;
     font-weight: bold;
   }
 
-  /* 7. 数値入力欄の上下矢印を非表示 */
+  /* 数値入力欄の上下矢印を非表示 */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -99,6 +105,7 @@
   }
 </style>
 
+{# 編集時のみ×ボタンを表示する（custom-phone-frameの外側に配置して常に固定表示） #}
 {% if form.instance.pk %}
 <div style="padding: 12px 16px 0 16px;">
   <button type="button" onclick="history.back()" style="
@@ -117,21 +124,24 @@
 </div>
 {% endif %}
 
+<!-- 収支登録・編集画面 -->
 <div class="custom-phone-frame">
   <div class="p-4">
     <form method="post" enctype="multipart/form-data" id="main-form" novalidate>
-      {% csrf_token %}
-      
+      {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
+
       <!-- 収入・支出の切り替えボタン -->
       <div class="mb-4 mt-2" style="position: relative; z-index: 100;">
         <div class="d-flex justify-content-between gap-3">
           <div class="flex-fill">
-            <input type="radio" class="btn-check" name="tx_type" id="tx_type_income" value="income" 
+            {# 編集時は既存の収支タイプを選択状態にする #}
+            <input type="radio" class="btn-check" name="tx_type" id="tx_type_income" value="income"
                    {% if form.tx_type.value == "income" %}checked{% endif %}>
             <label class="btn btn-outline-custom w-100 py-2" for="tx_type_income" style="border-radius: 12px;">収入</label>
           </div>
           <div class="flex-fill">
-            <input type="radio" class="btn-check" name="tx_type" id="tx_type_expense" value="expense" 
+            {# 新規作成時はデフォルトで支出を選択する #}
+            <input type="radio" class="btn-check" name="tx_type" id="tx_type_expense" value="expense"
                    {% if form.tx_type.value == "expense" or not form.tx_type.value %}checked{% endif %}>
             <label class="btn btn-outline-custom w-100 py-2" for="tx_type_expense" style="border-radius: 12px;">支出</label>
           </div>
@@ -139,6 +149,7 @@
       </div>
 
       <div class="note-style-container">
+
         <!-- 金額入力行 -->
         <div class="note-row d-flex align-items-center justify-content-between">
           <span class="note-label">金額<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
@@ -148,13 +159,15 @@
           </div>
         </div>
 
-        <!-- カテゴリー選択行（タップするとパネルが開く） -->
+        <!-- カテゴリー選択行（タップするとカテゴリーパネルが開く） -->
         <div class="note-row d-flex align-items-center justify-content-between" id="category-row" style="cursor: pointer;">
           <span class="note-label">カテゴリー<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">*</span></span>
           <div id="category-display" style="font-weight: bold; color: #5d4037; text-align: right;">
             選択してください
           </div>
+          {# 選択したカテゴリーのIDをhiddenフィールドでサーバーに送信する #}
           <input type="hidden" name="category" id="category-hidden" value="{{ form.category.value|default:'' }}">
+          {# カテゴリーの選択肢をJavaScriptで参照するための非表示セレクトボックス #}
           <div style="display: none;">
             <select id="id_category" name="_category_ref">
               {% for choice in form.category.field.choices %}
@@ -180,6 +193,7 @@
         <div class="note-row d-flex align-items-center justify-content-between">
           <span class="note-label">写真<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
           <div style="display: flex; gap: 8px; align-items: center;">
+            {# 編集時に既存の画像がある場合のみ確認ボタンを表示する #}
             {% if form.instance.pk and form.instance.image %}
             <button type="button" id="image-confirm-btn" class="btn btn-sm" style="background-color: #f0f0f0; color: #5d4037; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px;">確認</button>
             {% endif %}
@@ -187,7 +201,7 @@
             <div style="display: none;">{{ form.image }}</div>
           </div>
         </div>
-      
+
         <!-- 必須項目の説明 -->
         <div style="margin-top: 16px; font-size: 0.75rem; color: #999;">
           <span style="color: #e74c3c;">*</span> 必須入力　
@@ -195,12 +209,13 @@
         </div>
       </div>
 
-      <!-- 保存・削除ボタン -->
+      <!-- 保存ボタン -->
       <div class="d-grid gap-2 mt-5">
         <button type="submit" class="btn btn-primary py-2" style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;">保存する</button>
+        {# 編集時のみ削除ボタンを表示する #}
         {% if form.instance.pk %}
-        <!-- 編集時のみ削除ボタンを表示する -->
-        <button type="button" id="delete-btn" class="btn py-2" 
+        <!-- 削除ボタン（タップで確認モーダルを表示） -->
+        <button type="button" id="delete-btn" class="btn py-2"
           style="background-color: #e74c3c; color: white; border: none; border-radius: 10px; font-weight: bold;">
           この収支を削除
         </button>
@@ -211,336 +226,362 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const amountInput = document.getElementById('id_amount');
-  const calcPanel = document.getElementById('calculator-panel');
-  const calcDisplay = document.getElementById('calc-display');
-  // _category_refという名前で非表示セレクトボックスを取得する
-  const catSelect = document.querySelector('select[name="_category_ref"]');
-  const categoryPanel = document.getElementById('category-panel');
-  const categoryRow = document.getElementById('category-row');
-  const categoryDisplay = document.getElementById('category-display');
-  const categoryHidden = document.getElementById('category-hidden');
-  const categoryList = document.getElementById('category-list');
+  document.addEventListener('DOMContentLoaded', function() {
+    // 各DOM要素を取得する
+    const amountInput = document.getElementById('id_amount');
+    const calcPanel = document.getElementById('calculator-panel');
+    const calcDisplay = document.getElementById('calc-display');
+    // カテゴリーの選択肢を参照するための非表示セレクトボックスを取得する
+    const catSelect = document.querySelector('select[name="_category_ref"]');
+    const categoryPanel = document.getElementById('category-panel');
+    const categoryRow = document.getElementById('category-row');
+    const categoryDisplay = document.getElementById('category-display');
+    const categoryHidden = document.getElementById('category-hidden');
+    const categoryList = document.getElementById('category-list');
 
-  let expression = '';
+    // 電卓の入力式を保持する変数
+    let expression = '';
 
-  const hideCalc = () => {
-    calcPanel.classList.remove('show');
-    calcPanel.style.pointerEvents = 'none';
-  };
+    // 電卓パネルを閉じる
+    const hideCalc = () => {
+      calcPanel.classList.remove('show');
+      calcPanel.style.pointerEvents = 'none';
+    };
 
-  const hideCategoryPanel = () => {
-    categoryPanel.style.bottom = '-100%';
-  };
+    // カテゴリーパネルを閉じる
+    const hideCategoryPanel = () => {
+      categoryPanel.style.bottom = '-100%';
+    };
 
-  const hideAll = () => {
-    hideCalc();
-    hideCategoryPanel();
-  };
+    // 全てのパネルを閉じる
+    const hideAll = () => {
+      hideCalc();
+      hideCategoryPanel();
+    };
 
-  const showCalc = () => {
-    expression = amountInput.value || '';
-    calcDisplay.innerText = expression || '0';
-    calcPanel.classList.add('show');
-    calcPanel.style.pointerEvents = 'auto';
-  };
+    // 電卓パネルを表示する
+    const showCalc = () => {
+      expression = amountInput.value || '';
+      calcDisplay.innerText = expression || '0';
+      calcPanel.classList.add('show');
+      calcPanel.style.pointerEvents = 'auto';
+    };
 
-  if (amountInput) {
-    amountInput.addEventListener('click', function(e) {
-      e.preventDefault();
-      this.blur();
-      hideAll();
-      showCalc();
-    });
-  }
-
-  document.querySelectorAll('input, textarea').forEach(el => {
-    if (el !== amountInput) {
-      el.addEventListener('focus', function() {
+    // 金額入力欄をタップしたら電卓パネルを表示する
+    if (amountInput) {
+      amountInput.addEventListener('click', function(e) {
+        e.preventDefault();
+        this.blur();
         hideAll();
+        showCalc();
       });
     }
-  });
 
-  document.getElementById('header-close-btn').addEventListener('click', hideCalc);
+    // 他の入力欄にフォーカスしたら全パネルを閉じる
+    document.querySelectorAll('input, textarea').forEach(el => {
+      if (el !== amountInput) {
+        el.addEventListener('focus', function() {
+          hideAll();
+        });
+      }
+    });
 
-  document.getElementById('header-done-btn').addEventListener('click', function() {
-    // expressionが空の場合は金額入力欄も空欄にする
-    if (expression === '') {
-      amountInput.value = '';
-    } else {
-      try {
-        const result = Math.round(eval(expression));
-        if (!isNaN(result) && result >= 0) {
-          amountInput.value = result;
-        }
-      } catch(e) {}
-    }
-    hideCalc();
-  });
+    // 「閉じる」ボタンで電卓パネルを閉じる
+    document.getElementById('header-close-btn').addEventListener('click', hideCalc);
 
-  document.querySelectorAll('.calc-btn[data-val]').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      const val = this.dataset.val;
-      const displayMap = {'+': '＋', '-': '－', '*': '×', '/': '÷'};
-
-      if (val === 'clear') {
-        expression = '';
-        // Cボタンで電卓表示も空欄にする
-        calcDisplay.innerText = '';
-        // 金額入力欄も空欄にする
+    // 「確定」ボタンで電卓の計算結果を金額入力欄に反映する
+    document.getElementById('header-done-btn').addEventListener('click', function() {
+      if (expression === '') {
+        // 入力が空の場合は金額入力欄も空欄にする
         amountInput.value = '';
-      } else if (val === 'back') {
-        expression = expression.slice(0, -1);
-        calcDisplay.innerText = expression || '0';
-      } else if (val === '=') {
+      } else {
         try {
           const result = Math.round(eval(expression));
           if (!isNaN(result) && result >= 0) {
-            expression = String(result);
-            calcDisplay.innerText = expression;
+            amountInput.value = result;
           }
         } catch(e) {}
-      } else if (['+', '-', '*', '/'].includes(val)) {
-        const last = expression.slice(-1);
-        if (['+', '-', '*', '/'].includes(last)) {
+      }
+      hideCalc();
+    });
+
+    // 電卓ボタンを押した時の処理
+    document.querySelectorAll('.calc-btn[data-val]').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const val = this.dataset.val;
+        // 演算子を日本語表記に変換するマップ
+        const displayMap = {'+': '＋', '-': '－', '*': '×', '/': '÷'};
+
+        if (val === 'clear') {
+          // Cボタンで電卓表示と金額入力欄を空欄にする
+          expression = '';
+          calcDisplay.innerText = '';
+          amountInput.value = '';
+        } else if (val === 'back') {
+          // ⌫ボタンで最後の1文字を削除する
           expression = expression.slice(0, -1);
-        }
-        expression += val;
-        calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]);
-      } else {
-        if (expression === '0') {
-          expression = val;
-        } else {
+          calcDisplay.innerText = expression || '0';
+        } else if (val === '=') {
+          // =ボタンで計算結果を表示する
+          try {
+            const result = Math.round(eval(expression));
+            if (!isNaN(result) && result >= 0) {
+              expression = String(result);
+              calcDisplay.innerText = expression;
+            }
+          } catch(e) {}
+        } else if (['+', '-', '*', '/'].includes(val)) {
+          // 演算子ボタンの処理（連続して押した場合は最後の演算子に置き換える）
           const last = expression.slice(-1);
-          const secondLast = expression.slice(-2, -1);
-          if (last === '0' && ['+', '-', '*', '/'].includes(secondLast)) {
-            expression = expression.slice(0, -1) + val;
-          } else {
-            expression += val;
+          if (['+', '-', '*', '/'].includes(last)) {
+            expression = expression.slice(0, -1);
           }
+          expression += val;
+          calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]);
+        } else {
+          // 数字ボタンの処理
+          if (expression === '0') {
+            expression = val;
+          } else {
+            const last = expression.slice(-1);
+            const secondLast = expression.slice(-2, -1);
+            if (last === '0' && ['+', '-', '*', '/'].includes(secondLast)) {
+              expression = expression.slice(0, -1) + val;
+            } else {
+              expression += val;
+            }
+          }
+          calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]);
         }
-        calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]);
-      }
-    });
-  });
-
-  const updateCategoryPanel = () => {
-    categoryList.innerHTML = '';
-    Array.from(catSelect.options).forEach(opt => {
-      if (opt.value === '') return;
-      const item = document.createElement('div');
-      item.style.cssText = 'padding: 14px 16px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; color: #5d4037;';
-      item.innerText = opt.text;
-      if (opt.value === categoryHidden.value) {
-        item.style.color = '#9c6d5c';
-        item.innerText = '✓ ' + opt.text;
-      }
-      item.addEventListener('click', function() {
-        categoryHidden.value = opt.value;
-        categoryDisplay.innerText = opt.text;
-        hideCategoryPanel();
       });
-      categoryList.appendChild(item);
     });
-  };
 
-  const showCategoryPanel = () => {
-    updateCategoryPanel();
-    const selectedType = document.querySelector('input[name="tx_type"]:checked').value;
-    document.getElementById('category-edit-btn').href = 
-      `{% url 'households:category_list' %}?type=${selectedType}`;
-    categoryPanel.style.bottom = '0';
-  };
+    // カテゴリーパネルの選択肢を更新する
+    const updateCategoryPanel = () => {
+      categoryList.innerHTML = '';
+      Array.from(catSelect.options).forEach(opt => {
+        if (opt.value === '') return;
+        const item = document.createElement('div');
+        item.style.cssText = 'padding: 14px 16px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: bold; color: #5d4037;';
+        item.innerText = opt.text;
+        // 現在選択中のカテゴリーに✓をつける
+        if (opt.value === categoryHidden.value) {
+          item.style.color = '#9c6d5c';
+          item.innerText = '✓ ' + opt.text;
+        }
+        item.addEventListener('click', function() {
+          categoryHidden.value = opt.value;
+          categoryDisplay.innerText = opt.text;
+          hideCategoryPanel();
+        });
+        categoryList.appendChild(item);
+      });
+    };
 
-  categoryRow.addEventListener('click', function() {
-    hideAll();
-    showCategoryPanel();
-  });
+    // カテゴリーパネルを表示する
+    const showCategoryPanel = () => {
+      updateCategoryPanel();
+      // 選択中の収支タイプに合わせてカテゴリー編集ボタンのリンク先を設定する
+      const selectedType = document.querySelector('input[name="tx_type"]:checked').value;
+      document.getElementById('category-edit-btn').href =
+        `{% url 'households:category_list' %}?type=${selectedType}`;
+      categoryPanel.style.bottom = '0';
+    };
 
-  document.getElementById('category-close-btn').addEventListener('click', hideCategoryPanel);
-
-  document.querySelectorAll('input[name="tx_type"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-      categoryDisplay.innerText = '選択してください';
-      categoryHidden.value = '';
-      setTimeout(() => {
-        updateCategoryPanel();
-      }, 50);
+    // カテゴリー行をタップしたらカテゴリーパネルを表示する
+    categoryRow.addEventListener('click', function() {
+      hideAll();
+      showCategoryPanel();
     });
-  });
 
-  if (categoryHidden.value) {
-    const matchedOption = Array.from(catSelect.options).find(o => o.value === categoryHidden.value);
-    if (matchedOption) {
-      // （収入）（支出）の表記を除去して表示する
-      const cleanText = matchedOption.text.replace('（収入）', '').replace('（支出）', '').trim();
-      categoryDisplay.innerText = cleanText;
+    // 「閉じる」ボタンでカテゴリーパネルを閉じる
+    document.getElementById('category-close-btn').addEventListener('click', hideCategoryPanel);
+
+    // 収支タイプを切り替えた時にカテゴリー選択をリセットする
+    document.querySelectorAll('input[name="tx_type"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        categoryDisplay.innerText = '選択してください';
+        categoryHidden.value = '';
+        setTimeout(() => {
+          updateCategoryPanel();
+        }, 50);
+      });
+    });
+
+    // 編集時に既存のカテゴリーを表示する
+    if (categoryHidden.value) {
+      const matchedOption = Array.from(catSelect.options).find(o => o.value === categoryHidden.value);
+      if (matchedOption) {
+        // （収入）（支出）の表記を除去して表示する
+        const cleanText = matchedOption.text.replace('（収入）', '').replace('（支出）', '').trim();
+        categoryDisplay.innerText = cleanText;
+      }
     }
-  }
-});
+  });
 
-document.addEventListener('DOMContentLoaded', function() {
-  const typeRadios = document.querySelectorAll('input[name="tx_type"]');
-  // _category_refという名前で非表示セレクトボックスを取得する
-  const catSelect = document.querySelector('select[name="_category_ref"]');
-  const allOptions = Array.from(catSelect.options);
+  document.addEventListener('DOMContentLoaded', function() {
+    const typeRadios = document.querySelectorAll('input[name="tx_type"]');
+    // カテゴリーの選択肢を参照するための非表示セレクトボックスを取得する
+    const catSelect = document.querySelector('select[name="_category_ref"]');
+    // 全カテゴリーの選択肢を保持しておく
+    const allOptions = Array.from(catSelect.options);
 
-  const filterCategories = () => {
-    const selectedType = document.querySelector('input[name="tx_type"]:checked').value;
-    const targetLabel = (selectedType === 'income') ? '（収入）' : '（支出）';
-    catSelect.innerHTML = '';
-    catSelect.options.length = 0;
-    allOptions.forEach(opt => {
-      if (opt.value === "" || opt.text.includes(targetLabel)) {
-        const cleanText = opt.text.replace('（収入）', '').replace('（支出）', '');
-        const newOption = new Option(cleanText, opt.value);
-        catSelect.add(newOption);
+    // 選択中の収支タイプに合わせてカテゴリーの選択肢を絞り込む
+    const filterCategories = () => {
+      const selectedType = document.querySelector('input[name="tx_type"]:checked').value;
+      const targetLabel = (selectedType === 'income') ? '（収入）' : '（支出）';
+      catSelect.innerHTML = '';
+      catSelect.options.length = 0;
+      allOptions.forEach(opt => {
+        if (opt.value === "" || opt.text.includes(targetLabel)) {
+          // （収入）（支出）の表記を除去して表示する
+          const cleanText = opt.text.replace('（収入）', '').replace('（支出）', '');
+          const newOption = new Option(cleanText, opt.value);
+          catSelect.add(newOption);
+        }
+      });
+    };
+
+    typeRadios.forEach(radio => {
+      radio.addEventListener('change', filterCategories);
+    });
+    // ページ読み込み時に収支タイプに合わせて絞り込む
+    filterCategories();
+  });
+
+  // 画像ファイルを選択した時にボタンのラベルをファイル名に変更する
+  const imageInput = document.getElementById('id_image');
+  if (imageInput) {
+    imageInput.addEventListener('change', function() {
+      const fileName = this.files[0] ? this.files[0].name : '';
+      const label = document.querySelector('label[for="id_image"]');
+      if (fileName) {
+        label.innerText = '✓ ' + fileName.slice(0, 10) + '...';
+        label.style.backgroundColor = '#2ecc71';
       }
     });
-  };
+  }
 
-  typeRadios.forEach(radio => {
-    radio.addEventListener('change', filterCategories);
-  });
-  filterCategories();
-});
+  // 画像確認ボタンを押した時に画像をモーダルで表示する
+  const confirmBtn = document.getElementById('image-confirm-btn');
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', function() {
+      {% if form.instance.pk and form.instance.image %}
+      // モーダルオーバーレイを作成する
+      const overlay = document.createElement('div');
+      // card-boxを基準に配置するためpositionをabsoluteにする
+      overlay.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
 
-const imageInput = document.getElementById('id_image');
-if (imageInput) {
-  imageInput.addEventListener('change', function() {
-    const fileName = this.files[0] ? this.files[0].name : '';
-    const label = document.querySelector('label[for="id_image"]');
-    if (fileName) {
-      label.innerText = '✓ ' + fileName.slice(0, 10) + '...';
-      label.style.backgroundColor = '#2ecc71';
+      // 画像要素を作成する
+      const img = document.createElement('img');
+      img.src = '{{ form.instance.image.url }}';
+      img.style.cssText = 'max-width: 90%; max-height: 80%; border-radius: 8px; object-fit: contain;';
+
+      // タップしたらモーダルを閉じる
+      overlay.addEventListener('click', function() {
+        overlay.remove();
+      });
+
+      overlay.appendChild(img);
+      // card-boxに追加してスマホ枠内に収める
+      const cardBox = document.querySelector('.card-box');
+      cardBox.appendChild(overlay);
+      {% endif %}
+    });
+  }
+
+  // 保存ボタンを押した時のバリデーション処理
+  document.getElementById('main-form').addEventListener('submit', function(e) {
+    const errors = [];
+
+    // カテゴリーの必須チェック
+    const categoryHidden = document.getElementById('category-hidden');
+    if (!categoryHidden.value) {
+      errors.push('カテゴリーを選択してください');
+    }
+
+    // 日付の必須チェック
+    const dateInput = document.querySelector('input[name="date"]');
+    if (!dateInput || !dateInput.value) {
+      errors.push('日付を入力してください');
+    }
+
+    // 金額または写真のどちらか必須チェック
+    const amountInput = document.getElementById('id_amount');
+    const imageInput = document.getElementById('id_image');
+    const hasAmount = amountInput && amountInput.value && amountInput.value !== '0';
+    const hasNewImage = imageInput && imageInput.files && imageInput.files.length > 0;
+    // 編集時にすでに画像が登録されている場合はtrueにする
+    const hasExistingImage = {% if form.instance.pk and form.instance.image %}true{% else %}false{% endif %};
+
+    if (!hasAmount && !hasNewImage && !hasExistingImage) {
+      errors.push('金額または写真のどちらかを入力してください');
+    }
+
+    // エラーがある場合は送信を止めてメッセージを表示する
+    if (errors.length > 0) {
+      e.preventDefault();
+
+      // 既存のエラーメッセージを削除する
+      const existing = document.getElementById('validation-errors');
+      if (existing) existing.remove();
+
+      // エラーメッセージを作成して表示する
+      const errorDiv = document.createElement('div');
+      errorDiv.id = 'validation-errors';
+      errorDiv.style.cssText = 'background: #fde8e8; border: 1px solid #e74c3c; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.85rem;';
+
+      errors.forEach(msg => {
+        const p = document.createElement('p');
+        p.style.cssText = 'color: #e74c3c; margin: 0; padding: 2px 0;';
+        p.innerText = '• ' + msg;
+        errorDiv.appendChild(p);
+      });
+
+      // 保存ボタンの上にエラーメッセージを挿入する
+      const saveBtn = document.querySelector('button[type="submit"]');
+      saveBtn.parentElement.insertBefore(errorDiv, saveBtn);
+
+      // エラーメッセージの位置までスクロールする
+      errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   });
-}
 
-const confirmBtn = document.getElementById('image-confirm-btn');
-if (confirmBtn) {
-  confirmBtn.addEventListener('click', function() {
-    {% if form.instance.pk and form.instance.image %}
-    
-    // モーダルオーバーレイを作成する
-    const overlay = document.createElement('div');
-    // card-boxを基準に配置するためpositionをabsoluteにする
-    overlay.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
-    
-    // 画像を作成する
-    const img = document.createElement('img');
-    img.src = '{{ form.instance.image.url }}';
-    img.style.cssText = 'max-width: 90%; max-height: 80%; border-radius: 8px; object-fit: contain;';
-    
-    // タップしたらモーダルを閉じる
-    overlay.addEventListener('click', function() {
-      overlay.remove();
-    });
-    
-    // 先に画像をoverlayに追加する
-    overlay.appendChild(img);
+  // 削除ボタンを押した時に確認モーダルを表示する
+  const deleteBtn = document.getElementById('delete-btn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function() {
+      const cardBox = document.querySelector('.card-box');
 
-    // その後card-boxに追加してスマホ枠内に収める
-    const cardBox = document.querySelector('.card-box');
-    cardBox.appendChild(overlay);
-    
-    {% endif %}
-  });
-}
+      // 確認モーダルを動的に作成する
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
 
-// 保存ボタンを押した時のバリデーション処理
-document.getElementById('main-form').addEventListener('submit', function(e) {
-  const errors = [];
-
-  // カテゴリーの必須チェック
-  const categoryHidden = document.getElementById('category-hidden');
-  if (!categoryHidden.value) {
-    errors.push('カテゴリーを選択してください');
-  }
-
-  // 日付の必須チェック
-  const dateInput = document.querySelector('input[name="date"]');
-  if (!dateInput || !dateInput.value) {
-    errors.push('日付を入力してください');
-  }
-
-  // 金額または写真のどちらか必須チェック
-  const amountInput = document.getElementById('id_amount');
-  const imageInput = document.getElementById('id_image');
-  const hasAmount = amountInput && amountInput.value && amountInput.value !== '0';
-  const hasNewImage = imageInput && imageInput.files && imageInput.files.length > 0;
-  // 編集時にすでに画像が登録されている場合はtrueにする
-  const hasExistingImage = {% if form.instance.pk and form.instance.image %}true{% else %}false{% endif %};
-
-  if (!hasAmount && !hasNewImage && !hasExistingImage) {
-    errors.push('金額または写真のどちらかを入力してください');
-  }
-
-  // エラーがある場合は送信を止めてメッセージを表示する
-  if (errors.length > 0) {
-    e.preventDefault();
-    
-    // 既存のエラーメッセージを削除する
-    const existing = document.getElementById('validation-errors');
-    if (existing) existing.remove();
-
-    // エラーメッセージを作成して表示する
-    const errorDiv = document.createElement('div');
-    errorDiv.id = 'validation-errors';
-    errorDiv.style.cssText = 'background: #fde8e8; border: 1px solid #e74c3c; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.85rem;';
-    
-    errors.forEach(msg => {
-      const p = document.createElement('p');
-      p.style.cssText = 'color: #e74c3c; margin: 0; padding: 2px 0;';
-      p.innerText = '• ' + msg;
-      errorDiv.appendChild(p);
-    });
-
-    // 保存ボタンの上に挿入する
-    const saveBtn = document.querySelector('button[type="submit"]');
-    saveBtn.parentElement.insertBefore(errorDiv, saveBtn);
-
-    // エラーメッセージの位置までスクロールする
-    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-});
-
-// 削除ボタンを押した時に確認モーダルを表示する
-const deleteBtn = document.getElementById('delete-btn');
-
-if (deleteBtn) {
-  deleteBtn.addEventListener('click', function() {
-    // モーダルをJavaScriptで動的に作成してcard-boxに追加する
-    const cardBox = document.querySelector('.card-box');
-    
-    const modal = document.createElement('div');
-    modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
-    
-    modal.innerHTML = `
-      <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
-        <p style="font-weight: bold; color: #333; margin-bottom: 20px;">削除してよろしいですか？</p>
-        <div style="display: flex; gap: 12px;">
-          <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
-          <a href="/home/delete/{{ form.instance.pk }}/" style="flex: 1; background-color: #e74c3c; color: white !important; text-decoration: none !important; border-radius: 50px; font-weight: bold; padding: 10px; display: flex; align-items: center; justify-content: center;">削除</a>
+      modal.innerHTML = `
+        <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+          <p style="font-weight: bold; color: #333; margin-bottom: 20px;">削除してよろしいですか？</p>
+          <div style="display: flex; gap: 12px;">
+            <!-- キャンセルボタン -->
+            <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
+            <!-- 削除実行リンク -->
+            <a href="/home/delete/{{ form.instance.pk }}/" style="flex: 1; background-color: #e74c3c; color: white !important; text-decoration: none !important; border-radius: 50px; font-weight: bold; padding: 10px; display: flex; align-items: center; justify-content: center;">削除</a>
+          </div>
         </div>
-      </div>
-    `;
-    
-    // キャンセルボタンでモーダルを閉じる
-    modal.querySelector('#modal-cancel-btn').addEventListener('click', function() {
-      modal.remove();
-    });
-    
-    cardBox.appendChild(modal);
-  });
-}
+      `;
 
+      // キャンセルボタンでモーダルを閉じる
+      modal.querySelector('#modal-cancel-btn').addEventListener('click', function() {
+        modal.remove();
+      });
+
+      cardBox.appendChild(modal);
+    });
+  }
 </script>
 
 {% endblock %}
+
 {% block extra_panels %}
 <!-- 電卓パネル（card-box内に配置） -->
 <div id="calculator-panel" class="calculator-panel" style="
@@ -554,11 +595,13 @@ if (deleteBtn) {
   z-index: 2000;
   border-radius: 20px 20px 0 0;
 ">
+  <!-- 電卓ヘッダー（閉じる・計算結果表示・確定） -->
   <div class="p-2 d-flex justify-content-between align-items-center" style="background: #9c6d5c; border-radius: 20px 20px 0 0;">
     <button type="button" class="btn btn-sm text-white" id="header-close-btn">閉じる</button>
     <div id="calc-display" style="color: white; font-size: 1.2rem; font-weight: bold;">0</div>
     <button type="button" class="btn btn-sm text-white fw-bold" id="header-done-btn">確定</button>
   </div>
+  <!-- 電卓ボタンのグリッド -->
   <div class="calculator-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #ddd;">
     <button type="button" class="calc-btn" data-val="7">7</button>
     <button type="button" class="calc-btn" data-val="8">8</button>
@@ -595,14 +638,14 @@ if (deleteBtn) {
   display: flex;
   flex-direction: column;
 ">
+  <!-- カテゴリーパネルヘッダー（閉じる・タイトル・追加/編集） -->
   <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #9c6d5c; border-radius: 20px 20px 0 0; flex-shrink: 0;">
     <button type="button" id="category-close-btn" class="btn btn-sm text-white">閉じる</button>
     <span style="color: white; font-weight: bold;">カテゴリー</span>
     <a href="#" id="category-edit-btn" class="btn btn-sm text-white">追加/編集</a>
   </div>
+  <!-- カテゴリー選択肢のスクロールエリア（JavaScriptで動的に生成） -->
   <div id="category-list" style="overflow-y: auto; flex-grow: 1; padding: 8px 0;"></div>
 </div>
-
-
 
 {% endblock %}

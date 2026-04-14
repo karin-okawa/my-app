@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
 <style>
@@ -11,6 +11,7 @@
   }
 </style>
 
+<!-- メールアドレス変更画面 -->
 <div class="update-container">
 
   <!-- 戻るボタン -->
@@ -23,38 +24,42 @@
   <!-- タイトル -->
   <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 24px;">メールアドレスの変更</h2>
 
-  <!-- 現在のメールアドレス -->
+  <!-- 現在のメールアドレスの表示 -->
   <div style="margin-bottom: 20px;">
     <div style="font-size: 0.85rem; color: #888; font-weight: bold; margin-bottom: 4px;">現在のメールアドレス：</div>
+    {# views.pyから渡されたユーザーオブジェクトのメールアドレスを表示 #}
     <div style="font-size: 0.95rem; color: #5d4037; font-weight: bold;">{{ user_obj.email }}</div>
   </div>
 
-  <!-- エラーメッセージ -->
+  {# エラーがある場合のみ表示 #}
   {% if error %}
+  <!-- エラーメッセージ -->
   <div style="background: #fde8e8; border: 1px solid #e74c3c; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.85rem; color: #e74c3c;">
     {{ error }}
   </div>
   {% endif %}
 
+  <!-- 入力フォーム -->
   <form method="post">
-    {% csrf_token %}
+    {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
 
-    <!-- 新しいメールアドレス -->
+    <!-- 新しいメールアドレス入力欄 -->
     <div style="margin-bottom: 16px;">
       <label style="font-size: 0.85rem; color: #888; font-weight: bold; display: block; margin-bottom: 6px;">新しいメールアドレス：</label>
-      <input type="email" name="email" 
-             style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;">
+      <input type="email" name="email"
+        style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;">
     </div>
 
-    <!-- パスワード確認 -->
+    <!-- 現在のパスワード確認入力欄 -->
     <div style="margin-bottom: 24px;">
-      <label style="font-size: 0.85rem; color: #888; font-weight: bold; display: block; margin-bottom: 6px;">パスワード：</label>
+      <label style="font-size: 0.85rem; color: #888; font-weight: bold; display: block; margin-bottom: 6px;">現在のパスワード：</label>
       <input type="password" name="password"
-             style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;">
+        style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;">
     </div>
 
+    <!-- 送信ボタン -->
     <button type="submit" class="btn w-100 py-2"
-            style="background-color: #e8d5c0; color: #5d4037; border-radius: 10px; font-weight: bold; border: none;">
+      style="background-color: #e8d5c0; color: #5d4037; border-radius: 10px; font-weight: bold; border: none;">
       メールアドレスを変更する
     </button>
 

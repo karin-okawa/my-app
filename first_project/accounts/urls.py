@@ -1,14 +1,18 @@
-from django.urls import path
-from django.contrib.auth import views as auth_views
-from .views import (
-    RegistUserView, UserLoginView, UserLogoutView, 
-    MyPageView, LogoutDoneView, UserUpdateView, 
+from django.urls import path  # URLパターン定義関数のインポート
+from django.contrib.auth.views import (  # 認証関連のビュークラスのインポート
+    PasswordChangeView, PasswordChangeDoneView,
+    PasswordResetView, PasswordResetDoneView,
+    PasswordResetConfirmView, PasswordResetCompleteView,
+)
+from .views import (  # このアプリ内のビュークラスのインポート
+    RegistUserView, UserLoginView, UserLogoutView,
+    MyPageView, LogoutDoneView, UserUpdateView,
     AvatarUpdateView, NicknameUpdateView,
     EmailUpdateView, EmailUpdateDoneView, EmailConfirmView,
     ReminderSettingView,
 )
-from django.contrib.auth.views import PasswordChangeView, PasswordChangeDoneView
 
+# URLの名前空間（テンプレートから 'accounts:login' のように参照する際に使用）
 app_name = 'accounts'
 
 urlpatterns = [
@@ -22,7 +26,7 @@ urlpatterns = [
     path('logout/done/', LogoutDoneView.as_view(), name='logout_done'),
     # マイページ
     path('mypage/', MyPageView.as_view(), name='mypage'),
-    # メールアドレス変更
+    # ユーザー情報更新
     path('update/', UserUpdateView.as_view(), name='user_update'),
     # プロフィール画像更新
     path('avatar/update/', AvatarUpdateView.as_view(), name='avatar_update'),
@@ -45,22 +49,22 @@ urlpatterns = [
         extra_context={'hide_nav': True},
     ), name='password_change_done'),
     # パスワードリセット（メール送信）
-    path('password_reset/', auth_views.PasswordResetView.as_view(
+    path('password_reset/', PasswordResetView.as_view(
         template_name='accounts/password_reset_form.html',
         email_template_name='accounts/password_reset_email.txt',
         success_url='/accounts/password_reset/done/',
     ), name='password_reset'),
     # パスワードリセットメール送信完了画面
-    path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(
+    path('password_reset/done/', PasswordResetDoneView.as_view(
         template_name='accounts/password_reset_done.html'
     ), name='password_reset_done'),
     # パスワードリセット確認リンク
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+    path('reset/<uidb64>/<token>/', PasswordResetConfirmView.as_view(
         template_name='accounts/password_reset_confirm.html',
         success_url='/accounts/reset/done/',
     ), name='password_reset_confirm'),
     # パスワードリセット完了画面
-    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(
+    path('reset/done/', PasswordResetCompleteView.as_view(
         template_name='accounts/password_reset_complete.html'
     ), name='password_reset_complete'),
     # リマインダー設定画面

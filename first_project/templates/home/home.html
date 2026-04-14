@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% load dict_extras %}
+{% extends "base.html" %} {# base.htmlを継承 #}
+{% load dict_extras %} {# カスタムテンプレートフィルターの読み込み #}
 
 {% block content %}
 <style>
@@ -28,11 +28,11 @@
     height: 35px !important;
     max-height: 35px !important;
     padding: 2px !important;
-    overflow: hidden !important; 
+    overflow: hidden !important;
     vertical-align: top !important;
   }
 
-  /* day-contentの高さを固定 */
+  /* マス目内のコンテンツエリアの高さを固定 */
   .day-content {
     height: 22px !important;
     max-height: 22px !important;
@@ -58,9 +58,9 @@
   .calendar-table thead tr {
     line-height: normal;
   }
-
 </style>
 
+<!-- ホーム画面 -->
 <div class="home-container">
 
   <!-- 上部固定エリア -->
@@ -68,16 +68,18 @@
 
     <!-- 年月ナビゲーション -->
     <div class="month-nav d-flex justify-content-center align-items-center" style="gap: 20px;">
-      <a href="{% url 'home:home_with_month' prev_year prev_month %}" 
-         class="btn btn-sm btn-outline-secondary" 
+      {# 前月へのリンク #}
+      <a href="{% url 'home:home_with_month' prev_year prev_month %}"
+         class="btn btn-sm btn-outline-secondary"
          style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
         ◁
       </a>
       <h2 class="mb-0" style="color: #5d4037; font-weight: bold; font-size: 1.25rem;">
         {{ year }}年{{ month }}月
       </h2>
-      <a href="{% url 'home:home_with_month' next_year next_month %}" 
-         class="btn btn-sm btn-outline-secondary" 
+      {# 翌月へのリンク #}
+      <a href="{% url 'home:home_with_month' next_year next_month %}"
+         class="btn btn-sm btn-outline-secondary"
          style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
         ▷
       </a>
@@ -87,27 +89,34 @@
     <table class="calendar-table">
       <thead>
         <tr>
+          <!-- 日曜は赤、土曜は青で表示 -->
           <th style="color: #a24141;">日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th style="color: #2c587c;">土</th>
         </tr>
       </thead>
       <tbody>
+        {# 週ごとにループ #}
         {% for week in calendar %}
         <tr>
+          {# 日付ごとにループ #}
           {% for day in week %}
+          {# 今日の日付にはtodayクラスを付与 #}
           <td class="{% if day == current_day %}today{% endif %}">
             {% if day != 0 %}
+              <!-- 日付の数字 -->
               <span class="day-number">{{ day }}</span>
-             <div class="day-content">
-                <!-- 上段：収入（収入写真マークあれば左端に表示） -->
+              <div class="day-content">
+
+                <!-- 上段：収入エリア -->
                 <div style="display: flex; align-items: center; justify-content: space-between; min-height: 10px; line-height: 1;">
-                  <!-- 左端：収入の写真マーク -->
+                  <!-- 左端：収入の画像アイコン -->
                   <span style="font-size: 0.6rem; color: #2c587c;">
+                    {# 収入の画像がある日のみアイコンを表示 #}
                     {% if day in income_image_days %}
                       {% if income_map|dict_get:day %}
-                        <!-- 金額と画像の両方がある場合は絵のアイコン -->
+                        {# 金額と画像の両方がある場合は画像アイコン #}
                         <i class="bi bi-image"></i>
                       {% else %}
-                        <!-- 画像のみの場合はびっくりマーク -->
+                        {# 画像のみで金額がない場合はびっくりマーク #}
                         <i class="bi bi-exclamation-circle"></i>
                       {% endif %}
                     {% endif %}
@@ -118,16 +127,17 @@
                   </span>
                 </div>
 
-                <!-- 下段：支出（支出写真マークあれば左端に表示） -->
+                <!-- 下段：支出エリア -->
                 <div style="display: flex; align-items: center; justify-content: space-between; min-height: 10px; line-height: 1;">
-                  <!-- 左端：支出の写真マーク -->
+                  <!-- 左端：支出の画像アイコン -->
                   <span style="font-size: 0.6rem; color: #a24141;">
+                    {# 支出の画像がある日のみアイコンを表示 #}
                     {% if day in expense_image_days %}
                       {% if expense_map|dict_get:day %}
-                        <!-- 金額と画像の両方がある場合は絵のアイコン -->
+                        {# 金額と画像の両方がある場合は画像アイコン #}
                         <i class="bi bi-image"></i>
                       {% else %}
-                        <!-- 画像のみの場合はびっくりマーク -->
+                        {# 画像のみで金額がない場合はびっくりマーク #}
                         <i class="bi bi-exclamation-circle"></i>
                       {% endif %}
                     {% endif %}
@@ -137,7 +147,8 @@
                     {% if expense_map|dict_get:day %}{{ expense_map|dict_get:day }}円{% endif %}
                   </span>
                 </div>
-              </div> 
+
+              </div>
             {% endif %}
           </td>
           {% endfor %}
@@ -166,6 +177,7 @@
 
   <!-- 下部スクロールエリア（収支一覧） -->
   <div class="home-scroll">
+    {# 日付ごとにグループ化して表示 #}
     {% regroup transactions by date as transactions_by_date %}
     {% for day_group in transactions_by_date %}
 
@@ -176,8 +188,10 @@
 
     <!-- その日の収支一覧 -->
     {% for tx in day_group.list %}
+    <!-- 1件分の収支（クリックで編集画面へ遷移） -->
     <a href="/home/update/{{ tx.pk }}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #eee;">
       <div style="display: flex; align-items: center; gap: 8px;">
+        {# カテゴリーがある場合はカテゴリー色の丸とカテゴリー名を表示 #}
         {% if tx.category %}
         <div style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ tx.category.color }}; flex-shrink: 0;"></div>
         <span style="font-size: 0.85rem; color: #5d4037; font-weight: bold;">{{ tx.category.name }}{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
@@ -187,15 +201,17 @@
         {% endif %}
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
+        {# 画像がある場合のみアイコンを表示 #}
         {% if tx.image %}
           {% if tx.amount %}
-            <!-- 金額と画像の両方がある場合は絵のアイコン -->
+            {# 金額と画像の両方がある場合は画像アイコン #}
             <i class="bi bi-image" style="font-size: 0.75rem; {% if tx.tx_type == 'income' %}color: #2c587c;{% else %}color: #a24141;{% endif %}"></i>
           {% else %}
-            <!-- 画像のみの場合はびっくりマーク -->
+            {# 画像のみで金額がない場合はびっくりマーク #}
             <i class="bi bi-exclamation-circle" style="font-size: 0.75rem; {% if tx.tx_type == 'income' %}color: #2c587c;{% else %}color: #a24141;{% endif %}"></i>
           {% endif %}
         {% endif %}
+        {# 金額がある場合のみ表示（収入は青、支出は赤） #}
         {% if tx.amount %}
         <span style="font-size: 0.85rem; font-weight: bold; {% if tx.tx_type == 'income' %}color: #2c587c;{% else %}color: #a24141;{% endif %}">
           {{ tx.amount|floatformat:0 }}円
@@ -205,6 +221,7 @@
     </a>
     {% endfor %}
 
+    {# 収支データがない場合のメッセージ #}
     {% empty %}
     <div style="text-align: center; color: #999; padding: 20px; font-size: 0.85rem;">この月の収支はまだありません</div>
     {% endfor %}
@@ -213,70 +230,77 @@
 </div><!-- home-container閉じタグ -->
 
 <script>
-// 0時になったら今日の日付のハイライトを自動で切り替える
-function updateTodayHighlight() {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-  const currentDay = now.getDate();
+  // 0時になったら今日の日付のハイライトを自動で切り替える
+  function updateTodayHighlight() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const currentDay = now.getDate();
 
-  // 表示中の年月を取得する
-  const displayYear = {{ year }};
-  const displayMonth = {{ month }};
+    // 表示中の年月を取得する
+    const displayYear = {{ year }};
+    const displayMonth = {{ month }};
 
-  // 全てのtodayクラスを一旦削除する
-  document.querySelectorAll('.today').forEach(el => {
-    el.classList.remove('today');
-  });
-
-  // 表示中の月が今月の場合のみ今日のマスにtodayクラスを追加する
-  if (displayYear === currentYear && displayMonth === currentMonth) {
-    document.querySelectorAll('.day-number').forEach(el => {
-      if (parseInt(el.innerText) === currentDay) {
-        el.closest('td').classList.add('today');
-      }
+    // 全てのtodayクラスを一旦削除する
+    document.querySelectorAll('.today').forEach(el => {
+      el.classList.remove('today');
     });
+
+    // 表示中の月が今月の場合のみ今日のマスにtodayクラスを追加する
+    if (displayYear === currentYear && displayMonth === currentMonth) {
+      document.querySelectorAll('.day-number').forEach(el => {
+        if (parseInt(el.innerText) === currentDay) {
+          el.closest('td').classList.add('today');
+        }
+      });
+    }
   }
-}
 
-// 0時に切り替わるまでの残り時間を計算してタイマーをセットする
-function scheduleNextDayUpdate() {
-  const now = new Date();
-  // 次の0時までのミリ秒を計算する
-  const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  const msUntilMidnight = nextMidnight - now;
+  // 0時に切り替わるまでの残り時間を計算してタイマーをセットする
+  function scheduleNextDayUpdate() {
+    const now = new Date();
+    // 次の0時までのミリ秒を計算する
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const msUntilMidnight = nextMidnight - now;
 
-  setTimeout(() => {
-    // 0時になったらハイライトを更新する
-    updateTodayHighlight();
-    // 次の日のために再度タイマーをセットする
-    scheduleNextDayUpdate();
-  }, msUntilMidnight);
-}
+    setTimeout(() => {
+      // 0時になったらハイライトを更新する
+      updateTodayHighlight();
+      // 次の日のために再度タイマーをセットする
+      scheduleNextDayUpdate();
+    }, msUntilMidnight);
+  }
 
-// ページ読み込み時にタイマーをスタートする
-scheduleNextDayUpdate();
+  // ページ読み込み時にタイマーをスタートする
+  scheduleNextDayUpdate();
 </script>
 
+<!-- 日別収支モーダルの背景（暗幕） -->
 <div id="sheetBackdrop" class="sheet-backdrop"></div>
+
+<!-- 日別収支モーダル本体（下から出てくる） -->
 <div id="daySheet" class="day-sheet">
   <div class="sheet-header">
+    <!-- 選択した日付を表示するエリア -->
     <div id="sheetDate" class="sheet-date"></div>
+    <!-- 新規作成ボタン（クリックで該当日付の登録画面へ遷移） -->
     <a id="sheetCreateBtn" href="#" class="btn btn-primary w-100 mt-2" style="background-color: #9c6d5c;">+ 新規作成</a>
   </div>
+  <!-- 収支一覧のスクロールエリア -->
   <div id="sheetList" class="sheet-list"></div>
+  <!-- モーダルを閉じるボタン -->
   <button type="button" id="sheetCancel" class="sheet-cancel">キャンセル</button>
 </div>
 
 <script>
-  // --- 1. 画面上のパーツ（要素）を取得 ---
+  // モーダル関連のDOM要素を取得する
   const backdrop = document.getElementById('sheetBackdrop');
   const sheet = document.getElementById('daySheet');
   const sheetDate = document.getElementById('sheetDate');
   const sheetList = document.getElementById('sheetList');
   const sheetCreateBtn = document.getElementById('sheetCreateBtn');
 
-  // --- 2. カレンダーの各マスに対してクリックイベントを設定 ---
+  // カレンダーの各マスにクリックイベントを設定する
   document.querySelectorAll('.calendar-table td').forEach(td => {
     const dayElement = td.querySelector('.day-number');
     if (!dayElement) return;
@@ -286,12 +310,16 @@ scheduleNextDayUpdate();
       const day = parseInt(dayElement.innerText.trim(), 10);
       const year = parseInt("{{ year }}", 10);
       const month = parseInt("{{ month }}", 10);
+
+      // モーダルのヘッダーに日付を表示する
       sheetDate.innerText = `${year}年${month}月${day}日`;
       const mm = String(month).padStart(2, '0');
       const dd = String(day).padStart(2, '0');
+      // 新規作成ボタンのリンク先に日付を設定する
       sheetCreateBtn.href = `{% url 'home:transaction_create' %}?date=${year}-${mm}-${dd}`;
       const jsonUrl = `{% url 'home:home' %}day-json/${year}/${month}/${day}/`;
 
+      // 指定日の収支データをJSON形式で取得する
       fetch(jsonUrl)
         .then(response => {
           if (!response.ok) throw new Error('Network response was not ok');
@@ -306,7 +334,7 @@ scheduleNextDayUpdate();
               const div = document.createElement('div');
               div.className = 'sheet-item';
               const colorStyle = tx.is_income ? 'color: #2c587c;' : 'color: #a24141;';
-              // 画像アイコンを決定する（画像あり&金額あり→絵、画像あり&金額なし→びっくり、画像なし→なし）
+              // 画像アイコンを決定する（画像あり&金額あり→画像アイコン、画像あり&金額なし→びっくりマーク、画像なし→なし）
               const iconHtml = tx.has_image
                 ? (tx.has_amount
                     ? `<i class="bi bi-image" style="font-size: 0.85rem; ${colorStyle}"></i>`
@@ -331,21 +359,22 @@ scheduleNextDayUpdate();
           sheetList.innerHTML = '<div style="text-align:center; color:#999; margin-top:30px; font-size:0.8rem;">登録された履歴はありません</div>';
         })
         .finally(() => {
+          // モーダルを表示する
           backdrop.style.display = 'block';
           setTimeout(() => sheet.classList.add('show'), 10);
         });
     });
   });
 
-  // --- 3. モーダルを閉じるための関数 ---
+  // モーダルを閉じる関数
   function closeSheet() {
     sheet.classList.remove('show');
     setTimeout(() => { backdrop.style.display = 'none'; }, 300);
   }
 
+  // キャンセルボタンと暗幕クリックでモーダルを閉じる
   document.getElementById('sheetCancel').addEventListener('click', closeSheet);
   backdrop.addEventListener('click', closeSheet);
-
 </script>
 
 {% endblock %}

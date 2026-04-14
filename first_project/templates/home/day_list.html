@@ -1,42 +1,50 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
+{% block content %}
+<!-- 日別収支一覧画面 -->
+
+<!-- タイトル（年月日を表示） -->
 <h2>{{ year }}年{{ month }}月{{ day }}日の収支</h2>
 
+<!-- カレンダーへ戻るリンク -->
 <p>
   <a href="{% url 'home:home' %}" style="text-decoration: none; color: #8d6e63;">← カレンダーに戻る</a>
 </p>
 
+{# 収支データがある場合は一覧を表示、ない場合はメッセージを表示 #}
 {% if transactions %}
-  <ul style="list-style: none; padding: 0;">
-    {% for tx in transactions %}
-      <li style="margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
-        <a href="/home/update/{{ tx.pk }}/" style="text-decoration: none; color: inherit; display: block;">
-          <strong style="font-size: 1.1em; color: #5d4037;">
-            {{ tx.category.name }}
-          </strong>
-          
-          <span style="margin-left: 10px;">
-            {{ tx.amount }}円
-          </span>
-
-          {% if tx.memo %}
-            <span style="color: #757575; font-size: 0.9em; margin-left: 5px;">
-              （{{ tx.memo }}）
-            </span>
-          {% endif %}
-
-          {% if tx.image %} 
-            <span title="画像あり">🖼️</span> 
-          {% endif %}
-          
-          <span style="float: right; color: #bdbdbd;">＞</span>
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
+<ul style="list-style: none; padding: 0;">
+  {% for tx in transactions %}
+  <!-- 収支1件分の表示（クリックで編集画面へ遷移） -->
+  <li style="margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
+    <a href="/home/update/{{ tx.pk }}/" style="text-decoration: none; color: inherit; display: block;">
+      <!-- カテゴリー名 -->
+      <strong style="font-size: 1.1em; color: #5d4037;">
+        {{ tx.category.name }}
+      </strong>
+      <!-- 金額 -->
+      <span style="margin-left: 10px;">
+        {{ tx.amount }}円
+      </span>
+      {# メモがある場合のみ表示 #}
+      {% if tx.memo %}
+      <span style="color: #757575; font-size: 0.9em; margin-left: 5px;">
+        （{{ tx.memo }}）
+      </span>
+      {% endif %}
+      {# 画像がある場合のみアイコンを表示 #}
+      {% if tx.image %}
+      <i class="bi bi-image" title="画像あり" style="color: #9c6d5c;"></i>
+      {% endif %}
+      <!-- 右矢印アイコン -->
+      <span style="float: right; color: #bdbdbd;">＞</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
 {% else %}
-  <p>この日の収支はまだありません。</p>
+<!-- 収支データがない場合のメッセージ -->
+<p>この日の収支はまだありません。</p>
 {% endif %}
 
 {% endblock %}

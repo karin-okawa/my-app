@@ -1,24 +1,22 @@
-{% extends "base.html" %}
+{% extends "base.html" %} {# base.htmlを継承 #}
 
 {% block content %}
+<!-- メールアドレス変更確認メール送信完了画面 -->
 <div style="padding: 32px 16px; text-align: center;">
-
   <h2 style="font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 24px;">確認メールを送信しました</h2>
-
+  {# views.pyから渡された新しいメールアドレスを表示 #}
   <p style="font-size: 0.9rem; color: #555; margin-bottom: 8px;">
     <strong>{{ new_email }}</strong> 宛に確認メールを送りました。
   </p>
   <p style="font-size: 0.9rem; color: #555; margin-bottom: 24px;">
     メール内のリンクをクリックして、新しいメールアドレスの確認を完了してください。
   </p>
-
   <a href="{% url 'accounts:login' %}" style="color: #9c6d5c; text-decoration: underline; font-size: 0.9rem;">
     ログイン画面へ
   </a>
-
+  <!-- 補足メッセージ -->
   <p style="font-size: 0.75rem; color: #999; margin-top: 32px;">
     ※数分待ってもメールが届かない場合は、迷惑メールフォルダをご確認ください。
   </p>
-
 </div>
 {% endblock %}

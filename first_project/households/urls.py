@@ -1,39 +1,33 @@
-from django.urls import path
-from . import views
-from .views import (
-    TransactionListView, TransactionCreateView, DayTransactionsJsonView, 
-    TransactionUpdateView, CategoryListView, CategoryCreateView, 
+from django.urls import path  # URLパターン定義関数のインポート
+from .views import (  # このアプリ内のビュークラスのインポート
+    TransactionListView, TransactionCreateView, DayTransactionsJsonView,
+    TransactionUpdateView, CategoryListView, CategoryCreateView,
     CategoryUpdateView, CategoryDeleteView, CategoryReorderView,
-    CategoryColorView
+    CategoryColorView,
 )
 
-
-# URLの名前空間を households にする
-# テンプレートでは {% url 'households:list' %} のように呼び出せるようになる
+# URLの名前空間（テンプレートから 'households:list' のように参照する際に使用）
 app_name = "households"
 
 urlpatterns = [
-    # 収支一覧ページ（例：/households/）
+    # 収支一覧ページ
     path("", TransactionListView.as_view(), name="list"),
-
-    # 収支登録ページ（例：/households/new/）
+    # 収支登録ページ
     path("new/", TransactionCreateView.as_view(), name="create"),
-   
-    # 指定した「年・月・日」の収支データをJSONで返すAPI用URL
-    # 例: /households/api/day/2026/2/1/ 
-    # → DayTransactionsJsonView が実行され、
-    #   その日の収支データをモーダル表示用に返す
+    # 指定した日の収支データをJSON形式で返すAPI用URL（モーダル表示用）
     path("api/day/<int:year>/<int:month>/<int:day>/", DayTransactionsJsonView.as_view(), name="day_api"),
-
-    # 編集用のパスを追加（<int:pk> でどの収支かを指定）
-    path('transaction/<int:pk>/edit/', views.TransactionUpdateView.as_view(), name='transaction_edit'),
-
+    # 収支編集ページ（<int:pk>でどの収支かを指定）
+    path('transaction/<int:pk>/edit/', TransactionUpdateView.as_view(), name='transaction_edit'),
+    # カテゴリー一覧ページ
     path('categories/', CategoryListView.as_view(), name='category_list'),
+    # カテゴリー新規作成ページ
     path('categories/new/', CategoryCreateView.as_view(), name='category_create'),
+    # カテゴリー編集ページ
     path('categories/<int:pk>/edit/', CategoryUpdateView.as_view(), name='category_edit'),
+    # カテゴリー削除処理
     path('categories/<int:pk>/delete/', CategoryDeleteView.as_view(), name='category_delete'),
-    # 並び替え結果をサーバーに保存するAPI用URL
-    path('categories/reorder/', views.CategoryReorderView.as_view(), name='category_reorder'),
+    # カテゴリーの並び替え結果をサーバーに保存するAPI用URL
+    path('categories/reorder/', CategoryReorderView.as_view(), name='category_reorder'),
     # カテゴリーの色選択ページ
-    path('categories/<int:pk>/color/', views.CategoryColorView.as_view(), name='category_color'),
+    path('categories/<int:pk>/color/', CategoryColorView.as_view(), name='category_color'),
 ]

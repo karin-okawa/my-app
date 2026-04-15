@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>かけいまもるくん</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
+<meta charset="UTF-8">
+
+<!-- スマホに画面の実際の幅で表示させるタグ -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>かけいまもるくん</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
     body {
       display: flex;
       justify-content: center;
@@ -14,19 +18,23 @@
       background-color: #b29990;
       font-family: sans-serif;
       color: #5d4037;
-      padding: 40px 16px;
-    }
 
+      /* スマホでカードが画面からはみ出ないよう余白を小さめに */
+      padding: 16px;
+    }
     .content {
       background: #fff;
       border-radius: 20px;
-      padding: 40px 32px;
+
+      /* 内側余白もスマホで窮屈にならない程度に調整 */
+      padding: 32px 20px;
+
       max-width: 480px;
-      width: 100%;
+      width: 100%; /* 画面幅いっぱいに広がる */
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
-    /* スクリーンショットのスライダー */
+    /* スクリーンショットのスライダー（変更なし） */
     .screenshot-slider {
       display: flex;
       gap: 12px;
@@ -35,16 +43,13 @@
       padding: 8px 0 16px 0;
       -webkit-overflow-scrolling: touch;
     }
-
     .screenshot-slider::-webkit-scrollbar {
       height: 4px;
     }
-
     .screenshot-slider::-webkit-scrollbar-thumb {
       background: #e0d5d0;
       border-radius: 4px;
     }
-
     .screenshot-slider img {
       height: 280px;
       border-radius: 12px;
@@ -53,7 +58,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
-    /* ドキュメントボタン */
+    /* ドキュメントボタン（変更なし） */
     .doc-btn {
       display: block;
       width: 100%;
@@ -68,13 +73,12 @@
       text-decoration: none;
       transition: background-color 0.2s;
     }
-
     .doc-btn:hover {
       background-color: #e8d5c0;
       color: #5d4037;
     }
 
-    /* アプリへのボタン */
+    /* アプリへのボタン（変更なし） */
     .app-btn {
       display: block;
       width: 100%;
@@ -88,42 +92,28 @@
       text-decoration: none;
       margin-top: 16px;
     }
-
     .app-btn:hover {
       background-color: #7a5548;
       color: white;
     }
-  </style>
+</style>
 </head>
 <body>
-  <div class="content">
-
-    <!-- タイトル -->
-    <h1 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 16px;">かけいまもるくん💰</h1>
-
-    <!-- スクリーンショットのスライダー（タイトルの直下） -->
-    <div class="screenshot-slider">
-      <!-- ※以下の src に実際の画像パスを入れてください -->
-      <img src="/media/portfolio/ホーム画面.png" alt="ホーム画面">
-      <img src="/media/portfolio/入力画面.png" alt="入力画面">
-      <img src="/media/portfolio/グラフ画面.png" alt="グラフ画面">
-      <img src="/media/portfolio/掲示板画面.png" alt="掲示板画面">
-    </div>
-
-    <!-- 説明文 -->
-    <p style="font-size: 0.9rem; color: #555; margin-bottom: 4px;">家計管理が続かないあなたをサポートする家計簿アプリ。</p>
-    <p style="font-size: 0.9rem; color: #555; margin-bottom: 24px;">掲示板機能とリマインダー機能で、シンプルだけど続けられる工夫をぎゅっと詰めました。</p>
-
-    <!-- ドキュメントボタン -->
-    <!-- ※以下の href に実際のリンクを入れてください -->
-    <a href="https://docs.google.com/document/d/175psluerdbAFo6ojPcrKoEry_IFx6h3lwO4L86tNtU8/edit?usp=sharing" class="doc-btn"> 企画書</a>
-    <a href="https://docs.google.com/presentation/d/1AesI9eizzYOt0KB_ELUeFIp_QiL0jjMq7RpJABJB-OQ/edit?usp=sharing" class="doc-btn"> 画面設計図</a>
-    <a href="https://drive.google.com/file/d/1ZVR3H0Ih0nnntZu_aGDBNIILG8hIRBiF/view?usp=share_link" class="doc-btn"> 画面遷移図</a>
-    <a href="https://drive.google.com/file/d/1BkjON_yebkZWWsP3jmiVaJAbPl7QhDV5/view?usp=share_link" class="doc-btn"> ER図</a>
-
-    <!-- アプリへのボタン -->
-    <a href="{% url 'accounts:login' %}" class="app-btn">アプリ画面へ</a>
-
+<div class="content">
+  <h1 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 16px;">かけいまもるくん💰</h1>
+  <div class="screenshot-slider">
+    <img src="/media/portfolio/ホーム画面.png" alt="ホーム画面">
+    <img src="/media/portfolio/入力画面.png" alt="入力画面">
+    <img src="/media/portfolio/グラフ画面.png" alt="グラフ画面">
+    <img src="/media/portfolio/掲示板画面.png" alt="掲示板画面">
   </div>
+  <p style="font-size: 0.9rem; color: #555; margin-bottom: 4px;">家計管理が続かないあなたをサポートする家計簿アプリ。</p>
+  <p style="font-size: 0.9rem; color: #555; margin-bottom: 24px;">掲示板機能とリマインダー機能で、シンプルだけど続けられる工夫をぎゅっと詰めました。</p>
+  <a href="https://docs.google.com/document/d/175psluerdbAFo6ojPcrKoEry_IFx6h3lwO4L86tNtU8/edit?usp=sharing" class="doc-btn">企画書</a>
+  <a href="https://docs.google.com/presentation/d/1AesI9eizzYOt0KB_ELUeFIp_QiL0jjMq7RpJABJB-OQ/edit?usp=sharing" class="doc-btn">画面設計図</a>
+  <a href="https://drive.google.com/file/d/1ZVR3H0Ih0nnntZu_aGDBNIILG8hIRBiF/view?usp=share_link" class="doc-btn">画面遷移図</a>
+  <a href="https://drive.google.com/file/d/1BkjON_yebkZWWsP3jmiVaJAbPl7QhDV5/view?usp=share_link" class="doc-btn">ER図</a>
+  <a href="{% url 'accounts:login' %}" class="app-btn">アプリ画面へ</a>
+</div>
 </body>
 </html>

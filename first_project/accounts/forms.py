@@ -25,7 +25,7 @@ class RegistForm(forms.ModelForm):
         fields = ['username', 'email']
         # ラベルの設定
         labels = {
-            'username': '名前',
+            'username': 'ニックネーム',
             'email': 'メールアドレス',
         }
 

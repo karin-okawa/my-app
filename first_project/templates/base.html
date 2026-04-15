@@ -714,17 +714,29 @@
             urlArea.style.display = 'block';
             urlInput.select();
 
-            // コピーを試みる
-            try {
-              document.execCommand('copy');
-              inviteCopyBtn.innerText = 'コピーしました！';
-              inviteCopyBtn.style.backgroundColor = '#2ecc71';
-              setTimeout(() => {
-                inviteCopyBtn.innerText = '招待リンクをコピー';
-                inviteCopyBtn.style.backgroundColor = '#9c6d5c';
-              }, 2000);
-            } catch (err) {
-              inviteCopyBtn.innerText = '下のURLをコピーしてください';
+            // HTTPS環境ではnavigator.clipboardを使う
+            if (navigator.clipboard && window.isSecureContext) {
+              navigator.clipboard.writeText(data.invite_url).then(() => {
+                inviteCopyBtn.innerText = 'コピーしました！';
+                inviteCopyBtn.style.backgroundColor = '#2ecc71';
+                setTimeout(() => {
+                  inviteCopyBtn.innerText = '招待リンクをコピー';
+                  inviteCopyBtn.style.backgroundColor = '#9c6d5c';
+                }, 2000);
+              });
+            } else {
+              // HTTP環境（開発環境など）では古い方法でコピーする
+              try {
+                document.execCommand('copy');
+                inviteCopyBtn.innerText = 'コピーしました！';
+                inviteCopyBtn.style.backgroundColor = '#2ecc71';
+                setTimeout(() => {
+                  inviteCopyBtn.innerText = '招待リンクをコピー';
+                  inviteCopyBtn.style.backgroundColor = '#9c6d5c';
+                }, 2000);
+              } catch (err) {
+                inviteCopyBtn.innerText = '下のURLをコピーしてください';
+              }
             }
           }
         })

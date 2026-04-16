@@ -37,6 +37,12 @@ class UserLoginView(FormView):
     form_class = UserLoginForm
     success_url = reverse_lazy('home:home')
     
+    def dispatch(self, request, *args, **kwargs):
+        # すでにログイン済みの場合はホーム画面へリダイレクトする
+        if request.user.is_authenticated:
+            return redirect('home:home')
+        return super().dispatch(request, *args, **kwargs)
+    
     def form_valid(self, form):
         # forms.pyでパスワード照合が済んだユーザーを取り出す
         user = form.cleaned_data['user']

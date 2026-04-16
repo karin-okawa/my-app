@@ -462,8 +462,13 @@ class HouseholdInviteView(LoginRequiredMixin, View):
 # ============================
 # 招待リンクで家計簿に参加するビュー
 # ============================
-class HouseholdJoinView(LoginRequiredMixin, View):
-    def get(self, request, token, *args, **kwargs):
+class HouseholdJoinView(View):  # LoginRequiredMixinを外す
+    def get(self, request, token, *args, **kwargs): 
+        # 未ログインの場合はトークンをセッションに保存してログイン画面へ飛ばす
+        if not request.user.is_authenticated:
+            request.session['invite_token'] = token
+            return redirect('accounts:login')
+        
         # トークンをハッシュ化して検索する
         token_hash = hashlib.sha256(token.encode()).hexdigest()
 

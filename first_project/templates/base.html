@@ -694,7 +694,6 @@
       });
     }
 
-    
     // 招待リンクをコピーするボタン
     const inviteCopyBtn = document.getElementById('invite-copy-btn');
     if (inviteCopyBtn) {
@@ -708,13 +707,6 @@
         .then(res => res.json())
         .then(data => {
           if (data.invite_url) {
-            // URLを入力欄に表示する
-            const urlInput = document.getElementById('invite-url-input');
-            const urlArea = document.getElementById('invite-url-area');
-            urlInput.value = data.invite_url;
-            urlArea.style.display = 'block';
-            urlInput.select();
-
             // HTTPS環境ではnavigator.clipboardを使う
             if (navigator.clipboard && window.isSecureContext) {
               navigator.clipboard.writeText(data.invite_url).then(() => {
@@ -726,7 +718,12 @@
                 }, 2000);
               });
             } else {
-              // HTTP環境（開発環境など）では古い方法でコピーする
+              // HTTP環境では手動コピー用にURLを表示する
+              const urlInput = document.getElementById('invite-url-input');
+              const urlArea = document.getElementById('invite-url-area');
+              urlInput.value = data.invite_url;
+              urlArea.style.display = 'block';
+              urlInput.select();
               try {
                 document.execCommand('copy');
                 inviteCopyBtn.innerText = 'コピーしました！';
@@ -744,6 +741,7 @@
         .catch(err => console.error('エラー:', err));
       });
     }
+    
 
     {% if user.is_authenticated %}
     // バナー通知を表示する関数

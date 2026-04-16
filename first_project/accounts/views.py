@@ -36,11 +36,16 @@ class UserLoginView(FormView):
     template_name = 'accounts/login.html'
     form_class = UserLoginForm
     success_url = reverse_lazy('home:home')
-
+    
     def form_valid(self, form):
         # forms.pyでパスワード照合が済んだユーザーを取り出す
         user = form.cleaned_data['user']
         login(self.request, user)
+
+        # 招待トークンがセッションにある場合は参加処理へ飛ばす
+        invite_token = self.request.session.pop('invite_token', None)
+        if invite_token:
+            return redirect('home:household_join', token=invite_token)
 
         # ログイン時に家計簿がなければ「個人家計簿」を自動作成する
         if not UserHouseholdAccount.objects.filter(user=user).exists():
@@ -74,6 +79,7 @@ class UserLoginView(FormView):
 
         # 最終的にsuccess_url（ホーム画面）へリダイレクトさせる
         return super().form_valid(form)
+        
 
 
 # マイページビュー（ログインユーザー自身の情報を表示）

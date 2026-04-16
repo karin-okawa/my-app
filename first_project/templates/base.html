@@ -709,14 +709,24 @@
           if (data.invite_url) {
             // HTTPS環境ではnavigator.clipboardを使う
             if (navigator.clipboard && window.isSecureContext) {
-              navigator.clipboard.writeText(data.invite_url).then(() => {
-                inviteCopyBtn.innerText = 'コピーしました！';
-                inviteCopyBtn.style.backgroundColor = '#2ecc71';
-                setTimeout(() => {
-                  inviteCopyBtn.innerText = '招待リンクをコピー';
-                  inviteCopyBtn.style.backgroundColor = '#9c6d5c';
-                }, 2000);
-              });
+              navigator.clipboard.writeText(data.invite_url)
+                .then(() => {
+                  inviteCopyBtn.innerText = 'コピーしました！';
+                  inviteCopyBtn.style.backgroundColor = '#2ecc71';
+                  setTimeout(() => {
+                    inviteCopyBtn.innerText = '招待リンクをコピー';
+                    inviteCopyBtn.style.backgroundColor = '#9c6d5c';
+                  }, 2000);
+                })
+                .catch(() => {
+                  // navigator.clipboardが失敗した場合はURLを表示して手動コピーに切り替える
+                  const urlInput = document.getElementById('invite-url-input');
+                  const urlArea = document.getElementById('invite-url-area');
+                  urlInput.value = data.invite_url;
+                  urlArea.style.display = 'block';
+                  urlInput.select();
+                  inviteCopyBtn.innerText = '下のURLをコピーしてください';
+                });
             } else {
               // HTTP環境では手動コピー用にURLを表示する
               const urlInput = document.getElementById('invite-url-input');

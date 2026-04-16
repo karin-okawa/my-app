@@ -494,12 +494,14 @@ class HouseholdJoinView(View):  # LoginRequiredMixinを外す
             request.session['current_household_id'] = uha.household_account.id
             return redirect('home:home')
 
-        # 新しいメンバーとして追加する
-        UserHouseholdAccount.objects.create(
+        # 新しいメンバーとして追加する（すでに存在する場合は作成しない）
+        UserHouseholdAccount.objects.get_or_create(
             user=request.user,
             household_account=uha.household_account,
-            status=1,
-            joined_at=timezone.now()
+            defaults={
+                'status': 1,
+                'joined_at': timezone.now()
+            }
         )
 
         # 招待レコードを無効化する（一度使用したら失効）

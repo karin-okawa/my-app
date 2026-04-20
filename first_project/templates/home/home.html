@@ -110,15 +110,12 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; min-height: 10px; line-height: 1;">
                   <!-- 左端：収入の画像アイコン -->
                   <span style="font-size: 0.6rem; color: #2c587c;">
-                    {# 収入の画像がある日のみアイコンを表示 #}
+                    {# 金額と画像の両方がある場合は画像アイコン #}
                     {% if day in income_image_days %}
-                      {% if income_map|dict_get:day %}
-                        {# 金額と画像の両方がある場合は画像アイコン #}
-                        <i class="bi bi-image"></i>
-                      {% else %}
-                        {# 画像のみで金額がない場合はびっくりマーク #}
-                        <i class="bi bi-exclamation-circle"></i>
-                      {% endif %}
+                      <i class="bi bi-image"></i>
+                    {# 画像のみで金額がない場合はびっくりマーク #}
+                    {% elif day in income_no_amount_days %}
+                      <i class="bi bi-exclamation-circle"></i>
                     {% endif %}
                   </span>
                   <!-- 右端：収入金額 -->
@@ -131,15 +128,12 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; min-height: 10px; line-height: 1;">
                   <!-- 左端：支出の画像アイコン -->
                   <span style="font-size: 0.6rem; color: #a24141;">
-                    {# 支出の画像がある日のみアイコンを表示 #}
+                    {# 金額と画像の両方がある場合は画像アイコン #}
                     {% if day in expense_image_days %}
-                      {% if expense_map|dict_get:day %}
-                        {# 金額と画像の両方がある場合は画像アイコン #}
-                        <i class="bi bi-image"></i>
-                      {% else %}
-                        {# 画像のみで金額がない場合はびっくりマーク #}
-                        <i class="bi bi-exclamation-circle"></i>
-                      {% endif %}
+                      <i class="bi bi-image"></i>
+                    {# 画像のみで金額がない場合はびっくりマーク #}
+                    {% elif day in expense_no_amount_days %}
+                      <i class="bi bi-exclamation-circle"></i>
                     {% endif %}
                   </span>
                   <!-- 右端：支出金額 -->

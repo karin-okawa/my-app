@@ -142,20 +142,44 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context['total_expense'] = total_expense
         context['total_balance'] = total_balance
 
-        # 収入レコードで画像がアップロードされている日を取得する
+        # 収入レコードで画像があり金額もある日を取得する（画像アイコン用）
         income_image_days = qs.filter(
             image__isnull=False,
-            tx_type=Transaction.INCOME
+            tx_type=Transaction.INCOME,
+            amount__isnull=False,  # 金額がある場合のみ
         ).exclude(
             image=''
         ).annotate(
             day=ExtractDay("date")
         ).values_list("day", flat=True).distinct()
 
-        # 支出レコードで画像がアップロードされている日を取得する
+        # 収入レコードで画像はあるが金額がない日を取得する（びっくりマーク用）
+        income_no_amount_days = qs.filter(
+            image__isnull=False,
+            tx_type=Transaction.INCOME,
+            amount__isnull=True,  # 金額がない場合
+        ).exclude(
+            image=''
+        ).annotate(
+            day=ExtractDay("date")
+        ).values_list("day", flat=True).distinct()
+
+        # 支出レコードで画像があり金額もある日を取得する（画像アイコン用）
         expense_image_days = qs.filter(
             image__isnull=False,
-            tx_type=Transaction.EXPENSE
+            tx_type=Transaction.EXPENSE,
+            amount__isnull=False,  # 金額がある場合のみ
+        ).exclude(
+            image=''
+        ).annotate(
+            day=ExtractDay("date")
+        ).values_list("day", flat=True).distinct()
+
+        # 支出レコードで画像はあるが金額がない日を取得する（びっくりマーク用）
+        expense_no_amount_days = qs.filter(
+            image__isnull=False,
+            tx_type=Transaction.EXPENSE,
+            amount__isnull=True,  # 金額がない場合
         ).exclude(
             image=''
         ).annotate(
@@ -164,7 +188,10 @@ class HomeView(LoginRequiredMixin, TemplateView):
 
         # それぞれセットとして保持する
         context["income_image_days"] = set(income_image_days)
+        context["income_no_amount_days"] = set(income_no_amount_days)
         context["expense_image_days"] = set(expense_image_days)
+        context["expense_no_amount_days"] = set(expense_no_amount_days)
+
 
         return context
 

@@ -34,9 +34,18 @@
     position: relative;
   }
 
+  /* 【レスポンシブ】スマホ実機で開いた時は、枠を消して全画面表示に切り替える */
   @media (max-width: 576px) {
-    .page-center { padding: 0 !important; }
-    .card-box { max-width: 100%; height: 100dvh; border-radius: 0; }
+    .page-center { 
+      padding: 0 !important;
+      height: 100dvh !important;
+    }
+    /* ブラウザのアドレスバーを除いた高さに固定する */
+    .card-box { 
+      max-width: 100%; 
+      height: 100dvh; 
+      border-radius: 0; 
+    }
   }
 
   /* 【ヘッダー】 */ 
@@ -79,6 +88,26 @@
   .nav-item { text-decoration: none; color: #5d4037; text-align: center; flex: 1; }
   .nav-item i { display: block; font-size: 1.2rem; }
   .nav-item span { font-size: 10px; }
+
+  /* スマホ実機でbody自体のスクロールを禁止する */
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* page-centerがはみ出さないようにする */
+  .page-center {
+    background-color: #b29990;
+    min-height: 100%;
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    overflow: hidden;
+  }
 
   /* 【ドロワーメニュー】右から出てくる白枠のメニュー本体 */
   #drawer {

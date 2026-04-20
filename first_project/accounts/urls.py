@@ -2,14 +2,14 @@ from django.urls import path  # URLパターン定義関数のインポート
 from django.contrib.auth.views import (  # 認証関連のビュークラスのインポート
     PasswordChangeView, PasswordChangeDoneView,
     PasswordResetView, PasswordResetDoneView,
-    PasswordResetConfirmView, PasswordResetCompleteView,
+    PasswordResetConfirmView,
 )
 from .views import (  # このアプリ内のビュークラスのインポート
     RegistUserView, UserLoginView, UserLogoutView,
     MyPageView, LogoutDoneView, UserUpdateView,
     AvatarUpdateView, NicknameUpdateView,
     EmailUpdateView, EmailUpdateDoneView, EmailConfirmView,
-    ReminderSettingView,
+    ReminderSettingView, PasswordResetCompleteView,
 )
 
 # URLの名前空間（テンプレートから 'accounts:login' のように参照する際に使用）
@@ -65,9 +65,7 @@ urlpatterns = [
         extra_context={'hide_nav': True},  # ヘッダー・フッターを非表示にする
     ), name='password_reset_confirm'),
     # パスワードリセット完了画面
-    path('reset/done/', PasswordResetCompleteView.as_view(
-        template_name='accounts/password_reset_complete.html'
-    ), name='password_reset_complete'),
+    path('reset/done/', PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     # リマインダー設定画面
     path('reminder/', ReminderSettingView.as_view(), name='reminder_setting'),
 ]

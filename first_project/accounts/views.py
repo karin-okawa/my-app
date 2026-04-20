@@ -87,6 +87,22 @@ class UserLoginView(FormView):
         return super().form_valid(form)
         
 
+# パスワードリセット完了後にログアウトしてログイン画面へ遷移するビュー
+class PasswordResetCompleteView(TemplateView):
+    template_name = 'accounts/password_reset_complete.html'
+
+    def get(self, request, *args, **kwargs):
+        # ログイン済みの場合はログアウトする
+        if request.user.is_authenticated:
+            logout(request)
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # ヘッダー・フッターを非表示にする
+        context['hide_nav'] = True
+        return context
+
 
 # マイページビュー（ログインユーザー自身の情報を表示）
 class MyPageView(LoginRequiredMixin, DetailView):

@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-m(!u0(y*zv!5=l(y&zg@^t^)9)%4*z(l-8oowk6obj%iupwzt3
 DEBUG = True
 
 # アクセスを許可するホスト名の一覧
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['karinkayon.pythonanywhere.com']
 
 # インストール済みアプリの一覧
 INSTALLED_APPS = [

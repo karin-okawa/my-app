@@ -62,6 +62,7 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', PasswordResetConfirmView.as_view(
         template_name='accounts/password_reset_confirm.html',
         success_url='/accounts/reset/done/',
+        extra_context={'hide_nav': True},  # ヘッダー・フッターを非表示にする
     ), name='password_reset_confirm'),
     # パスワードリセット完了画面
     path('reset/done/', PasswordResetCompleteView.as_view(

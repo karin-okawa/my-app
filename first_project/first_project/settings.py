@@ -138,11 +138,11 @@ PASSWORD_RESET_TIMEOUT = 1800
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# メール設定（SendGrid経由でメールを送信する）
+# メール設定（Gmail経由でメールを送信する）
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # SMTPでメール送信
-EMAIL_HOST = 'smtp.sendgrid.net'  # SendGridのSMTPサーバー
+EMAIL_HOST = 'smtp.gmail.com'  # GmailのSMTPサーバー
 EMAIL_PORT = 587  # TLS用のポート番号
 EMAIL_USE_TLS = True  # TLS暗号化を有効にする
-EMAIL_HOST_USER = 'apikey'  # SendGridではユーザー名は常に'apikey'固定
-EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY')  # .envから取得したAPIキー
-DEFAULT_FROM_EMAIL = 'karin_kayon@icloud.com'  # 送信元メールアドレス（SendGridで認証済みのもの）
+EMAIL_HOST_USER = 'kakeimamorukun@gmail.com'  # 送信元のGmailアドレス
+EMAIL_HOST_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD')  # .envから取得したGmailアプリパスワード
+DEFAULT_FROM_EMAIL = 'kakeimamorukun@gmail.com'  # 送信元メールアドレス

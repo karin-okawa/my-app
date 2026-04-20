@@ -25,8 +25,10 @@
     {# フォームエラーがある場合のみ表示 #}
     {% if form.errors %}
     <!-- エラーメッセージ -->
-    <div style="background: #fdecea; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.85rem; color: #e74c3c;">
-      {{ form.non_field_errors }}
+    <div style="background: #fdecea; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.85rem; color: #e74c3c; text-align: left;">
+      {% for error in form.non_field_errors %}
+      <p style="margin: 0;">{{ error }}</p>
+      {% endfor %}
     </div>
     {% endif %}
 

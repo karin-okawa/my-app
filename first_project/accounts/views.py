@@ -189,6 +189,13 @@ class EmailUpdateView(LoginRequiredMixin, View):
                 'error': 'パスワードが正しくありません'
             })
 
+        # 現在と同じメールアドレスの確認
+        if new_email == request.user.email:
+            return render(request, self.template_name, {
+                'user_obj': request.user,
+                'error': '現在と同じメールアドレスです。別のメールアドレスを入力してください'
+            })
+
         # メールアドレスの重複確認
         if User.objects.filter(email=new_email).exclude(pk=request.user.pk).exists():
             return render(request, self.template_name, {
@@ -262,7 +269,20 @@ class EmailConfirmView(LoginRequiredMixin, View):
         del request.session['email_change_new']
         del request.session['email_change_expires']
 
-        return redirect('accounts:mypage')
+        # メールアドレス変更完了後はログアウトして完了画面へ遷移する
+        logout(request)
+        return redirect('accounts:email_confirm_done')
+
+
+# メールアドレス変更完了画面ビュー
+class EmailConfirmDoneView(TemplateView):
+    template_name = 'accounts/email_confirm_done.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # ヘッダー・フッターを非表示にする
+        context['hide_nav'] = True
+        return context
 
 
 # リマインダー設定ビュー

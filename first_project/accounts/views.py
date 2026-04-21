@@ -207,7 +207,7 @@ class EmailUpdateView(LoginRequiredMixin, View):
             confirm_url = request.build_absolute_uri(f'/accounts/email/confirm/{token}/')
             send_mail(
                 subject='メールアドレス変更の確認',
-                message=f'以下のリンクをクリックしてメールアドレスの変更を完了してください。\n\n{confirm_url}\n\n※このリンクの有効期限は30分です。',
+                message=f'メールアドレス変更のリンクです：\n{confirm_url}\nこのメールに心当たりがない場合は破棄してください。',
                 from_email=None,
                 recipient_list=[new_email],
             )

@@ -185,13 +185,32 @@
     <!-- 1件分の収支（クリックで編集画面へ遷移） -->
     <a href="/home/update/{{ tx.pk }}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #eee;">
       <div style="display: flex; align-items: center; gap: 8px;">
-        {# カテゴリーがある場合はカテゴリー色の丸とカテゴリー名を表示 #}
+        {# 複数メンバーの場合はユーザーアイコン、1人の場合はカテゴリー色の丸を表示 #}
+        {% if is_multi_member %}
+          {# ユーザーアイコンを表示 #}
+          {% if tx.user.avatar %}
+          <div style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
+            <img src="{{ tx.user.avatar.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+          </div>
+          {% else %}
+          {# アバターがない場合はユーザーIDをもとに固定色の丸に頭文字を表示 #}
+          <div style="width: 24px; height: 24px; border-radius: 50%; background-color: {{ user_colors|dict_get:tx.user.id }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <span style="font-size: 0.65rem; font-weight: bold; color: white;">{{ tx.user.username|slice:':1' }}</span>
+          </div>
+          {% endif %}
+        {% else %}
+          {# カテゴリー色の丸を表示 #}
+          {% if tx.category %}
+          <div style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ tx.category.color }}; flex-shrink: 0;"></div>
+          {% else %}
+          <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #ccc; flex-shrink: 0;"></div>
+          {% endif %}
+        {% endif %}  
+        {# カテゴリー名とメモを表示 #}
         {% if tx.category %}
-        <div style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ tx.category.color }}; flex-shrink: 0;"></div>
         <span style="font-size: 0.85rem; color: #5d4037; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 180px; display: inline-block;">{{ tx.category.name }}{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
         {% else %}
-        <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #ccc; flex-shrink: 0;"></div>
-        <span style="font-size: 0.85rem; color: #999;">未分類{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
+        <span style="font-size: 0.85rem; color: #999; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 180px; display: inline-block;">未分類{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
         {% endif %}
       </div>
       <div style="display: flex; align-items: center; gap: 6px;">
@@ -328,16 +347,26 @@
               const div = document.createElement('div');
               div.className = 'sheet-item';
               const colorStyle = tx.is_income ? 'color: #2c587c;' : 'color: #a24141;';
-              // 画像アイコンを決定する（画像あり&金額あり→画像アイコン、画像あり&金額なし→びっくりマーク、画像なし→なし）
+              // 画像アイコンを決定する
               const iconHtml = tx.has_image
                 ? (tx.has_amount
                     ? `<i class="bi bi-image" style="font-size: 0.85rem; ${colorStyle}"></i>`
                     : `<i class="bi bi-exclamation-circle" style="font-size: 0.85rem; ${colorStyle}"></i>`)
                 : '';
 
+              // ユーザーアイコンを決定する（複数メンバーの場合のみ表示）
+              const userIconHtml = data.is_multi_member
+                ? (tx.avatar_url
+                    ? `<img src="${tx.avatar_url}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">`
+                    : `<div style="width: 24px; height: 24px; border-radius: 50%; background-color: ${tx.user_color}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><span style="font-size: 0.65rem; font-weight: bold; color: white;">${tx.user_initial}</span></div>`)
+                : '';
+
               div.innerHTML = `
                 <a href="/home/update/${tx.id}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                  <span style="color:#555; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 180px; display: inline-block;">${tx.memo || '（メモなし）'}</span>
+                  <span style="display: flex; align-items: center; gap: 6px;">
+                    ${userIconHtml}
+                    <span style="color:#555; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 160px; display: inline-block;">${tx.memo || '（メモなし）'}</span>
+                  </span>
                   <span style="display: flex; align-items: center; gap: 4px;">
                     ${iconHtml}
                     <span style="${colorStyle} font-weight:bold;">${tx.amount_str}</span>

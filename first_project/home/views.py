@@ -191,6 +191,25 @@ class HomeView(LoginRequiredMixin, TemplateView):
         context["income_no_amount_days"] = set(income_no_amount_days)
         context["expense_image_days"] = set(expense_image_days)
         context["expense_no_amount_days"] = set(expense_no_amount_days)
+   
+       
+        # 現在の家計簿の参加人数を取得する
+        member_count = UserHouseholdAccount.objects.filter(
+            household_account=household,
+            status=1
+        ).count()
+        context['is_multi_member'] = member_count > 1
+
+        # ユーザーごとの色を計算する（IDをもとに固定色を割り当てる）
+        color_palette = [
+            '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+            '#3498db', '#9b59b6', '#1abc9c', '#e91e63',
+        ]
+        user_colors = {}
+        for tx in transactions:
+            if tx.user and tx.user.id not in user_colors:
+                user_colors[tx.user.id] = color_palette[tx.user.id % len(color_palette)]
+        context['user_colors'] = user_colors
 
 
         return context
@@ -247,6 +266,11 @@ class DayTransactionJsonView(LoginRequiredMixin, View):
         d = self.kwargs['day']
 
         target_date = date(y, m, d)
+        
+        color_palette = [
+          '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+          '#3498db', '#9b59b6', '#1abc9c', '#e91e63',
+        ]
 
         # 現在選択中の家計簿のデータのみ取得する
         household = get_current_household(request)
@@ -270,10 +294,21 @@ class DayTransactionJsonView(LoginRequiredMixin, View):
                 'memo': category_name + memo_text,
                 'has_image': bool(tx.image),
                 'has_amount': bool(tx.amount),
+                'avatar_url': tx.user.avatar.url if tx.user and tx.user.avatar else None,
+                # ユーザーIDをもとに固定色を割り当てる
+                'user_color': color_palette[tx.user.id % len(color_palette)] if tx.user else '#e0d5d0',
+                'user_initial': tx.user.username[0] if tx.user and tx.user.username else '?',
             })
 
-        # 辞書形式にして'transactions'というキーで返す
-        return JsonResponse({'transactions': transactions_data})
+        # 現在の家計簿の参加人数を取得する
+        member_count = UserHouseholdAccount.objects.filter(
+            household_account=household,
+            status=1
+        ).count()
+        return JsonResponse({
+            'transactions': transactions_data,
+            'is_multi_member': member_count > 1,  # 複数メンバーかどうか
+        })
 
 
 # ============================

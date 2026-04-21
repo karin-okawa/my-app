@@ -195,7 +195,7 @@
           </div>
           {% else %}
           {# アバターがない場合はユーザーIDをもとに固定色の丸に頭文字を表示 #}
-          <div style="width: 16px; height: 16px; min-height: 16px; border-radius: 50%; background-color: {{ user_colors|dict_get:tx.user.id }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; align-self: center;">
+          <div style="width: 20px; height: 20px; border-radius: 50%; background-color: {{ user_colors|dict_get:tx.user.id }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; align-self: center;">
             <span style="font-size: 0.65rem; font-weight: bold; color: white;">{{ tx.user.username|slice:':1' }}</span>
           </div>
           {% endif %}

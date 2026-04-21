@@ -188,7 +188,7 @@
         {# カテゴリーがある場合はカテゴリー色の丸とカテゴリー名を表示 #}
         {% if tx.category %}
         <div style="width: 10px; height: 10px; border-radius: 50%; background-color: {{ tx.category.color }}; flex-shrink: 0;"></div>
-        <span style="font-size: 0.85rem; color: #5d4037; font-weight: bold;">{{ tx.category.name }}{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
+        <span style="font-size: 0.85rem; color: #5d4037; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 180px; display: inline-block; font-size: clamp(0.6rem, 1.5vw, 0.85rem);">{{ tx.category.name }}{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
         {% else %}
         <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #ccc; flex-shrink: 0;"></div>
         <span style="font-size: 0.85rem; color: #999;">未分類{% if tx.memo %}（{{ tx.memo }}）{% endif %}</span>
@@ -337,7 +337,7 @@
 
               div.innerHTML = `
                 <a href="/home/update/${tx.id}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                  <span style="color:#555;">${tx.memo || '（メモなし）'}</span>
+                  <span style="color:#555; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 180px; display: inline-block; font-size: clamp(0.6rem, 1.5vw, 0.85rem);">${tx.memo || '（メモなし）'}</span>
                   <span style="display: flex; align-items: center; gap: 4px;">
                     ${iconHtml}
                     <span style="${colorStyle} font-weight:bold;">${tx.amount_str}</span>

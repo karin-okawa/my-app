@@ -540,9 +540,9 @@
       const saveBtn = document.querySelector('button[type="submit"]');
       saveBtn.parentElement.insertBefore(errorDiv, saveBtn);
 
-      // エラーメッセージの位置までスクロールする
-      errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+      // エラーメッセージが見えるように上部にスクロールする
+      document.querySelector('.custom-phone-frame').scrollTop = 0;
+          }
   });
 
   // 削除ボタンを押した時に確認モーダルを表示する

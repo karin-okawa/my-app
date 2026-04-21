@@ -16,7 +16,7 @@ import hashlib  # ハッシュ化モジュールのインポート
 # ③自分のアプリのモデルとフォーム
 from households.models import Transaction, HouseholdAccount, UserHouseholdAccount, Category  # 家計簿アプリのモデルのインポート
 from .forms import TransactionForm  # このアプリ内のフォームクラスのインポート
-from django.contrib import messages  # フラッシュメッセージ機能のインポート
+from django.contrib import messages  # メッセージ機能のインポート
 from django.shortcuts import redirect, render  # リダイレクトと画面描画関数のインポート
 
 
@@ -68,7 +68,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
         user_households = UserHouseholdAccount.objects.filter(
             user=self.request.user,
             status=1
-        ).select_related('household_account')
+        ).select_related('household_account').distinct()
         context['user_households'] = user_households
 
         # URLにyear/monthがあればそれを使い、なければ今の年月を使う
@@ -199,6 +199,7 @@ class HomeView(LoginRequiredMixin, TemplateView):
             status=1
         ).count()
         context['is_multi_member'] = member_count > 1
+        
         # ユーザーごとの色を計算する（IDをもとに固定色を割り当てる）
         color_palette = [
             '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
@@ -210,7 +211,13 @@ class HomeView(LoginRequiredMixin, TemplateView):
                 user_colors[tx.user.id] = color_palette[tx.user.id % len(color_palette)]
         context['user_colors'] = user_colors
 
-
+        # 家計簿リストを取得する際、最後に .distinct() を付け足す
+        # これにより、同じ家計簿が複数回ヒットしても1つにまとめられる
+        context['households'] = HouseholdAccount.objects.filter(
+            userhouseholdaccount__user=self.request.user,
+            userhouseholdaccount__status=1
+        ).distinct()
+        
         return context
 
 
@@ -407,6 +414,19 @@ class HouseholdCreateView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         name = request.POST.get('name', '').strip()
         if name:
+            # 1. すでに同じ名前の家計簿に自分が参加していないかチェック
+            existing_link = UserHouseholdAccount.objects.filter(
+                user=request.user,
+                household_account__name=name,
+                status=1
+            ).first()
+
+            if existing_link:
+                # すでに存在する場合は、その家計簿を「選択中」にしてホームへ戻る
+                request.session['current_household_id'] = existing_link.household_account.id
+                return redirect('home:home')
+
+            # 2. 存在しない場合のみ、新規作成処理を行う
             # 家計簿とユーザーの紐付けレコードを作成する
             household = HouseholdAccount.objects.create(name=name)
             UserHouseholdAccount.objects.create(
@@ -430,8 +450,10 @@ class HouseholdCreateView(LoginRequiredMixin, View):
             ]
             for cat in default_categories:
                 Category.objects.create(household_account=household, **cat)
+            
             # 作成した家計簿をセッションに保存する
             request.session['current_household_id'] = household.id
+
         return redirect('home:home')
 
 

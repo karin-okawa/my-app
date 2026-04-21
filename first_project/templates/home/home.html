@@ -185,7 +185,7 @@
     {% for tx in day_group.list %}
     <!-- 1件分の収支（クリックで編集画面へ遷移） -->
     <a href="/home/update/{{ tx.pk }}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid #eee; min-height: 44px; overflow: visible;">
-      <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; overflow: visible;">
         {# 複数メンバーの場合はユーザーアイコン、1人の場合はカテゴリー色の丸を表示 #}
         {% if is_multi_member %}
           {# ユーザーアイコンを表示 #}

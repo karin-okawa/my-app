@@ -9,8 +9,6 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    margin: -16px; /* app-mainのpaddingを打ち消す */
-    width: calc(100% + 32px); /* app-mainのpaddingを打ち消す */
   }
 
   /* 上部固定エリア（カレンダー＋月間合計） */
@@ -59,6 +57,11 @@
   /* 曜日ヘッダーの行は通常に戻す */
   .calendar-table thead tr {
     line-height: normal;
+  }
+
+  /* ホーム画面ではapp-mainのpaddingを無効にする */
+  .app-main {
+    padding: 0 !important;
   }
 </style>
 

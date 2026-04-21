@@ -2,10 +2,35 @@
 
 {% block content %}
 <style>
-  /* 掲示板画面ではapp-mainをスクロール可能にする */
-  .app-main {
-    overflow-y: auto !important;
-  }
+ /* 掲示板画面ではapp-mainをスクロール可能にする */
+.app-main {
+  overflow-y: auto !important;
+  padding: 0 !important; /* paddingを削除してタブを上部に固定する */
+}
+
+/* タブを上部に固定する */
+#postTab {
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+  z-index: 100;
+  padding: 0 16px;
+  margin: 0 !important;
+}
+
+/* タブコンテンツ（投稿一覧）はスクロール可能にする */
+#postTabContent {
+  padding: 0 16px;
+  overflow-y: auto;
+}
+
+/* メインコンテナのpadding調整 */
+#main-content {
+  padding: 0 !important;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+} 
 </style>
 
 <!-- 掲示板一覧画面 -->

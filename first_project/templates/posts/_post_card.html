@@ -63,7 +63,7 @@
     {# メモがある場合のみ表示 #}
     {% if post.memo %}
     <!-- メモ -->
-    <p style="font-size: 0.85rem; color: #555; margin-bottom: 8px;">{{ post.memo }}</p>
+    <p style="font-size: 0.85rem; color: #555; margin-bottom: 8px; white-space: pre-wrap;">{{ post.memo }}</p>
     {% endif %}
 
     <!-- 投稿日といいねボタンのエリア -->

@@ -199,7 +199,6 @@ class HomeView(LoginRequiredMixin, TemplateView):
             status=1
         ).count()
         context['is_multi_member'] = member_count > 1
-
         # ユーザーごとの色を計算する（IDをもとに固定色を割り当てる）
         color_palette = [
             '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
@@ -505,9 +504,8 @@ class HouseholdInviteView(LoginRequiredMixin, View):
             status=2
         ).delete()
 
-        # 招待用のレコードを作成する（status=2は招待中を意味する）
+        # userを指定せずに招待用のレコードを作成する（status=2は招待中を意味する）
         UserHouseholdAccount.objects.create(
-            user=request.user,
             household_account_id=household_id,
             invitation_token_hash=token_hash,
             expires_at=expires_at,
@@ -524,55 +522,50 @@ class HouseholdInviteView(LoginRequiredMixin, View):
 # ============================
 # 招待リンクで家計簿に参加するビュー
 # ============================
-class HouseholdJoinView(View):  # LoginRequiredMixinを外す
+class HouseholdJoinView(View):
     def get(self, request, token, *args, **kwargs): 
-        # 未ログインの場合はトークンをセッションに保存してログイン画面へ飛ばす
         if not request.user.is_authenticated:
             request.session['invite_token'] = token
             return redirect('accounts:login')
         
-        # トークンをハッシュ化して検索する
         token_hash = hashlib.sha256(token.encode()).hexdigest()
 
-        # 有効な招待レコードを検索する（期限切れは除外）
-        uha = UserHouseholdAccount.objects.filter(
+        # 有効な招待レコードを検索
+        invite_record = UserHouseholdAccount.objects.filter(
             invitation_token_hash=token_hash,
             status=2,
             expires_at__gt=timezone.now()
         ).first()
 
-        if not uha:
-            # 無効または期限切れの場合はエラーページへ
+        if not invite_record:
             return render(request, 'home/invite_error.html', {
                 'error': '招待リンクが無効または期限切れです'
             })
 
-        # すでに参加している場合はそのままホームへリダイレクトする
-        if UserHouseholdAccount.objects.filter(
+        # 招待用レコード自体の家計簿を取得しておく（削除前にキープ）
+        target_household = invite_record.household_account
+
+        # すでに参加しているかチェック
+        existing_member = UserHouseholdAccount.objects.filter(
             user=request.user,
-            household_account=uha.household_account,
+            household_account=target_household,
             status=1
-        ).exists():
-            request.session['current_household_id'] = uha.household_account.id
-            return redirect('home:home')
+        ).exists()
 
-        # 新しいメンバーとして追加する（すでに存在する場合は作成しない）
-        UserHouseholdAccount.objects.get_or_create(
-            user=request.user,
-            household_account=uha.household_account,
-            defaults={
-                'status': 1,
-                'joined_at': timezone.now()
-            }
-        )
+        if not existing_member:
+            # まだ参加していない場合のみ新しいメンバーレコードを作成
+            UserHouseholdAccount.objects.create(
+                user=request.user,
+                household_account=target_household,
+                status=1,
+                joined_at=timezone.now()
+            )
 
-        # 招待レコードを無効化する（一度使用したら失効）
-        uha.invitation_token_hash = None
-        uha.status = 1
-        uha.save()
+        # 招待用レコード（status=2）を使い回さず、削除して失効させる
+        invite_record.delete() 
 
-        # 参加した家計簿をセッションに保存する
-        request.session['current_household_id'] = uha.household_account.id
+        # 参加した家計簿をセッションに保存
+        request.session['current_household_id'] = target_household.id
 
         return redirect('home:home')
 

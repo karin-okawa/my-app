@@ -526,8 +526,9 @@ class HouseholdInviteView(LoginRequiredMixin, View):
             status=2
         ).delete()
 
-        # userを指定せずに招待用のレコードを作成する（status=2は招待中を意味する）
+        # userを指定して作成する（Not Null制約エラーを防ぐため）
         UserHouseholdAccount.objects.create(
+            user=request.user,
             household_account_id=household_id,
             invitation_token_hash=token_hash,
             expires_at=expires_at,

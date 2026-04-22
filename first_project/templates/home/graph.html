@@ -283,18 +283,32 @@
 
   // ページ読み込み時に実行
   document.addEventListener('DOMContentLoaded', function() {
-    // 1. まずDjangoの変数から取得
+    // Djangoの変数から取得
     let initialType = "{{ current_type|default:'expense' }}";
 
-    // 2. もしURLに直接 ?type=... があればそちらを優先（念のため）
+    // もしURLに直接 ?type=... があればそちらを優先
     const params = new URLSearchParams(window.location.search);
     const urlType = params.get('type');
     if (urlType === 'income' || urlType === 'expense') {
         initialType = urlType;
     }
 
-    // 3. 確定したタイプで切り替えを実行
+    // 確定したタイプで切り替えを実行
     switchType(initialType);
+  });
+
+  // 年月リンク（◁ ▷）をクリックした時に、現在の選択タイプをURLに強制的に追加する
+  document.querySelectorAll('a[href*="graph"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      const url = new URL(this.href);
+      // いま画面でアクティブになっているボタンから、最新のタイプを取得する
+      const activeBtn = document.querySelector('.type-btn.active');
+      const currentType = activeBtn && activeBtn.id === 'btn-income' ? 'income' : 'expense';
+      
+      // リンク先のURLに最新のタイプをセットし直す
+      url.searchParams.set('type', currentType);
+      this.href = url.href;
+    });
   });
 
 </script>

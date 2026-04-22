@@ -52,18 +52,22 @@
   <div class="graph-fixed">
 
     <!-- 年月ナビゲーション -->
-    <div class="d-flex justify-content-center align-items-center" ...>
-      {# 前月へのリンク：ここを graph_with_month にします #}
+    <div class="d-flex justify-content-center align-items-center" style="gap: 20px; padding: 6px 0;">
+      {# 前月リンク #}
       <a href="{% url 'home:graph_with_month' prev_year prev_month %}?type={{ current_type }}"
-        class="btn btn-sm ...">
+        class="btn btn-sm btn-outline-secondary"
+        style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
         ◁
       </a>
 
-      <h2 ...>{{ year }}年{{ month }}月</h2>
+      <span style="color: #5d4037; font-weight: bold; font-size: 1.1rem;">
+        {{ year }}年{{ month }}月
+      </span>
 
-      {# 翌月へのリンク：ここも graph_with_month にします #}
+      {# 翌月リンク #}
       <a href="{% url 'home:graph_with_month' next_year next_month %}?type={{ current_type }}"
-        class="btn btn-sm ...">
+        class="btn btn-sm btn-outline-secondary"
+        style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
         ▷
       </a>
     </div>

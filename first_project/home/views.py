@@ -689,15 +689,16 @@ class GraphView(LoginRequiredMixin, TemplateView):
         total_expense = sum(d['total'] for d in expense_data)
         total_income = sum(d['total'] for d in income_data)
 
-        context.update({
-            'expense_data': expense_data,
-            'income_data': income_data,
-            'total_expense': total_expense,
-            'total_income': total_income,
-        })
-        
-        # URLのクエリパラメータからtypeを取得する（デフォルトはexpense）
         current_type = self.request.GET.get('type', 'expense')
-        context['current_type'] = current_type
+        
+        # テンプレート（HTML）に渡すデータをまとめて設定する
+        context.update({
+            'expense_data': expense_data,   # 支出のカテゴリー別集計リスト
+            'income_data': income_data,     # 収入のカテゴリー別集計リスト
+            'total_expense': total_expense, # 支出の合計金額
+            'total_income': total_income,   # 収入の合計金額
+            # 現在の表示タイプ（'expense' または 'income'）
+            'current_type': current_type, 
+        })
         
         return context

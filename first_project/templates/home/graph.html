@@ -78,10 +78,13 @@
     <!-- 支出・収入切り替えボタン -->
     <div style="display: flex; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin: 0 16px 8px;">
       <button type="button" 
-              class="type-btn {% if current_type == 'expense' %}active{% else %}inactive{% endif %}" 
+              {# 修正：current_typeを見て active か inactive を決める #}
+              class="type-btn {% if current_type == 'expense' or not current_type %}active{% else %}inactive{% endif %}" 
               id="btn-expense" 
               onclick="switchType('expense')">支出</button>
+              
       <button type="button" 
+              {# 修正：current_typeが income の時だけ active にする #}
               class="type-btn {% if current_type == 'income' %}active{% else %}inactive{% endif %}" 
               id="btn-income" 
               onclick="switchType('income')">収入</button>
@@ -276,11 +279,22 @@
     }
   }
 
-  // ページ読み込み時に実行（Djangoから受け取った current_type を使う）
+  // ページ読み込み時に実行
   document.addEventListener('DOMContentLoaded', function() {
-    const initialType = "{{ current_type|default:'expense' }}";
+    // 1. まずDjangoの変数から取得
+    let initialType = "{{ current_type|default:'expense' }}";
+
+    // 2. もしURLに直接 ?type=... があればそちらを優先（念のため）
+    const params = new URLSearchParams(window.location.search);
+    const urlType = params.get('type');
+    if (urlType === 'income' || urlType === 'expense') {
+        initialType = urlType;
+    }
+
+    // 3. 確定したタイプで切り替えを実行
     switchType(initialType);
   });
+  
 </script>
 
 {% endblock %}

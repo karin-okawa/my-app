@@ -729,14 +729,26 @@
       inviteCopyBtn.addEventListener('click', function() {
         const form = document.getElementById('invite-form');
         const formData = new FormData(form);
+        
+        // --- CSRFトークンを取得 ---
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
         fetch("{% url 'home:household_invite' %}", {
           method: 'POST',
           body: formData,
+          // --- ヘッダーにトークンを追加 ---
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
         })
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error('サーバーエラーが発生しました');
+          return res.json();
+        })
         .then(data => {
+          // ...（以下の処理は元のままでOKです）
           if (data.invite_url) {
-            // HTTPS環境ではnavigator.clipboardを使う
             if (navigator.clipboard && window.isSecureContext) {
               navigator.clipboard.writeText(data.invite_url)
                 .then(() => {
@@ -748,7 +760,6 @@
                   }, 2000);
                 })
                 .catch(() => {
-                  // navigator.clipboardが失敗した場合はURLを表示して手動コピーに切り替える
                   const urlInput = document.getElementById('invite-url-input');
                   const urlArea = document.getElementById('invite-url-area');
                   urlInput.value = data.invite_url;
@@ -757,7 +768,6 @@
                   inviteCopyBtn.innerText = '下のURLをコピーしてください';
                 });
             } else {
-              // HTTP環境では手動コピー用にURLを表示する
               const urlInput = document.getElementById('invite-url-input');
               const urlArea = document.getElementById('invite-url-area');
               urlInput.value = data.invite_url;
@@ -775,9 +785,14 @@
                 inviteCopyBtn.innerText = '下のURLをコピーしてください';
               }
             }
+          } else {
+            alert('エラー: ' + (data.error || 'URLを取得できませんでした'));
           }
         })
-        .catch(err => console.error('エラー:', err));
+        .catch(err => {
+          console.error('エラー:', err);
+          alert('通信に失敗しました。');
+        });
       });
     }
     

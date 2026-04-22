@@ -54,7 +54,7 @@
     <!-- 年月ナビゲーション -->
     <div class="d-flex justify-content-center align-items-center" style="gap: 20px; padding: 6px 0;">
       {# 前月へのリンク #}
-      <a href="{% url 'home:graph_with_month' prev_year prev_month %}"
+      <a href="{% url 'home:graph_with_month' prev_year prev_month %}?type={{ current_type }}"
          class="btn btn-sm btn-outline-secondary"
          style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
         ◁
@@ -63,7 +63,7 @@
         {{ year }}年{{ month }}月
       </h2>
       {# 翌月へのリンク #}
-      <a href="{% url 'home:graph_with_month' next_year next_month %}"
+      <a href="{% url 'home:graph_with_month' next_year next_month %}?type={{ current_type }}"
          class="btn btn-sm btn-outline-secondary"
          style="border-radius: 4px; padding: 2px 10px; text-decoration: none; color: #5d4037; border-color: #dee2e6;">
         ▷
@@ -249,6 +249,11 @@
     const btnExpense = document.getElementById('btn-expense');
     const btnIncome = document.getElementById('btn-income');
 
+    // URLのクエリパラメータにtypeを保存する
+    const url = new URL(window.location.href);
+    url.searchParams.set('type', type);
+    window.history.replaceState({}, '', url);
+
     if (type === 'expense') {
       // 支出を表示する
       expenseList.style.display = 'block';
@@ -266,8 +271,9 @@
     }
   }
 
-  // ページ読み込み時に支出グラフを初期表示する
-  drawChart(expenseData);
+  // ページ読み込み時にURLのtypeパラメータに応じてグラフを表示する
+  const initialType = "{{ current_type }}";
+  switchType(initialType);
 </script>
 
 {% endblock %}

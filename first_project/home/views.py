@@ -695,5 +695,9 @@ class GraphView(LoginRequiredMixin, TemplateView):
             'total_expense': total_expense,
             'total_income': total_income,
         })
-
+        
+        # URLのクエリパラメータからtypeを取得する（デフォルトはexpense）
+        current_type = self.request.GET.get('type', 'expense')
+        context['current_type'] = current_type
+        
         return context

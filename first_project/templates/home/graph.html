@@ -77,8 +77,14 @@
 
     <!-- 支出・収入切り替えボタン -->
     <div style="display: flex; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; margin: 0 16px 8px;">
-      <button type="button" class="type-btn active" id="btn-expense" onclick="switchType('expense')">支出</button>
-      <button type="button" class="type-btn inactive" id="btn-income" onclick="switchType('income')">収入</button>
+      <button type="button" 
+              class="type-btn {% if current_type == 'expense' %}active{% else %}inactive{% endif %}" 
+              id="btn-expense" 
+              onclick="switchType('expense')">支出</button>
+      <button type="button" 
+              class="type-btn {% if current_type == 'income' %}active{% else %}inactive{% endif %}" 
+              id="btn-income" 
+              onclick="switchType('income')">収入</button>
     </div>
 
   </div><!-- graph-fixed閉じタグ -->
@@ -249,31 +255,32 @@
     const btnExpense = document.getElementById('btn-expense');
     const btnIncome = document.getElementById('btn-income');
 
-    // URLのクエリパラメータにtypeを保存する
+    // URLのクエリパラメータを更新（ページ遷移なしでURLだけ書き換える）
     const url = new URL(window.location.href);
     url.searchParams.set('type', type);
     window.history.replaceState({}, '', url);
 
-    if (type === 'expense') {
-      // 支出を表示する
-      expenseList.style.display = 'block';
-      incomeList.style.display = 'none';
-      btnExpense.className = 'type-btn active';
-      btnIncome.className = 'type-btn inactive';
-      drawChart(expenseData);
-    } else {
-      // 収入を表示する
+    // 見た目とデータの切り替え
+    if (type === 'income') {
       expenseList.style.display = 'none';
       incomeList.style.display = 'block';
       btnExpense.className = 'type-btn inactive';
       btnIncome.className = 'type-btn active';
       drawChart(incomeData);
+    } else {
+      expenseList.style.display = 'block';
+      incomeList.style.display = 'none';
+      btnExpense.className = 'type-btn active';
+      btnIncome.className = 'type-btn inactive';
+      drawChart(expenseData);
     }
   }
 
-  // ページ読み込み時にURLのtypeパラメータに応じてグラフを表示する
-  const initialType = "{{ current_type }}";
-  switchType(initialType);
+  // ページ読み込み時に実行（Djangoから受け取った current_type を使う）
+  document.addEventListener('DOMContentLoaded', function() {
+    const initialType = "{{ current_type|default:'expense' }}";
+    switchType(initialType);
+  });
 </script>
 
 {% endblock %}

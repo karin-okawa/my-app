@@ -1,8 +1,8 @@
-{% extends "base.html" %} {# base.htmlを継承 #}
+{% extends "base.html" %} {# 共通テンプレートの継承 #}
 
 {% block content %}
 <style>
-  /* マイページ全体のスタイル */
+  /* マイページ全体のレイアウト設定 */
   .mypage-container {
     display: flex;
     flex-direction: column;
@@ -11,7 +11,7 @@
     padding: 16px;
   }
 
-  /* プロフィール画像の丸いエリア */
+  /* ユーザーアイコンの円形表示エリア */
   .avatar-circle {
     width: 80px;
     height: 80px;
@@ -24,7 +24,7 @@
     margin: 0 auto;
   }
 
-  /* 情報行のスタイル */
+  /* 項目ごとの行スタイル（境界線を含む） */
   .info-row {
     display: flex;
     justify-content: space-between;
@@ -33,18 +33,21 @@
     border-bottom: 1px solid #eee;
   }
 
+  /* 項目名のラベルスタイル */
   .info-label {
     font-size: 0.9rem;
     color: #888;
     font-weight: bold;
   }
 
+  /* 実際の値（ユーザー情報）の表示スタイル */
   .info-value {
     font-size: 0.9rem;
     color: #5d4037;
     font-weight: bold;
   }
 
+  /* 編集・変更用リンクの共通スタイル（アンダーライン付き） */
   .edit-link {
     font-size: 0.8rem;
     color: #9c6d5c;
@@ -56,55 +59,44 @@
   }
 </style>
 
-<!-- マイページ -->
 <div class="mypage-container">
 
-  <!-- 戻るボタン -->
   <div style="margin-bottom: 8px;">
-    <a href="{% url 'home:home' %}" style="color: #888; text-decoration: none; font-size: 0.9rem;">
+    <a href="{% url 'home:home' %}" style="color: #888; text-decoration: underline; font-size: 0.9rem;">
       ← 戻る
     </a>
   </div>
 
-  <!-- タイトル -->
   <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 20px;">マイページ</h2>
 
-  <!-- プロフィール画像エリア -->
   <div style="text-align: center; margin-bottom: 8px;">
     <div class="avatar-circle">
-      {# アバター画像がある場合は表示、ない場合はデフォルトアイコンを表示 #}
+      {# 設定済み画像があれば表示し、なければデフォルトアイコンを表示 #}
       {% if user_obj.avatar %}
       <img src="{{ user_obj.avatar.url }}" style="width: 100%; height: 100%; object-fit: cover;">
       {% else %}
       <i class="bi bi-person-fill" style="font-size: 2.5rem; color: #9c6d5c;"></i>
       {% endif %}
     </div>
-    <!-- プロフィール画像編集ボタン（クリックでモーダルを開く） -->
     <button type="button" id="avatar-edit-btn" class="edit-link" style="margin-top: 6px; display: block; margin-left: auto; margin-right: auto;">編集する</button>
   </div>
 
-  <!-- ニックネーム -->
   <div class="info-row">
     <div>
       <div class="info-label">ニックネーム：</div>
-      {# views.pyから渡されたユーザーオブジェクトのニックネームを表示 #}
       <div class="info-value" id="nickname-display">{{ user_obj.username }}</div>
     </div>
-    <!-- ニックネーム編集ボタン（クリックでモーダルを開く） -->
     <button type="button" id="nickname-edit-btn" class="edit-link">編集する</button>
   </div>
 
-  <!-- メールアドレス -->
   <div class="info-row">
     <div>
       <div class="info-label">メールアドレス：</div>
-      {# views.pyから渡されたユーザーオブジェクトのメールアドレスを表示 #}
       <div class="info-value">{{ user_obj.email }}</div>
     </div>
     <a href="{% url 'accounts:email_update' %}" class="edit-link">変更する</a>
   </div>
 
-  <!-- パスワード変更ボタン -->
   <div style="margin-top: 32px;">
     <a href="{% url 'accounts:password_change' %}" class="btn w-100 py-2"
        style="background-color: #e8d5c0; color: #5d4037; border-radius: 10px; font-weight: bold; text-decoration: none; display: block; text-align: center;">
@@ -112,7 +104,6 @@
     </a>
   </div>
 
-  <!-- ログアウトボタン（クリックで確認モーダルを開く） -->
   <div style="margin-top: 12px;">
     <button type="button" id="logout-btn" class="btn w-100 py-2"
        style="background-color: #e74c3c; color: white; border-radius: 10px; font-weight: bold; border: none;">
@@ -122,21 +113,19 @@
 
 </div>
 
-<!-- プロフィール画像アップロードモーダル -->
 <div id="avatar-modal" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; border-radius: 20px;">
   <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
       <span style="font-weight: bold; color: #5d4037;">画像をアップロード</span>
       <button type="button" id="avatar-modal-close" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #888;">✕</button>
     </div>
-    <!-- 画像アップロードフォーム -->
     <form method="post" enctype="multipart/form-data" action="{% url 'accounts:avatar_update' %}">
-      {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
+      {% csrf_token %}
       <label for="avatar-input" class="btn w-100 py-2"
              style="background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; cursor: pointer;">
         アップロード
       </label>
-      {# ファイル選択後に保存ボタンを表示する（初期状態は非表示） #}
+      {# ファイル未選択時は隠蔽し、選択後にJSで表示を制御 #}
       <input type="file" id="avatar-input" name="avatar" accept="image/*" style="display: none;">
       <button type="submit" id="avatar-submit-btn" class="btn w-100 py-2 mt-2"
               style="background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; display: none;">
@@ -146,13 +135,12 @@
   </div>
 </div>
 
-<!-- ニックネーム編集モーダル -->
 <div id="nickname-modal" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; border-radius: 20px;">
   <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
     <p style="font-weight: bold; color: #5d4037; margin-bottom: 16px;">ニックネームを編集してください</p>
     <form method="post" action="{% url 'accounts:nickname_update' %}">
-      {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
-      {# 現在のニックネームを初期値として表示 #}
+      {% csrf_token %}
+      {# 現在のユーザー名を初期値として設定 #}
       <input type="text" name="username" value="{{ user_obj.username }}"
              style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem;">
       <div style="display: flex; gap: 12px;">
@@ -163,16 +151,13 @@
   </div>
 </div>
 
-<!-- ログアウト確認モーダル -->
 <div id="logout-modal" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; border-radius: 20px;">
   <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
     <p style="font-weight: bold; color: #333; margin-bottom: 20px;">ログアウトしますか？</p>
     <div style="display: flex; gap: 12px;">
-      <!-- キャンセルボタン -->
       <button type="button" id="logout-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px;">キャンセル</button>
-      <!-- ログアウト実行フォーム -->
       <form method="post" action="{% url 'accounts:logout' %}" style="flex: 1;">
-        {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
+        {% csrf_token %}
         <button type="submit" class="btn w-100" style="background-color: #e74c3c; color: white; border-radius: 50px; font-weight: bold; padding: 10px;">ログアウト</button>
       </form>
     </div>
@@ -180,9 +165,12 @@
 </div>
 
 <script>
+  /* 各モーダルのDOM要素を取得し、表示・非表示のイベント制御を定義。
+    cardBox（親要素）に対してモーダルを追加することで、スマホレイアウトの枠内に表示させる。
+  */
   const cardBox = document.querySelector('.card-box');
 
-  // プロフィール画像モーダルの開閉
+  // アバター編集モーダルの制御
   document.getElementById('avatar-edit-btn').addEventListener('click', function() {
     const modal = document.getElementById('avatar-modal');
     cardBox.appendChild(modal);
@@ -193,7 +181,7 @@
     document.getElementById('avatar-modal').style.display = 'none';
   });
 
-  // 画像選択時に保存ボタンを表示する
+  // ファイル選択完了時のみ保存ボタンを活性化（表示）
   document.getElementById('avatar-input').addEventListener('change', function() {
     const submitBtn = document.getElementById('avatar-submit-btn');
     if (this.files.length > 0) {
@@ -201,7 +189,7 @@
     }
   });
 
-  // ニックネームモーダルの開閉
+  // ニックネーム編集モーダルの制御
   document.getElementById('nickname-edit-btn').addEventListener('click', function() {
     const modal = document.getElementById('nickname-modal');
     cardBox.appendChild(modal);
@@ -212,7 +200,7 @@
     document.getElementById('nickname-modal').style.display = 'none';
   });
 
-  // ログアウトモーダルの開閉
+  // ログアウト確認モーダルの制御
   document.getElementById('logout-btn').addEventListener('click', function() {
     const modal = document.getElementById('logout-modal');
     cardBox.appendChild(modal);
@@ -223,5 +211,4 @@
     document.getElementById('logout-modal').style.display = 'none';
   });
 </script>
-
 {% endblock %}

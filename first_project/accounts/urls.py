@@ -54,6 +54,7 @@ urlpatterns = [
     path('password_reset/', PasswordResetView.as_view(
         template_name='accounts/password_reset_form.html',
         email_template_name='accounts/password_reset_email.txt',
+        subject_template_name='accounts/password_reset_subject.txt',
         success_url='/accounts/password_reset/done/',
     ), name='password_reset'),
     # パスワードリセットメール送信完了画面

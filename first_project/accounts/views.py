@@ -213,7 +213,7 @@ class EmailUpdateView(LoginRequiredMixin, View):
         try:
             confirm_url = request.build_absolute_uri(f'/accounts/email/confirm/{token}/')
             send_mail(
-                subject='メールアドレス変更の確認',
+                subject='【かけいまもるくん】メールアドレス変更の確認',
                 message=f'メールアドレス変更のリンクです：\n{confirm_url}\nこのメールに心当たりがない場合は破棄してください。',
                 from_email=None,
                 recipient_list=[new_email],

@@ -846,7 +846,7 @@
       // ページ読み込み時にランダムな時間を設定する（就寝時間を避ける）
       const sessionKey = 'encourage_shown_date';
       const today = new Date().toDateString();
-      const shownDate = sessionStorage.getItem(sessionKey);
+      const shownDate = localStorage.getItem(sessionKey);
 
       if (shownDate !== today) {
         // 今日まだ表示していない場合はランダムな時間後に表示する
@@ -868,7 +868,7 @@
           setTimeout(() => {
             const randomMessage = messages[Math.floor(Math.random() * messages.length)];
             showBanner(randomMessage);
-            sessionStorage.setItem(sessionKey, today);
+            localStorage.setItem(sessionKey, today);
           }, waitMinutes * 60 * 1000);
         }
       }

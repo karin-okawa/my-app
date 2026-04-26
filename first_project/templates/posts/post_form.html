@@ -50,8 +50,10 @@
 
     <!-- 送信・キャンセルボタン -->
     <div class="d-grid gap-2">
+      <!-- 二重送信防止：ボタンを押したら無効化する -->
       <button type="submit" class="btn btn-primary"
-        style="background-color: #9c6d5c; border: none; padding: 12px; border-radius: 10px; font-weight: bold;">
+        style="background-color: #9c6d5c; border: none; padding: 12px; border-radius: 10px; font-weight: bold;"
+        onclick="this.disabled=true; this.innerText='投稿中...'; this.form.submit();">
         家計簿を投稿する
       </button>
       <!-- キャンセルボタン（掲示板一覧へ戻る） -->

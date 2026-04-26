@@ -75,7 +75,8 @@
       {% endif %}
 
       <div class="mt-5" style="display: flex; justify-content: center;">
-        <button type="submit" class="btn" style="background-color: #9c6d5c; color: white; border: none; border-radius: 10px; font-weight: bold; padding: 10px 0; width: 90%;">保存</button>
+        <!-- 二重送信防止：ボタンを押したら無効化する -->
+        <button type="submit" id="submit-btn" class="btn" style="background-color: #9c6d5c; color: white; border: none; border-radius: 10px; font-weight: bold; padding: 10px 0; width: 90%;" onclick="this.disabled=true; this.innerText='保存中...'; this.form.submit();">保存</button>
       </div>
 
       <div class="mt-3 text-center">

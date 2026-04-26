@@ -22,8 +22,8 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 # 開発環境用の設定（本番環境では変更が必要）
 SECRET_KEY = 'django-insecure-m(!u0(y*zv!5=l(y&zg@^t^)9)%4*z(l-8oowk6obj%iupwzt3'
 
-# デバッグモード（本番環境ではFalseに変更する）
-DEBUG = True
+# デバッグモード（仮想環境ではTrue,本番環境ではFalseに変更する）
+DEBUG = False
 
 # アクセスを許可するホスト名の一覧
 ALLOWED_HOSTS = ['karinkayon.pythonanywhere.com']

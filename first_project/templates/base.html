@@ -312,22 +312,24 @@
       {% if user.is_authenticated and not hide_nav %}
       
         <div id="drawerOverlay"></div>
-
+        
+        <!-- ドロワー（メニュー） -->
         <div id="drawer">
           <button id="drawerClose" class="btn" style="position: absolute; top: 12px; right: 12px; padding: 0;">
             <i class="bi bi-x-lg" style="font-size: 1.4rem;"></i>
           </button>
           
           <ul style="list-style: none; margin: 48px 0 0; padding: 0; font-size: 0.9rem;">
-            <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
-              <a href="{% url 'accounts:mypage' %}" style="text-decoration: none; color: #5d4037;">マイページ</a>
+            <li style="border-bottom: 1px solid #eee;">
+              <a href="{% url 'accounts:mypage' %}" style="text-decoration: none; color: #5d4037; display: block; padding: 12px 0;">マイページ</a>
             </li>
-            <li style="padding: 12px 0; border-bottom: 1px solid #eee;">
-              <a href="{% url 'accounts:reminder_setting' %}" style="text-decoration: none; color: #5d4037;">リマインダー設定</a>
+            <li style="border-bottom: 1px solid #eee;">
+              <a href="{% url 'accounts:reminder_setting' %}" style="text-decoration: none; color: #5d4037; display: block; padding: 12px 0;">リマインダー設定</a>
             </li>
           </ul>
         </div>
 
+        <!-- ヘッダー -->
         <header style="border-bottom: 1px solid #eee; flex-shrink: 0; position: relative;">
           <div style="display: flex; justify-content: center; align-items: center; padding: 12px 0;">
             <h1 style="font-size: 1rem; margin: 0; font-weight: bold; color: #5d4037;">かけいまもるくん</h1>
@@ -358,7 +360,7 @@
       </div>
 
       {% if user.is_authenticated and not hide_nav %}
-      
+        <!-- フッター -->
         <div class="app-footer">
           <a href="{% url 'home:home' %}" class="nav-item" style="text-decoration: none; color: #333; text-align: center;">
             <i class="bi bi-calendar3 d-block"></i>
@@ -492,12 +494,12 @@
           <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
             <p style="font-weight: bold; color: #333; margin-bottom: 20px;" id="household-delete-message">削除しますか？</p>
             <div style="display: flex; gap: 12px;">
+              <button type="button" id="household-delete-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">キャンセル</button>
               <form method="post" action="{% url 'home:household_delete' %}" style="flex: 1;">
                 {% csrf_token %}
                 <input type="hidden" name="household_id" id="delete-household-id">
                 <button type="submit" class="btn w-100" style="background-color: #e74c3c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">削除</button>
               </form>
-              <button type="button" id="household-delete-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">キャンセル</button>
             </div>
           </div>
         </div>

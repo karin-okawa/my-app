@@ -168,12 +168,13 @@
   <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
     <p style="font-weight: bold; color: #333; margin-bottom: 20px;">ログアウトしますか？</p>
     <div style="display: flex; gap: 12px;">
+      <!-- キャンセルボタン -->
+      <button type="button" id="logout-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px;">キャンセル</button>
       <!-- ログアウト実行フォーム -->
       <form method="post" action="{% url 'accounts:logout' %}" style="flex: 1;">
         {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
         <button type="submit" class="btn w-100" style="background-color: #e74c3c; color: white; border-radius: 50px; font-weight: bold; padding: 10px;">ログアウト</button>
       </form>
-      <button type="button" id="logout-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px;">キャンセル</button>
     </div>
   </div>
 </div>

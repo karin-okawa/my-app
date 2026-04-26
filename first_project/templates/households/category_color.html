@@ -16,9 +16,9 @@
     <div style="display: flex; align-items: center; margin-bottom: 24px;">
       {# 新規作成からの場合はカテゴリー一覧へ、編集からの場合は編集画面へ戻る #}
       {% if request.GET.from == 'create' %}
-      <a href="{% url 'households:category_list' %}?type={{ request.GET.type }}" style="color: #888; text-decoration: none; font-size: 0.9rem; flex-shrink: 0;">＜ 戻る</a>
+      <a href="{% url 'households:category_list' %}?type={{ request.GET.type }}" style="color: #888; text-decoration: underline; font-size: 0.9rem; flex-shrink: 0;">← 戻る</a>
       {% else %}
-      <a href="{% url 'households:category_edit' object.pk %}?type={{ request.GET.type }}" style="color: #888; text-decoration: none; font-size: 0.9rem; flex-shrink: 0;">＜ 戻る</a>
+      <a href="{% url 'households:category_edit' object.pk %}?type={{ request.GET.type }}" style="color: #888; text-decoration: underline; font-size: 0.9rem; flex-shrink: 0;">← 戻る</a>
       {% endif %}
 
       <!-- タイトル -->
@@ -119,7 +119,7 @@
 
       <!-- 入力画面に戻るリンク -->
       <div class="mt-3 text-center">
-        <a href="{% url 'home:transaction_create' %}" style="color: #9c6d5c; text-decoration: none; font-size: 0.9rem;">入力画面に戻る</a>
+        <a href="{% url 'home:transaction_create' %}" style="color: #9c6d5c; text-decoration: underline; font-size: 0.9rem;">入力画面に戻る</a>
       </div>
 
     </form>

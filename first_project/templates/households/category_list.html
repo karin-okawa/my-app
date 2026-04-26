@@ -1,1 +1,244 @@
+{% extends "base.html" %} {# base.htmlを継承 #}
 
+{% block content %}
+<style>
+  /* カテゴリー一覧画面ではapp-mainをスクロール可能にする */
+  .app-main {
+    overflow-y: auto !important;
+  }
+  .custom-phone-frame {
+    height: auto !important;
+  }
+</style>
+
+<!-- カテゴリー一覧画面 -->
+<div class="custom-phone-frame">
+  <div class="p-4">
+
+    <!-- ページタイトルエリア（左：×ボタン、中央：タイトル） -->
+    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+      <!-- 左端：丸で囲んだ×ボタン（入力画面に戻る） -->
+      <a href="{% url 'home:transaction_create' %}" style="
+        color: #888;
+        text-decoration: none;
+        width: 40px;
+        height: 40px;
+        border: 2px solid #888;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+      ">✕</a>
+
+      {# 収支タイプに応じてタイトルを切り替える #}
+      <h2 style="font-size: 1.3rem; font-weight: bold; color: #5d4037; margin: 0; flex-grow: 1; text-align: center;">
+        {% if category_type == 'income' %}収入カテゴリー
+        {% elif category_type == 'expense' %}支出カテゴリー
+        {% else %}カテゴリー管理
+        {% endif %}
+      </h2>
+
+      <!-- 右端のスペーサー（タイトルを中央に揃えるため） -->
+      <div style="width: 10px; flex-shrink: 0;"></div>
+    </div>
+
+    <!-- 操作説明行 -->
+    <div style="display: flex; align-items: center; padding: 4px 0 8px 0;">
+      <span style="font-size: 0.7rem; color: #bbb; flex-shrink: 0; margin-right: 12px;">↓削除ボタン</span>
+      <span style="flex-grow: 1;"></span>
+      <span style="font-size: 0.7rem; color: #bbb; flex-shrink: 0;">ドラッグで並び替え↓</span>
+    </div>
+
+    <!-- ドラッグ&ドロップで並び替え可能なカテゴリー一覧 -->
+    <div id="category-list" style="padding: 0; margin: 0;">
+      {# カテゴリーをループして表示 #}
+      {% for category in categories %}
+      <!-- 各行のコンテナ（スライド用） -->
+      <div style="overflow: hidden; border-bottom: 1px solid #eee; position: relative;">
+        <div style="display: flex; align-items: stretch;">
+
+          <!-- スライドする行本体 -->
+          <div class="category-item" data-id="{{ category.pk }}" style="
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            width: 100%;
+            transition: transform 0.2s ease;
+            background: #fff;
+            flex-shrink: 0;
+          ">
+            <!-- 左端：赤丸マイナスボタン（タップで削除ボタンをスライド表示） -->
+            <button type="button" class="delete-trigger" data-id="{{ category.pk }}" style="
+              color: #d9534f;
+              font-size: 1.4rem;
+              margin-right: 12px;
+              background: none;
+              border: none;
+              padding: 0;
+              flex-shrink: 0;
+              cursor: pointer;
+            ">&#x2296;</button>
+
+            <!-- カテゴリー名（タップで編集画面へ遷移） -->
+            <a href="{% url 'households:category_edit' category.pk %}?type={{ category_type }}"
+               style="font-weight: bold; color: #5d4037; flex-grow: 1; text-decoration: none;">
+              {{ category.name }}
+            </a>
+
+            <!-- 右端：編集画面へ遷移する矢印 -->
+            <a href="{% url 'households:category_edit' category.pk %}?type={{ category_type }}"
+               style="color: #ccc; text-decoration: none; margin-right: 8px; font-size: 1rem;">›</a>
+
+            <!-- 右端：ドラッグ用の三本線ハンドル -->
+            <span class="drag-handle" style="color: #ccc; font-size: 1.2rem; cursor: grab; flex-shrink: 0;">☰</span>
+          </div>
+
+          <!-- 右側に隠れている削除ボタン（スライドで表示） -->
+          <button type="button" class="delete-btn" data-id="{{ category.pk }}" data-name="{{ category.name }}" style="
+            position: absolute;
+            right: -70px;
+            top: 8px;
+            bottom: 8px;
+            width: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #d9534f;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            border: none;
+            transition: right 0.2s ease;
+            border-radius: 10px;
+            cursor: pointer;
+          ">削除</button>
+
+        </div>
+      </div>
+      {# カテゴリーがない場合のメッセージ #}
+      {% empty %}
+      <div style="color: #999; text-align: center; padding: 20px 0;">カテゴリーがまだありません</div>
+      {% endfor %}
+    </div>
+
+    <!-- カテゴリー追加ボタン -->
+    <div class="mt-4" style="display: flex; justify-content: center;">
+      <a href="{% url 'households:category_create' %}?type={{ category_type }}"
+         class="btn"
+         style="background-color: #9c6d5c; color: white; border: none; border-radius: 10px; font-weight: bold; padding: 10px 0; width: 90%;">
+        カテゴリー追加
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // SortableJSを動的に読み込む
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+  script.onload = function() {
+
+    // カテゴリー一覧をドラッグ&ドロップで並び替えできるようにする
+    const list = document.getElementById('category-list');
+    Sortable.create(list, {
+      animation: 150,        // ドラッグ中のアニメーション速度（ミリ秒）
+      handle: '.drag-handle', // 三本線部分だけをドラッグハンドルにする
+
+      onEnd: function() {
+        // 現在の並び順のIDリストを作成する
+        const order = Array.from(list.querySelectorAll('.category-item[data-id]'))
+          .map(el => parseInt(el.dataset.id));
+
+        // サーバーにPOSTリクエストで順番を送信する
+        fetch("{% url 'households:category_reorder' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // DjangoのCSRF対策トークンをクッキーから取得して送る
+            'X-CSRFToken': document.cookie.split('; ')
+              .find(row => row.startsWith('csrftoken='))
+              ?.split('=')[1]
+          },
+          body: JSON.stringify({ order: order })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status !== 'ok') {
+            console.error('並び替えの保存に失敗しました');
+          }
+        })
+        .catch(err => console.error('通信エラー:', err));
+      }
+    });
+
+    // 赤丸マイナスボタンを押したら行を左にスライドして削除ボタンを表示する
+    document.querySelectorAll('.delete-trigger').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const id = this.dataset.id;
+        const item = document.querySelector(`.category-item[data-id="${id}"]`);
+        const deleteBtn = item.closest('div[style*="position: relative"]').querySelector('.delete-btn');
+
+        if (deleteBtn.style.right === '0px') {
+          // すでに開いている場合は閉じる
+          item.style.transform = 'translateX(0)';
+          deleteBtn.style.right = '-70px';
+        } else {
+          // 他に開いているものがあれば全て閉じる
+          document.querySelectorAll('.category-item').forEach(el => {
+            el.style.transform = 'translateX(0)';
+          });
+          document.querySelectorAll('.delete-btn').forEach(el => {
+            el.style.right = '-70px';
+          });
+          // 左に70pxスライドして削除ボタンを表示する
+          item.style.transform = 'translateX(-70px)';
+          deleteBtn.style.right = '0px';
+        }
+      });
+    });
+  };
+
+  // スクリプトをページに追加して読み込みを開始する
+  document.head.appendChild(script);
+
+  // 削除ボタンを押した時に確認モーダルを表示する
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const categoryId = this.dataset.id;
+      const categoryName = this.dataset.name;
+      const cardBox = document.querySelector('.card-box');
+
+      // 確認モーダルを動的に作成する
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
+
+      modal.innerHTML = `
+        <div style="background: #fff; border-radius: 16px; padding: 24px; width: 80%; text-align: center;">
+          <p style="font-weight: bold; color: #333; margin-bottom: 20px;">「${categoryName}」を削除してよろしいですか？</p>
+          <div style="display: flex; gap: 12px;">
+            <!-- キャンセルボタン -->
+            <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
+            <!-- 削除実行フォーム -->
+            <form method="post" action="/households/categories/${categoryId}/delete/" style="flex: 1;">
+              <input type="hidden" name="csrfmiddlewaretoken" value="${document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1]}">
+              <button type="submit" style="width: 100%; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">削除</button>
+            </form>
+          </div>
+        </div>
+      `;
+
+      // キャンセルボタンでモーダルを閉じる
+      modal.querySelector('#modal-cancel-btn').addEventListener('click', function() {
+        modal.remove();
+      });
+
+      cardBox.appendChild(modal);
+    });
+  });
+</script>
+
+{% endblock %}

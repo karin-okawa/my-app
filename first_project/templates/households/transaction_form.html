@@ -124,6 +124,25 @@
 <!-- 収支登録・編集画面 -->
 <div class="custom-phone-frame">
   <div class="p-4">
+
+    <!-- サクセスメッセージの表示 -->
+    <!-- messagesにデータがある場合のみ表示される -->
+    {% if messages %}
+      {% for message in messages %}
+        <div style="
+          background-color: #e8f5e9;
+          color: #2e7d32;
+          border: 1px solid #a5d6a7;
+          border-radius: 6px;
+          padding: 10px 14px;
+          margin-bottom: 16px;
+          font-size: 0.9rem;
+        ">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
     <form method="post" enctype="multipart/form-data" id="main-form" novalidate>
       {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
 

@@ -385,6 +385,12 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
         household = get_current_household(self.request)
         return Transaction.objects.filter(household_account=household)
 
+    def delete(self, request, *args, **kwargs):
+        # サクセスメッセージを設定する
+        messages.success(request, '収支を削除しました')
+        # 親クラスの削除処理を実行する
+        return super().delete(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         # GETリクエストでも即削除してリダイレクトする（確認画面なし）
         return self.delete(request, *args, **kwargs)

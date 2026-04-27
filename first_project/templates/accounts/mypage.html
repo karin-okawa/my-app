@@ -67,6 +67,26 @@
     </a>
   </div>
 
+  <!-- サクセスメッセージの表示 -->
+  <!-- messagesにデータがある場合のみ表示される -->
+  {% if messages %}
+    {% for message in messages %}
+      <div style="
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+      ">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+<h2 style="text-align: center; ...">マイページ</h2>
+
   <h2 style="text-align: center; font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 20px;">マイページ</h2>
 
   <div style="text-align: center; margin-bottom: 8px;">

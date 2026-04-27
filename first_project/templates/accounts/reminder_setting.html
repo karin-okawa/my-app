@@ -70,6 +70,24 @@
     </a>
   </div>
 
+  <!-- サクセスメッセージの表示 -->
+  <!-- messagesにデータがある場合のみ表示される -->
+  {% if messages %}
+    {% for message in messages %}
+      <div style="
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+      ">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
   <!-- タイトル -->
   <h2 style="font-size: 1.1rem; font-weight: bold; color: #5d4037; margin-bottom: 20px;">リマインダー設定</h2>
 

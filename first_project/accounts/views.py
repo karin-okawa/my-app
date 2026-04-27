@@ -152,6 +152,8 @@ class AvatarUpdateView(LoginRequiredMixin, View):
             # アップロードされた画像をユーザーのavatarに保存する
             user.avatar = request.FILES['avatar']
             user.save()
+            # サクセスメッセージを設定する
+            messages.success(request, 'アイコン画像を変更しました')
         return redirect('accounts:mypage')
 
 
@@ -164,6 +166,8 @@ class NicknameUpdateView(LoginRequiredMixin, View):
         if username:
             user.username = username
             user.save()
+            # サクセスメッセージを設定する
+            messages.success(request, 'ニックネームを変更しました')
         return redirect('accounts:mypage')
 
 
@@ -304,4 +308,6 @@ class ReminderSettingView(LoginRequiredMixin, View):
         else:
             user.reminder_time = None
         user.save()
+        # サクセスメッセージを設定する
+        messages.success(request, 'リマインダー設定を保存しました')
         return redirect('accounts:reminder_setting')

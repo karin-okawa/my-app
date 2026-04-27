@@ -1,5 +1,6 @@
 # ①Django標準機能
 from django.contrib.auth.mixins import LoginRequiredMixin  # ログイン必須Mixinのインポート
+from django.contrib import messages  # サクセスメッセージのインポート
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView  # 汎用ビュークラスのインポート
 from django.views import View  # Viewの基本クラスのインポート
 from django.urls import reverse_lazy  # 名前付きURLパターンからURLを動的に生成する関数のインポート
@@ -41,12 +42,14 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
     template_name = "households/transaction_form.html"
-    # 登録成功後は収支一覧へ戻る
-    success_url = reverse_lazy("households:list")
+    # 登録成功後は入力画面へ戻る
+    success_url = reverse_lazy("households:create")
 
     def form_valid(self, form):
         # 保存前にログインユーザーを自動設定する
         form.instance.user = self.request.user
+        # サクセスメッセージを設定する
+        messages.success(self.request, '収支を登録しました')
         return super().form_valid(form)
 
 
@@ -57,8 +60,13 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     model = Transaction
     form_class = TransactionForm
     template_name = "households/transaction_form.html"
-    # 編集成功後は収支一覧へ戻る
-    success_url = reverse_lazy("households:list")
+    # 編集成功後は入力画面へ戻る
+    success_url = reverse_lazy("households:create")
+
+    def form_valid(self, form):
+        # サクセスメッセージを設定する
+        messages.success(self.request, '収支を編集しました')
+        return super().form_valid(form)
 
     def get_queryset(self):
         # 自分のデータだけを編集対象にする
@@ -132,9 +140,15 @@ class CategoryListView(LoginRequiredMixin, ListView):
 # ============================
 class CategoryUpdateView(LoginRequiredMixin, UpdateView):
     model = Category
-    # 編集できる項目：カテゴリー名・種類・色
     fields = ['name', 'category_type', 'color']
     template_name = "households/category_form.html"
+
+    def form_valid(self, form):
+        # フォームの保存処理を実行する
+        response = super().form_valid(form)
+        # サクセスメッセージを設定する
+        messages.success(self.request, 'カテゴリーを編集しました')
+        return response
 
     def get_success_url(self):
         # 編集成功後は収支タイプを引き継いでカテゴリー一覧へ戻る
@@ -276,6 +290,8 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
             category_type=form.instance.category_type
         ).order_by('-order').values_list('order', flat=True).first()
         form.instance.order = (max_order or 0) + 1
+        # サクセスメッセージを設定する
+        messages.success(self.request, 'カテゴリーを追加しました')
         return super().form_valid(form)
 
     def get_success_url(self):

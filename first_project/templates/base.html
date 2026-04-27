@@ -858,7 +858,8 @@
         if (currentHour >= 6 && currentHour < 23) {
           // 現在時刻から23時までの残り時間内でランダムに設定する
           const remainingMinutes = (23 - currentHour) * 60 - now.getMinutes();
-          waitMinutes = Math.floor(Math.random() * Math.min(remainingMinutes, 180)) + 10;
+          // 5分〜60分後にランダムに表示する（残り時間が少ない場合は残り時間内に収める）
+          waitMinutes = Math.floor(Math.random() * Math.min(remainingMinutes, - 5, 56)) + 5;
         } else {
           // 就寝時間帯はスキップする
           waitMinutes = null;

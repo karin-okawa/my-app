@@ -18,6 +18,15 @@
     <h1 style="font-size: 1.5rem; font-weight: bold; color: #5d4037;">かけいまもるくん</h1>
   </div>
 
+  {# サクセスメッセージがある場合に表示する #}
+  {% if messages %}
+  {% for message in messages %}
+  <div style="background: #e8f5e9; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.85rem; color: #2e7d32; text-align: center;">
+    {{ message }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
   <!-- ログインフォーム -->
   <form method="POST">
     {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}

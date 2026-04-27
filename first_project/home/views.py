@@ -324,7 +324,7 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
     template_name = "households/transaction_form.html"
-    success_url = reverse_lazy('home:home')
+    success_url = reverse_lazy('home:transaction_create')
 
     def get_form_kwargs(self):
         # フォームに現在の家計簿を渡す
@@ -358,7 +358,7 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     model = Transaction
     form_class = TransactionForm
     template_name = "households/transaction_form.html"
-    success_url = reverse_lazy('home:home')
+    success_url = reverse_lazy('home:transaction_create')
 
     def get_form_kwargs(self):
         # フォームに現在の家計簿を渡す

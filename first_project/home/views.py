@@ -1,5 +1,5 @@
 # ①DjangoのView関連
-from django.views.generic import TemplateView, ListView, CreateView, UpdateView, View, DeleteView  # 汎用ビュークラスのインポート
+from django.views.generic import TemplateView, ListView, View, DeleteView  # 汎用ビュークラスのインポート
 from django.contrib.auth.mixins import LoginRequiredMixin  # ログイン必須Mixinのインポート
 from django.urls import reverse_lazy  # 名前付きURLパターンからURLを動的に生成する関数のインポート
 from django.http import JsonResponse  # JSONレスポンス生成クラスのインポート
@@ -316,60 +316,6 @@ class DayTransactionJsonView(LoginRequiredMixin, View):
             'is_multi_member': member_count > 1,  # 複数メンバーかどうか
         })
 
-
-# ============================
-# 収支登録ビュー
-# ============================
-class TransactionCreateView(LoginRequiredMixin, CreateView):
-    model = Transaction
-    form_class = TransactionForm
-    template_name = "households/transaction_form.html"
-    success_url = reverse_lazy('home:transaction_create')
-
-    def get_form_kwargs(self):
-        # フォームに現在の家計簿を渡す
-        kwargs = super().get_form_kwargs()
-        kwargs['household'] = get_current_household(self.request)
-        return kwargs
-
-    def get_initial(self):
-        # 日付の初期値を設定する（URLパラメーターがあればその日付、なければ今日）
-        initial = super().get_initial()
-        date_str = self.request.GET.get('date')
-        if date_str:
-            initial['date'] = date_str
-        else:
-            initial['date'] = timezone.now().date()
-        return initial
-
-    def form_valid(self, form):
-        # 現在選択中の家計簿を取得して収支に紐づける
-        household = get_current_household(self.request)
-        form.instance.household_account = household
-        # 登録したユーザーも記録する
-        form.instance.user = self.request.user
-        return super().form_valid(form)
-
-
-# ============================
-# 収支編集ビュー
-# ============================
-class TransactionUpdateView(LoginRequiredMixin, UpdateView):
-    model = Transaction
-    form_class = TransactionForm
-    template_name = "households/transaction_form.html"
-    success_url = reverse_lazy('home:transaction_create')
-
-    def get_form_kwargs(self):
-        # フォームに現在の家計簿を渡す
-        kwargs = super().get_form_kwargs()
-        kwargs['household'] = get_current_household(self.request)
-        return kwargs
-
-    def get_queryset(self):
-        # 現在の家計簿に紐づいたデータだけを対象にする
-        household = get_current_household(self.request)
-        return Transaction.objects.filter(household_account=household)
 
 
 # ============================

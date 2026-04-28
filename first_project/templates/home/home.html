@@ -348,7 +348,7 @@
       const mm = String(month).padStart(2, '0');
       const dd = String(day).padStart(2, '0');
       // 新規作成ボタンのリンク先に日付を設定する
-      sheetCreateBtn.href = `{% url 'home:transaction_create' %}?date=${year}-${mm}-${dd}`;
+      sheetCreateBtn.href = `{% url 'households:create' %}?date=${year}-${mm}-${dd}`;
       const jsonUrl = `{% url 'home:home' %}day-json/${year}/${month}/${day}/`;
 
       // 指定日の収支データをJSON形式で取得する

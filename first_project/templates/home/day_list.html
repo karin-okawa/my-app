@@ -17,7 +17,7 @@
   {% for tx in transactions %}
   <!-- 収支1件分の表示（クリックで編集画面へ遷移） -->
   <li style="margin-bottom: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
-    <a href="/home/update/{{ tx.pk }}/" style="text-decoration: none; color: inherit; display: block;">
+    <a href="/households/transaction/{{ tx.pk }}/edit/" style="text-decoration: none; color: inherit; display: block;">
       <!-- カテゴリー名 -->
       <strong style="font-size: 1.1em; color: #5d4037;">
         {{ tx.category.name }}

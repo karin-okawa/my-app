@@ -202,7 +202,7 @@
     <!-- その日の収支一覧 -->
     {% for tx in day_group.list %}
     <!-- 1件分の収支（クリックで編集画面へ遷移） -->
-    <a href="/home/update/{{ tx.pk }}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #eee; overflow: visible;">
+    <a href="/households/transaction/{{ tx.pk }}/edit/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid #eee; overflow: visible;">
       <div style="display: flex; align-items: center; gap: 8px; overflow: visible;">
         {# 複数メンバーの場合はユーザーアイコン、1人の場合はカテゴリー色の丸を表示 #}
         {% if is_multi_member %}
@@ -381,7 +381,7 @@
                 : '';
 
               div.innerHTML = `
-                <a href="/home/update/${tx.id}/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                <a href="/households/transaction/${tx.id}/edit/" style="text-decoration: none; color: inherit; display: flex; justify-content: space-between; width: 100%; align-items: center;">
                   <span style="display: flex; align-items: center; gap: 6px;">
                     ${userIconHtml}
                     <span style="color:#555; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 160px; display: inline-block;">${tx.memo || '（メモなし）'}</span>

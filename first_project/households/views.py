@@ -69,8 +69,9 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def get_queryset(self):
-        # 自分のデータだけを編集対象にする
-        return Transaction.objects.filter(user=self.request.user)
+        # 現在の家計簿に紐づいたデータを編集対象にする（同じ家計簿のメンバーも編集可能）
+        household = get_current_household(self.request)
+        return Transaction.objects.filter(household_account=household)
 
 
 # ============================

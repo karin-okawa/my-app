@@ -9,6 +9,7 @@ from django.db.models import Sum  # DB集計用（合計）関数のインポー
 
 # ②その他のライブラリ
 from datetime import date  # 日付を扱うクラスのインポート
+from django.utils import timezone  # タイムゾーン対応の日時取得モジュールのインポート
 import json  # フロントから送られてくるJSON文字列をPythonのデータに変換する標準ライブラリのインポート
 import random  # ランダムな色を選ぶための標準ライブラリのインポート
 
@@ -44,6 +45,16 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     template_name = "households/transaction_form.html"
     # 登録成功後は入力画面へ戻る
     success_url = reverse_lazy("households:create")
+
+    def get_initial(self):
+        # 日付の初期値を設定する（URLパラメーターがあればその日付、なければ今日）
+        initial = super().get_initial()
+        date_str = self.request.GET.get('date')
+        if date_str:
+            initial['date'] = date_str
+        else:
+            initial['date'] = timezone.now().date()
+        return initial
 
     def form_valid(self, form):
         # 保存前にログインユーザーを自動設定する

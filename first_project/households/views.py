@@ -60,16 +60,26 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     model = Transaction
     form_class = TransactionForm
     template_name = "households/transaction_form.html"
-    # 編集成功後は入力画面へ戻る
-    success_url = reverse_lazy("households:create")
 
     def form_valid(self, form):
         # サクセスメッセージを設定する
         messages.success(self.request, '収支を編集しました')
         return super().form_valid(form)
 
+    def get_success_url(self):
+        # どこから来たかによって遷移先を変える
+        from_page = self.request.GET.get('from', '')
+        if from_page == 'home':
+            # ホーム画面から来た場合は該当年月のホーム画面へ戻る
+            year = self.request.GET.get('year')
+            month = self.request.GET.get('month')
+            if year and month:
+                return reverse_lazy('home:home_with_month', kwargs={'year': int(year), 'month': int(month)})
+        # それ以外は入力画面へ戻る
+        return reverse_lazy('households:create')
+
     def get_queryset(self):
-        # 現在の家計簿に紐づいたデータを編集対象にする（同じ家計簿のメンバーも編集可能）
+        # 現在の家計簿に紐づいたデータを編集対象にする
         household = get_current_household(self.request)
         return Transaction.objects.filter(household_account=household)
 

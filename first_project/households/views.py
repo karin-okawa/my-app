@@ -43,8 +43,6 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
     template_name = "households/transaction_form.html"
-    # 登録成功後は入力画面へ戻る
-    success_url = reverse_lazy("households:create")
 
     def get_initial(self):
         # 日付の初期値を設定する（URLパラメーターがあればその日付、なければ今日）
@@ -62,6 +60,18 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         # サクセスメッセージを設定する
         messages.success(self.request, '収支を登録しました')
         return super().form_valid(form)
+
+    def get_success_url(self):
+        # どこから来たかによって遷移先を変える
+        from_page = self.request.GET.get('from', '')
+        if from_page == 'home':
+            # ホーム画面から来た場合は該当年月のホーム画面へ戻る
+            year = self.request.GET.get('year')
+            month = self.request.GET.get('month')
+            if year and month:
+                return reverse_lazy('home:home_with_month', kwargs={'year': int(year), 'month': int(month)})
+        # それ以外は入力画面へ戻る
+        return reverse_lazy('households:create')
 
 
 # ============================

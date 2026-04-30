@@ -3,6 +3,7 @@ from django.shortcuts import render  # 画面描画関数のインポート
 from django.views.generic import ListView, CreateView, DeleteView  # 汎用ビュークラスのインポート
 from django.contrib.auth.mixins import LoginRequiredMixin  # ログイン必須Mixinのインポート
 from django.urls import reverse_lazy  # 名前付きURLパターンからURLを動的に生成する関数のインポート
+from django.contrib import messages  # サクセスメッセージのインポート
 from django.http import JsonResponse  # JSONレスポンス生成クラスのインポート
 from django.views import View  # Viewの基本クラスのインポート
 from django.db.models import Sum  # DB集計用（合計）関数のインポート
@@ -39,6 +40,8 @@ class PostListView(LoginRequiredMixin, ListView):
             user=self.request.user,
             household=household
         ).order_by('-id')
+        # URLパラメーターからアクティブなタブを取得する
+        context['active_tab'] = self.request.GET.get('tab', 'all')
         return context
 
 
@@ -151,13 +154,22 @@ class PostLikeView(LoginRequiredMixin, View):
 # ============================
 class PostDeleteView(LoginRequiredMixin, DeleteView):
     model = Post
-    # 削除後は掲示板一覧へ戻る
-    success_url = reverse_lazy('posts:post_list')
 
     def get_queryset(self):
         # 自分の投稿だけを削除対象にする
         return Post.objects.filter(user=self.request.user)
 
+    def delete(self, request, *args, **kwargs):
+        # サクセスメッセージを設定する
+        messages.success(request, '投稿を削除しました')
+        # 親クラスの削除処理を実行する
+        return super().delete(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         # GETリクエストでも即削除する（確認画面なし）
         return self.delete(request, *args, **kwargs)
+    
+    def get_success_url(self):
+        # どのタブから削除したかによって遷移先を変える
+        tab = self.request.GET.get('tab', 'all')
+        return f"{reverse_lazy('posts:post_list')}?tab={tab}"

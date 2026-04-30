@@ -36,13 +36,31 @@
 <!-- 掲示板一覧画面 -->
 <div class="container mt-3" id="main-content" style="position: relative;">
 
+  <!-- サクセスメッセージの表示 -->
+  <!-- messagesにデータがある場合のみ表示される -->
+  {% if messages %}
+    {% for message in messages %}
+      <div style="
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+      ">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
   <!-- タブメニュー（みんなの投稿・わたしの投稿） -->
   <ul class="nav nav-tabs nav-fill mb-3" id="postTab" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" style="color: #5d4037; font-weight: bold;">みんなの投稿</button>
+      <div class="tab-pane fade {% if active_tab != 'my' %}show active{% endif %}" id="all" role="tabpanel">
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="my-tab" data-bs-toggle="tab" data-bs-target="#my" type="button" role="tab" style="color: #5d4037; font-weight: bold;">わたしの投稿</button>
+      <div class="tab-pane fade {% if active_tab == 'my' %}show active{% endif %}" id="my" role="tabpanel">
     </li>
   </ul>
 
@@ -326,9 +344,13 @@
     // 削除ボタンの処理（確認モーダルを表示する）
     document.querySelectorAll('.post-delete-btn').forEach(btn => {
       btn.addEventListener('click', function() {
+        // 現在アクティブなタブを取得する
+        const activeTab = document.querySelector('#postTab .nav-link.active').id;
+        // アクティブなタブに応じてURLパラメーターを変える
+        const tabParam = activeTab === 'my-tab' ? '?tab=my' : '?tab=all';
         const postId = this.dataset.id;
         const cardBox = document.querySelector('.card-box');
-
+        
         // 確認モーダルを動的に作成する
         const modal = document.createElement('div');
         modal.style.cssText = 'position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center; border-radius: 20px;';
@@ -339,8 +361,8 @@
             <div style="display: flex; gap: 12px;">
               <!-- キャンセルボタン -->
               <button type="button" id="modal-cancel-btn" style="flex: 1; background-color: #f0f0f0; color: #333; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">キャンセル</button>
-              <!-- 削除実行リンク -->
-              <a href="/posts/${postId}/delete/" style="flex: 1; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center;">削除</a>
+              <!-- 削除ボタン -->
+              <a href="/posts/${postId}/delete/${tabParam}" style="flex: 1; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center;">削除</a>
             </div>
           </div>
         `;

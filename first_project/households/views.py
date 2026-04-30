@@ -72,6 +72,12 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
                 return reverse_lazy('home:home_with_month', kwargs={'year': int(year), 'month': int(month)})
         # それ以外は入力画面へ戻る
         return reverse_lazy('households:create')
+    
+    def get_form_kwargs(self):
+        # フォームに現在の家計簿を渡す
+        kwargs = super().get_form_kwargs()
+        kwargs['household'] = get_current_household(self.request)
+        return kwargs
 
 
 # ============================
@@ -103,6 +109,12 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
         # 現在の家計簿に紐づいたデータを編集対象にする
         household = get_current_household(self.request)
         return Transaction.objects.filter(household_account=household)
+    
+    def get_form_kwargs(self):
+        # フォームに現在の家計簿を渡す
+        kwargs = super().get_form_kwargs()
+        kwargs['household'] = get_current_household(self.request)
+        return kwargs
 
 
 # ============================

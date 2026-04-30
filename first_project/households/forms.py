@@ -33,6 +33,12 @@ class TransactionForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        # 家計簿をキーワード引数から取り出す（ない場合はNone）
+        household = kwargs.pop('household', None)
         super().__init__(*args, **kwargs)
-        # 全カテゴリーを選択肢として表示する
-        self.fields['category'].queryset = Category.objects.all()
+        if household:
+            # 現在の家計簿のカテゴリーだけに絞り込む
+            self.fields['category'].queryset = Category.objects.filter(household_account=household)
+        else:
+            # 家計簿が渡されない場合は空にする
+            self.fields['category'].queryset = Category.objects.none()

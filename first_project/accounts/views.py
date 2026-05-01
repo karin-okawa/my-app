@@ -119,6 +119,8 @@ class MyPageView(LoginRequiredMixin, DetailView):
 # ログアウト処理ビュー（ログアウト後はログイン画面へリダイレクトする）
 class UserLogoutView(View):
     def post(self, request, *args, **kwargs):
+        # セッションを完全にクリアしてからログアウトする
+        request.session.flush()
         logout(request)
         # ログイン画面にリダイレクトしてサクセスメッセージを表示する
         messages.success(request, 'ログアウトしました')

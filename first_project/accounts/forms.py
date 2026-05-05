@@ -1,6 +1,6 @@
 from django import forms  # Djangoのフォームモジュールのインポート
 from django.contrib.auth import authenticate  # ユーザー認証関数のインポート
-from django.contrib.auth.password_validation import validate_password  # パスワードバリデーション関数のインポート
+from django.contrib.auth.password_validation import validate_password  # パスワード強度チェック関数のインポート
 from django.contrib.auth import get_user_model  # カスタムユーザーモデル取得関数のインポート
 
 # カスタムユーザーモデルの取得
@@ -34,9 +34,27 @@ class RegistForm(forms.ModelForm):
         cleaned_data = super().clean()
         p1 = cleaned_data.get('password1')
         p2 = cleaned_data.get('password2')
+        # パスワードの一致確認
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError('パスワードが一致しません')
+        # パスワードの強度チェック（8文字以上・英数字混在など）
+        if p1:
+            try:
+                validate_password(p1)
+            except forms.ValidationError as e:
+                self.add_error('password1', e)
         return cleaned_data
+
+
+def save(self, commit=True):
+    # インスタンス生成（DBへの保存は保留）
+    user = super().save(commit=False)
+    # パスワードのハッシュ化処理
+    user.set_password(self.cleaned_data.get('password1'))
+    if commit:
+        # データベースへの保存実行
+        user.save()
+    return user
 
     # ユーザー保存処理
     def save(self, commit=True):

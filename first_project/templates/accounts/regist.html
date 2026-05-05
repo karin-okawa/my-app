@@ -34,10 +34,15 @@
     {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
 
     {# フォーム全体のエラー（パスワード不一致など）を表示する #}
-    {% if form.non_field_errors %}
+    {% if form.errors %}
     <div style="background: #fdecea; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.85rem; color: #e74c3c;">
       {% for error in form.non_field_errors %}
       <p style="margin: 0;">{{ error }}</p>
+      {% endfor %}
+      {% for field in form %}
+        {% for error in field.errors %}
+        <p style="margin: 0;">{{ error }}</p>
+        {% endfor %}
       {% endfor %}
     </div>
     {% endif %}
@@ -49,12 +54,6 @@
         {{ field.label }}
       </label>
       {{ field }}
-      {# バリデーションエラーがある場合のみ表示 #}
-      {% if field.errors %}
-      <div style="font-size: 0.8rem; color: #e74c3c; margin-top: 4px;">
-        {{ field.errors }}
-      </div>
-      {% endif %}
     </div>
     {% endfor %}
 

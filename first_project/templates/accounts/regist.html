@@ -33,6 +33,15 @@
   <form method="POST">
     {% csrf_token %} {# CSRFトークン（セキュリティ対策） #}
 
+    {# フォーム全体のエラー（パスワード不一致など）を表示する #}
+    {% if form.non_field_errors %}
+    <div style="background: #fdecea; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.85rem; color: #e74c3c;">
+      {% for error in form.non_field_errors %}
+      <p style="margin: 0;">{{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     {# フォームの各フィールドをループして表示 #}
     {% for field in form %}
     <div style="margin-bottom: 16px;">

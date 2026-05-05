@@ -40,12 +40,24 @@
       <p style="margin: 0;">{{ error }}</p>
       {% endfor %}
       {% for field in form %}
-        {% for error in field.errors %}
-        <p style="margin: 0;">{{ error }}</p>
-        {% endfor %}
+      <div style="margin-bottom: 16px;">
+        <label style="font-size: 0.85rem; color: #5d4037; font-weight: bold; display: block; margin-bottom: 6px;">
+          {{ field.label }}
+        </label>
+        {{ field }}
+        {# パスワードフィールドの下にパスワード条件を表示する #}
+        {% if field.name == 'password1' %}
+        <div style="background-color: #f9f5f3; border-radius: 8px; padding: 10px 14px; margin-top: 8px;">
+          <p style="font-size: 0.8rem; color: #5d4037; font-weight: bold; margin-bottom: 4px;">パスワードの条件</p>
+          <ul style="font-size: 0.8rem; color: #888; margin: 0; padding-left: 16px;">
+            <li>8文字以上</li>
+            <li>英字と数字を組み合わせてください</li>
+            <li>他のサービスと同じパスワードは使わないでください</li>
+          </ul>
+        </div>
+        {% endif %}
+      </div>
       {% endfor %}
-    </div>
-    {% endif %}
 
     {# フォームの各フィールドをループして表示 #}
     {% for field in form %}

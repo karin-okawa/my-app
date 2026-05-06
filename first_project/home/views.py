@@ -405,7 +405,11 @@ class HouseholdCreateView(LoginRequiredMixin, View):
             
             # 作成した家計簿をセッションに保存する
             request.session['current_household_id'] = household.id
-
+            
+            # サクセスメッセージを設定する
+            messages.success(request, f'「{name}」を作成しました')
+            
+            
         return redirect('home:home')
 
 
@@ -422,9 +426,12 @@ class HouseholdDeleteView(LoginRequiredMixin, View):
             status=1
         ).first()
         if uha:
+            name = uha.household_account.name  # 削除前に名前を取得する
             # 家計簿本体を削除し、セッションからIDを削除する
             uha.household_account.delete()
             request.session.pop('current_household_id', None)
+            # サクセスメッセージを設定する
+            messages.success(request, f'「{name}」を削除しました')
         return redirect('home:home')
 
 
@@ -445,6 +452,8 @@ class HouseholdUpdateView(LoginRequiredMixin, View):
             # 家計簿名を更新して保存する
             uha.household_account.name = name
             uha.household_account.save()
+            # サクセスメッセージを設定する
+            messages.success(request, '家計簿名を変更しました')
         return redirect('home:home')
 
 

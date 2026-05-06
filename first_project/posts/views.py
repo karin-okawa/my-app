@@ -126,7 +126,9 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         form.instance.category_colors = ordered_colors
         # 現在の家計簿を投稿に紐づける
         form.instance.household = household
-
+        # サクセスメッセージを設定する
+        messages.success(self.request, '投稿しました')
+        
         return super().form_valid(form)
 
 

@@ -303,6 +303,8 @@
     }, msUntilMidnight);
   }
 
+  // ページ読み込み時に今日のハイライトを即座に更新する
+  updateTodayHighlight();
   // ページ読み込み時にタイマーをスタートする
   scheduleNextDayUpdate();
 </script>

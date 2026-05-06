@@ -6,6 +6,7 @@ from django.views.generic import (  # 汎用ビュークラスのインポート
 from django.contrib.auth import login, logout  # ログイン・ログアウト関数のインポート
 from django.contrib.auth.mixins import LoginRequiredMixin  # ログイン必須Mixinのインポート
 from django.contrib import messages  # サクセスメッセージのインポート
+from django.contrib.auth.views import PasswordChangeView as DjangoPasswordChangeView  # Djangoの組み込みパスワード変更ビューのインポート
 from django.urls import reverse_lazy  # 名前付きURLパターンからURLを動的に生成する関数のインポート
 from django.http import JsonResponse  # JSONレスポンス生成クラスのインポート
 from django.core.mail import send_mail  # メール送信関数のインポート
@@ -202,6 +203,17 @@ class NicknameUpdateView(LoginRequiredMixin, View):
             # サクセスメッセージを設定する
             messages.success(request, 'ニックネームを変更しました')
         return redirect('accounts:mypage')
+
+
+# パスワード変更ビュー（サクセスメッセージ付き）
+class PasswordChangeView(LoginRequiredMixin, DjangoPasswordChangeView):
+    template_name = 'accounts/password_change.html'
+    success_url = reverse_lazy('accounts:mypage')
+
+    def form_valid(self, form):
+        # サクセスメッセージを設定する
+        messages.success(self.request, 'パスワードを変更しました')
+        return super().form_valid(form)
 
 
 # メールアドレス変更ビュー

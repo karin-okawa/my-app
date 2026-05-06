@@ -6,7 +6,7 @@ from django.http import JsonResponse  # JSONレスポンス生成クラスのイ
 
 # ②便利ツール
 import calendar  # Python標準ライブラリのカレンダー機能
-from datetime import date  # 日付で絞り込むためのdateクラスのインポート
+from datetime import date, timedelta  # 日付で絞り込むためのdateクラス,時間差分を扱うクラスのインポート
 from django.utils import timezone  # タイムゾーン対応の日時取得モジュールのインポート
 from django.db.models import Sum  # DB集計用（合計）関数のインポート
 from django.db.models.functions import ExtractDay  # 日付から「日（1〜31）」だけを取り出す関数のインポート
@@ -470,7 +470,7 @@ class HouseholdInviteView(LoginRequiredMixin, View):
         token_hash = hashlib.sha256(token.encode()).hexdigest()
 
         # 有効期限を30分後に設定する
-        expires_at = timezone.now() + timezone.timedelta(minutes=30)
+        expires_at = timezone.now() + timedelta(minutes=30)
 
         # 既存の招待中レコードを削除する
         UserHouseholdAccount.objects.filter(

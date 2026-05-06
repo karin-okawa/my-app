@@ -59,6 +59,7 @@ class RegistUserView(CreateView):
             ]
             for cat in default_categories:
                 Category.objects.create(household_account=household, **cat)
+        # ホーム画面へ遷移する
         return redirect('home:home')
 
 

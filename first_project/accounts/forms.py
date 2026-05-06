@@ -39,10 +39,21 @@ class RegistForm(forms.ModelForm):
             raise forms.ValidationError('パスワードが一致しません')
         # パスワードの強度チェック（8文字以上・英数字混在など）
         if p1:
-            try:
-                validate_password(p1)
-            except forms.ValidationError as e:
-                self.add_error('password1', e)
+            # 12文字以上チェック
+            if len(p1) < 12:
+                self.add_error('password1', '12文字以上で入力してください')
+            # 英大文字チェック
+            if not any(c.isupper() for c in p1):
+                self.add_error('password1', '英大文字を1文字以上含めてください')
+            # 英小文字チェック
+            if not any(c.islower() for c in p1):
+                self.add_error('password1', '英小文字を1文字以上含めてください')
+            # 数字チェック
+            if not any(c.isdigit() for c in p1):
+                self.add_error('password1', '数字を1文字以上含めてください')
+            # 記号チェック
+            if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in p1):
+                self.add_error('password1', '記号（!@#$%など）を1文字以上含めてください')
         return cleaned_data
 
 

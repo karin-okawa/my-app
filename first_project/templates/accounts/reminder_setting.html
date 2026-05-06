@@ -97,7 +97,10 @@
 
     <!-- リマインダー通知 ON/OFF -->
     <div class="setting-row">
-      <span class="setting-label">・通知</span>
+      <div>
+        <span class="setting-label">・通知</span>
+        <div style="font-size: 0.7rem; color: #999; margin-top: 2px;">＊設定した時刻に家計簿の入力を促す通知メッセージが届きます。</div>
+      </div>
       <div class="toggle-group">
         {# 現在の設定に応じてON/OFFボタンのスタイルを切り替え #}
         <button type="button" class="toggle-btn {% if user_obj.reminder_enabled %}on-active{% else %}inactive{% endif %}"
@@ -111,7 +114,10 @@
 
     <!-- 時刻設定（リマインダーがOFFの場合は半透明で表示） -->
     <div class="setting-row" id="time-row" style="{% if not user_obj.reminder_enabled %}opacity: 0.4;{% endif %}">
-      <span class="setting-label">・時刻</span>
+      <div>
+        <span class="setting-label">・時刻</span>
+        <div style="font-size: 0.7rem; color: #999; margin-top: 2px;">＊通知を受け取る時刻を設定してください。</div>
+      </div>
       <div style="position: relative;">
         {# 設定済みの時刻があればその値を、なければ21:00をデフォルト表示 #}
         <input type="text" id="time-display-btn"

@@ -41,7 +41,7 @@ urlpatterns = [
     # パスワード変更画面（ログイン済み）
     path('password/change/', PasswordChangeView.as_view(
         template_name='accounts/password_change.html',
-        success_url='/accounts/password/change/done/',
+        success_url='/accounts/mypage/',
     ), name='password_change'),
     # パスワード変更完了画面
     path('password/change/done/', PasswordChangeDoneView.as_view(

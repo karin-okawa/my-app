@@ -55,6 +55,9 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def form_valid(self, form):
+        # 現在選択中の家計簿を取得して収支に紐づける
+        household = get_current_household(self.request)
+        form.instance.household_account = household
         # 保存前にログインユーザーを自動設定する
         form.instance.user = self.request.user
         # サクセスメッセージを設定する

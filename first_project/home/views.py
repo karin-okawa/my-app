@@ -523,7 +523,7 @@ class HouseholdJoinView(View):
 
         if not invite_record:
             return render(request, 'home/invite_error.html', {
-                'error': '招待リンクが無効または期限切れです'
+                'error': '招待リンクが無効または期限切れです。新しい招待リンクを発行してもらってください。なお、招待リンクは再発行すると古いリンクは無効になります。'
             })
 
         # 招待用レコード自体の家計簿を取得しておく（削除前にキープ）

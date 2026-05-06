@@ -211,6 +211,8 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
         # 削除前にcategory_typeをインスタンス変数として保存しておく
         obj = self.get_object()
         self.category_type = obj.category_type
+        # サクセスメッセージを設定する
+        messages.success(request, 'カテゴリーを削除しました')
         return super().post(request, *args, **kwargs)
 
     def get_success_url(self):

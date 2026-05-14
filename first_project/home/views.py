@@ -507,37 +507,40 @@ class HouseholdInviteView(LoginRequiredMixin, View):
 # 招待リンクで家計簿に参加するビュー
 # ============================
 class HouseholdJoinView(View):
-    def get(self, request, token, *args, **kwargs): 
+    def get(self, request, token, *args, **kwargs):
+        # ログインしていない場合はトークンをセッションに保存してログイン画面へ遷移する
         if not request.user.is_authenticated:
             request.session['invite_token'] = token
             return redirect('accounts:login')
         
+        # トークンをハッシュ化して招待レコードを検索する
         token_hash = hashlib.sha256(token.encode()).hexdigest()
 
-        # 有効な招待レコードを検索
+        # 有効な招待レコードを検索する
         invite_record = UserHouseholdAccount.objects.filter(
             invitation_token_hash=token_hash,
             status=2,
             expires_at__gt=timezone.now()
         ).first()
 
+        # 招待レコードが見つからない場合はエラー画面を表示する
         if not invite_record:
             return render(request, 'home/invite_error.html', {
                 'error': '招待リンクが無効または期限切れです。新しい招待リンクを発行してもらってください。なお、招待リンクは再発行すると古いリンクは無効になります。'
             })
 
-        # 招待用レコード自体の家計簿を取得しておく（削除前にキープ）
+        # 招待された家計簿を取得する（削除前にキープ）
         target_household = invite_record.household_account
 
-        # すでに参加しているかチェック
+        # すでに参加しているかチェックする
         existing_member = UserHouseholdAccount.objects.filter(
             user=request.user,
             household_account=target_household,
             status=1
         ).exists()
 
+        # まだ参加していない場合のみ新しいメンバーレコードを作成する
         if not existing_member:
-            # まだ参加していない場合のみ新しいメンバーレコードを作成
             UserHouseholdAccount.objects.create(
                 user=request.user,
                 household_account=target_household,
@@ -545,12 +548,40 @@ class HouseholdJoinView(View):
                 joined_at=timezone.now()
             )
 
-        # 招待用レコード（status=2）を使い回さず、削除して失効させる
-        invite_record.delete() 
+        # 招待用レコードを削除して失効させる
+        invite_record.delete()
 
-        # 参加した家計簿をセッションに保存
+        # 招待された家計簿以外に参加している家計簿がない場合は個人家計簿を自動作成する
+        # （招待経由でアカウント登録したユーザーは個人家計簿が作成されないため）
+        if not UserHouseholdAccount.objects.filter(
+            user=request.user,
+            status=1
+        ).exclude(household_account=target_household).exists():
+            household = HouseholdAccount.objects.create(name='個人家計簿')
+            UserHouseholdAccount.objects.create(
+                user=request.user,
+                household_account=household,
+                status=1,
+                joined_at=timezone.now()
+            )
+            # デフォルトカテゴリーを作成する
+            default_categories = [
+                {'name': '食費', 'category_type': 'expense', 'color': '#e74c3c', 'order': 1},
+                {'name': '日用品費', 'category_type': 'expense', 'color': '#e67e22', 'order': 2},
+                {'name': '衣服費', 'category_type': 'expense', 'color': '#f1c40f', 'order': 3},
+                {'name': '交通費', 'category_type': 'expense', 'color': '#2ecc71', 'order': 4},
+                {'name': '趣味費', 'category_type': 'expense', 'color': '#3498db', 'order': 5},
+                {'name': '交際費', 'category_type': 'expense', 'color': '#9b59b6', 'order': 6},
+                {'name': '固定費', 'category_type': 'expense', 'color': '#2c3e50', 'order': 7},
+                {'name': 'その他', 'category_type': 'expense', 'color': '#95a5a6', 'order': 8},
+                {'name': '給与', 'category_type': 'income', 'color': '#2ecc71', 'order': 1},
+                {'name': 'その他', 'category_type': 'income', 'color': '#95a5a6', 'order': 2},
+            ]
+            for cat in default_categories:
+                Category.objects.create(household_account=household, **cat)
+
+        # 参加した家計簿をセッションに保存してホーム画面へ遷移する
         request.session['current_household_id'] = target_household.id
-
         return redirect('home:home')
 
 

@@ -110,11 +110,9 @@ class UserLoginForm(forms.Form):
 
 # パスワード変更フォーム（カスタムバリデーション付き）
 class CustomPasswordChangeForm(PasswordChangeForm):
-    def clean_new_password2(self):
+    def clean_new_password1(self):
+        # 新しいパスワードのバリデーションを行う
         p1 = self.cleaned_data.get('new_password1')
-        p2 = self.cleaned_data.get('new_password2')
-        # 親クラスのバリデーション（パスワード一致確認）を実行する
-        super().clean_new_password2()
         if p1:
             # 12文字以上チェック
             if len(p1) < 12:
@@ -131,4 +129,4 @@ class CustomPasswordChangeForm(PasswordChangeForm):
             # 記号チェック
             if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in p1):
                 raise forms.ValidationError('記号（!@#$%など）を1文字以上含めてください')
-        return p2
+        return p1

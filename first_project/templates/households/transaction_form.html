@@ -222,7 +222,7 @@
             </div>
           </div>
           <!-- 画像プレビューエリア（画像選択後に表示される） -->
-          <div id="image-preview-area" style="display: none; margin-top: 8px; align-items: center; gap: 8px;">
+          <div id="image-preview-area" style="display: none; margin-top: 8px; align-items: center; gap: 8px; justify-content: flex-end;">
             <!-- 選択した画像のサムネイル -->
             <img id="image-preview" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0;">
             <!-- 取り消しボタン -->
@@ -230,7 +230,7 @@
           </div>
           <!-- 既存画像のプレビュー（編集時） -->
           {% if form.instance.pk and form.instance.image %}
-          <div id="existing-image-area" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+          <div id="existing-image-area" style="margin-top: 8px; display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
             <!-- 登録済み画像のサムネイル -->
             <img src="{{ form.instance.image.url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0;">
             <!-- 削除ボタン -->

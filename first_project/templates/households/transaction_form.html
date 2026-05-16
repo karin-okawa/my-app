@@ -600,6 +600,11 @@
     // 0円または空欄は未入力扱いにする
     const hasAmount = amountInput && amountInput.value && parseInt(amountInput.value) > 0;
     
+    // 金額の上限チェック（99999999円まで）
+    if (amountInput && amountInput.value && parseInt(amountInput.value) > 99999999) {
+      errors.push('金額は99999999円以下で入力してください');
+    }
+
     const hasNewImage = imageInput && imageInput.files && imageInput.files.length > 0;
     
     const hasExistingImage = {% if form.instance.pk and form.instance.image %}true{% else %}false{% endif %};

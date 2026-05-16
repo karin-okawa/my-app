@@ -84,12 +84,10 @@ class UserLoginView(FormView):
         # forms.pyでパスワード照合が済んだユーザーを取り出す
         user = form.cleaned_data['user']
         login(self.request, user)
-
         # 招待トークンがセッションにある場合は参加処理へ飛ばす
         invite_token = self.request.session.pop('invite_token', None)
         if invite_token:
             return redirect('home:household_join', token=invite_token)
-
         # ログイン時に家計簿がなければ「個人家計簿」を自動作成する
         if not UserHouseholdAccount.objects.filter(user=user).exists():
             household = HouseholdAccount.objects.create(name='個人家計簿')
@@ -100,28 +98,22 @@ class UserLoginView(FormView):
                 joined_at=timezone.now()
             )
             # デフォルトカテゴリーを作成する
-            default_categories = [
-                # 支出カテゴリー
-                {'name': '食費', 'category_type': 'expense', 'color': '#e74c3c', 'order': 1},
-                {'name': '日用品費', 'category_type': 'expense', 'color': '#e67e22', 'order': 2},
-                {'name': '衣服費', 'category_type': 'expense', 'color': '#f1c40f', 'order': 3},
-                {'name': '交通費', 'category_type': 'expense', 'color': '#2ecc71', 'order': 4},
-                {'name': '趣味費', 'category_type': 'expense', 'color': '#3498db', 'order': 5},
-                {'name': '交際費', 'category_type': 'expense', 'color': '#9b59b6', 'order': 6},
-                {'name': '固定費', 'category_type': 'expense', 'color': '#2c3e50', 'order': 7},
-                {'name': 'その他', 'category_type': 'expense', 'color': '#95a5a6', 'order': 8},
-                # 収入カテゴリー
-                {'name': '給与', 'category_type': 'income', 'color': '#2ecc71', 'order': 1},
-                {'name': 'その他', 'category_type': 'income', 'color': '#95a5a6', 'order': 2},
-            ]
+            default_categories = [...]
             for cat in default_categories:
                 Category.objects.create(
                     household_account=household,
                     **cat
                 )
-
+        # ログイン時に最後に参加した家計簿をセッションに保存する
+        latest_household = UserHouseholdAccount.objects.filter(
+            user=user,
+            status=1
+        ).order_by('-joined_at').first()
+        if latest_household:
+            self.request.session['current_household_id'] = latest_household.household_account.id
         # 最終的にsuccess_url（ホーム画面）へリダイレクトさせる
         return super().form_valid(form)
+        
         
 
 # パスワードリセット完了後にログアウトしてログイン画面へ遷移するビュー

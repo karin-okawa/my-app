@@ -104,13 +104,34 @@ class UserLoginView(FormView):
                     household_account=household,
                     **cat
                 )
-        # ログイン時に最後に参加した家計簿をセッションに保存する
-        latest_household = UserHouseholdAccount.objects.filter(
-            user=user,
-            status=1
-        ).order_by('-joined_at').first()
-        if latest_household:
-            self.request.session['current_household_id'] = latest_household.household_account.id
+        # ログアウト前に選択していた家計簿があればそれを使う
+        last_household_id = self.request.session.pop('last_household_id', None)
+        if last_household_id:
+            # ログアウト前の家計簿がまだ参加中かチェックする
+            still_member = UserHouseholdAccount.objects.filter(
+                user=user,
+                household_account_id=last_household_id,
+                status=1
+            ).exists()
+            if still_member:
+                self.request.session['current_household_id'] = last_household_id
+            else:
+                # 参加していない場合は最後に参加した家計簿を選択する
+                latest_household = UserHouseholdAccount.objects.filter(
+                    user=user,
+                    status=1
+                ).order_by('-joined_at').first()
+                if latest_household:
+                    self.request.session['current_household_id'] = latest_household.household_account.id
+        else:
+            # ログアウト前の情報がない場合は最後に参加した家計簿を選択する
+            latest_household = UserHouseholdAccount.objects.filter(
+                user=user,
+                status=1
+            ).order_by('-joined_at').first()
+            if latest_household:
+                self.request.session['current_household_id'] = latest_household.household_account.id
+
         # 最終的にsuccess_url（ホーム画面）へリダイレクトさせる
         return super().form_valid(form)
         
@@ -147,12 +168,16 @@ class MyPageView(LoginRequiredMixin, DetailView):
 # ログアウト処理ビュー（ログアウト後はログイン画面へリダイレクトする）
 class UserLogoutView(View):
     def post(self, request, *args, **kwargs):
-        # 招待トークンがある場合はセッションに保存してからログアウトする
+        # ログアウト前に選択中の家計簿IDを保存しておく
+        last_household_id = request.session.get('current_household_id')
         invite_token = request.POST.get('invite_token')
         request.session.flush()
         logout(request)
         if invite_token:
             request.session['invite_token'] = invite_token
+        # ログアウト前の家計簿IDを新しいセッションに保存する
+        if last_household_id:
+            request.session['last_household_id'] = last_household_id
         messages.success(request, 'ログアウトしました')
         return redirect('accounts:login')
 

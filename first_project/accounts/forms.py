@@ -21,64 +21,38 @@ class RegistForm(forms.ModelForm):
     )
 
     class Meta:
-        # 使用するモデルの指定
         model = User
-        # フォームに表示するフィールド
         fields = ['username', 'email']
-        # ラベルの設定
         labels = {
             'username': 'ニックネーム',
             'email': 'メールアドレス',
         }
 
-    # パスワード一致確認のバリデーション処理
     def clean(self):
         cleaned_data = super().clean()
         p1 = cleaned_data.get('password1')
         p2 = cleaned_data.get('password2')
-        # パスワードの一致確認
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError('パスワードが一致しません')
-        # パスワードの強度チェック（8文字以上・英数字混在など）
         if p1:
-            # 12文字以上チェック
             if len(p1) < 12:
                 self.add_error('password1', '12文字以上で入力してください')
-            # 英大文字チェック
             if not any(c.isupper() for c in p1):
                 self.add_error('password1', '英大文字を1文字以上含めてください')
-            # 英小文字チェック
             if not any(c.islower() for c in p1):
                 self.add_error('password1', '英小文字を1文字以上含めてください')
-            # 数字チェック
             if not any(c.isdigit() for c in p1):
                 self.add_error('password1', '数字を1文字以上含めてください')
-            # 記号チェック
             if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in p1):
                 self.add_error('password1', '記号（!@#$%など）を1文字以上含めてください')
         return cleaned_data
 
-
-def save(self, commit=True):
-    # インスタンス生成（DBへの保存は保留）
-    user = super().save(commit=False)
-    # パスワードのハッシュ化処理
-    user.set_password(self.cleaned_data.get('password1'))
-    if commit:
-        # データベースへの保存実行
-        user.save()
-    return user
-
-    # ユーザー保存処理
+    # ユーザー保存処理（← cleanと同じインデント、クラスの中）
     def save(self, commit=True):
         # インスタンス生成（DBへの保存は保留）
         user = super().save(commit=False)
-        # 入力されたパスワードの取得
-        password = self.cleaned_data.get('password1')
-        # パスワードの強度チェック（バリデーション実行）
-        validate_password(password, user)
         # パスワードのハッシュ化処理
-        user.set_password(password)
+        user.set_password(self.cleaned_data.get('password1'))
         if commit:
             # データベースへの保存実行
             user.save()

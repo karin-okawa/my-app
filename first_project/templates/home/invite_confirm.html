@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- 招待確認画面 -->
+<div style="display: flex; flex-direction: column; height: 100%; padding: 24px 20px;">
+  <!-- タイトル -->
+  <div style="text-align: center; margin-bottom: 24px; margin-top: 16px;">
+    <h1 style="font-size: 1.3rem; font-weight: bold; color: #5d4037;">家計簿への招待</h1>
+  </div>
+  <!-- 説明文 -->
+  <p style="font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 32px;">
+    現在「<strong>{{ username }}</strong>」としてログイン中です。<br>
+    このアカウントで参加しますか？
+  </p>
+  <!-- このアカウントで参加するボタン -->
+  <a href="{% url 'home:household_join' token=token %}?confirmed=1"
+     style="display: block; width: 100%; padding: 12px; background-color: #9c6d5c; color: white; border-radius: 50px; font-size: 1rem; font-weight: bold; text-align: center; text-decoration: none; margin-bottom: 16px;">
+    このアカウントで参加する
+  </a>
+  <!-- 別のアカウントでログインするボタン -->
+  <form method="post" action="{% url 'accounts:logout' %}">
+    {% csrf_token %}
+    <input type="hidden" name="invite_token" value="{{ token }}">
+    <button type="submit"
+      style="width: 100%; padding: 12px; background-color: #f0f0f0; color: #5d4037; border: none; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer;">
+      別のアカウントでログインする
+    </button>
+  </form>
+</div>
+{% endblock %}

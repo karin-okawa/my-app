@@ -512,8 +512,15 @@ class HouseholdJoinView(View):
         if not request.user.is_authenticated:
             request.session['invite_token'] = token
             return redirect('accounts:login')
-        
-        # トークンをハッシュ化して招待レコードを検索する
+
+        # ログイン済みで確認前の場合は確認画面を表示する
+        if not request.GET.get('confirmed'):
+            return render(request, 'home/invite_confirm.html', {
+                'token': token,
+                'username': request.user.username,
+            })
+
+        # 確認済みの場合は参加処理を実行する
         token_hash = hashlib.sha256(token.encode()).hexdigest()
 
         # 有効な招待レコードを検索する
@@ -552,7 +559,6 @@ class HouseholdJoinView(View):
         invite_record.delete()
 
         # 招待された家計簿以外に参加している家計簿がない場合は個人家計簿を自動作成する
-        # （招待経由でアカウント登録したユーザーは個人家計簿が作成されないため）
         if not UserHouseholdAccount.objects.filter(
             user=request.user,
             status=1

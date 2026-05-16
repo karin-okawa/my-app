@@ -155,10 +155,12 @@ class MyPageView(LoginRequiredMixin, DetailView):
 # ログアウト処理ビュー（ログアウト後はログイン画面へリダイレクトする）
 class UserLogoutView(View):
     def post(self, request, *args, **kwargs):
-        # セッションを完全にクリアしてからログアウトする
+        # 招待トークンがある場合はセッションに保存してからログアウトする
+        invite_token = request.POST.get('invite_token')
         request.session.flush()
         logout(request)
-        # ログイン画面にリダイレクトしてサクセスメッセージを表示する
+        if invite_token:
+            request.session['invite_token'] = invite_token
         messages.success(request, 'ログアウトしました')
         return redirect('accounts:login')
 

@@ -32,36 +32,42 @@ class RegistUserView(CreateView):
     form_class = RegistForm
 
     def form_valid(self, form):
-        # ユーザーを保存する
-        response = super().form_valid(form)
-        # 登録後に自動ログインする
-        login(self.request, self.object)
-        # 家計簿がなければ「個人家計簿」を自動作成する
-        if not UserHouseholdAccount.objects.filter(user=self.object).exists():
-            household = HouseholdAccount.objects.create(name='個人家計簿')
-            UserHouseholdAccount.objects.create(
-                user=self.object,
-                household_account=household,
-                status=1,
-                joined_at=timezone.now()
-            )
-            # デフォルトカテゴリーを作成する
-            default_categories = [
-                {'name': '食費', 'category_type': 'expense', 'color': '#e74c3c', 'order': 1},
-                {'name': '日用品費', 'category_type': 'expense', 'color': '#e67e22', 'order': 2},
-                {'name': '衣服費', 'category_type': 'expense', 'color': '#f1c40f', 'order': 3},
-                {'name': '交通費', 'category_type': 'expense', 'color': '#2ecc71', 'order': 4},
-                {'name': '趣味費', 'category_type': 'expense', 'color': '#3498db', 'order': 5},
-                {'name': '交際費', 'category_type': 'expense', 'color': '#9b59b6', 'order': 6},
-                {'name': '固定費', 'category_type': 'expense', 'color': '#2c3e50', 'order': 7},
-                {'name': 'その他', 'category_type': 'expense', 'color': '#95a5a6', 'order': 8},
-                {'name': '給与', 'category_type': 'income', 'color': '#2ecc71', 'order': 1},
-                {'name': 'その他', 'category_type': 'income', 'color': '#95a5a6', 'order': 2},
-            ]
-            for cat in default_categories:
-                Category.objects.create(household_account=household, **cat)
-        # ホーム画面へ遷移する
-        return redirect('home:home')
+    # ユーザーを保存する
+    response = super().form_valid(form)
+    # 登録後に自動ログインする
+    login(self.request, self.object)
+    
+    # 招待トークンがセッションにある場合は参加処理へ飛ばす
+    invite_token = self.request.session.pop('invite_token', None)
+    if invite_token:
+        return redirect('home:household_join', token=invite_token)
+    
+    # 家計簿がなければ「個人家計簿」を自動作成する
+    if not UserHouseholdAccount.objects.filter(user=self.object).exists():
+        household = HouseholdAccount.objects.create(name='個人家計簿')
+        UserHouseholdAccount.objects.create(
+            user=self.object,
+            household_account=household,
+            status=1,
+            joined_at=timezone.now()
+        )
+        # デフォルトカテゴリーを作成する
+        default_categories = [
+            {'name': '食費', 'category_type': 'expense', 'color': '#e74c3c', 'order': 1},
+            {'name': '日用品費', 'category_type': 'expense', 'color': '#e67e22', 'order': 2},
+            {'name': '衣服費', 'category_type': 'expense', 'color': '#f1c40f', 'order': 3},
+            {'name': '交通費', 'category_type': 'expense', 'color': '#2ecc71', 'order': 4},
+            {'name': '趣味費', 'category_type': 'expense', 'color': '#3498db', 'order': 5},
+            {'name': '交際費', 'category_type': 'expense', 'color': '#9b59b6', 'order': 6},
+            {'name': '固定費', 'category_type': 'expense', 'color': '#2c3e50', 'order': 7},
+            {'name': 'その他', 'category_type': 'expense', 'color': '#95a5a6', 'order': 8},
+            {'name': '給与', 'category_type': 'income', 'color': '#2ecc71', 'order': 1},
+            {'name': 'その他', 'category_type': 'income', 'color': '#95a5a6', 'order': 2},
+        ]
+        for cat in default_categories:
+            Category.objects.create(household_account=household, **cat)
+    # ホーム画面へ遷移する
+    return redirect('home:home')
 
 
 # ログインビュー

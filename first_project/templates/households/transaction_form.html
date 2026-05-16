@@ -588,10 +588,12 @@
     
     const hasNewImage = imageInput && imageInput.files && imageInput.files.length > 0;
     
-    // 編集時にすでに画像が登録されている場合はtrueにする
     const hasExistingImage = {% if form.instance.pk and form.instance.image %}true{% else %}false{% endif %};
+    // 既存画像削除チェックボックスがオンの場合は画像なしとみなす
+    const imageCleared = document.getElementById('image-clear-checkbox') && 
+                        document.getElementById('image-clear-checkbox').checked;
 
-    if (!hasAmount && !hasNewImage && !hasExistingImage) {
+    if (!hasAmount && !hasNewImage && (!hasExistingImage || imageCleared)) {
       errors.push('金額または写真のどちらかを入力してください');
     }
 

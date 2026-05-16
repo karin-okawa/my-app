@@ -92,6 +92,13 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "households/transaction_form.html"
 
     def form_valid(self, form):
+        # 画像削除チェックボックスがオンの場合は画像を削除する
+        if self.request.POST.get('image-clear'):
+            instance = self.get_object()
+            if instance.image:
+                # 既存の画像ファイルを削除する
+                instance.image.delete(save=False)
+            form.instance.image = None
         # サクセスメッセージを設定する
         messages.success(self.request, '収支を編集しました')
         return super().form_valid(form)

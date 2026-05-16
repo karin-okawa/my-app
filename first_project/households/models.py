@@ -1,6 +1,6 @@
 from django.conf import settings  # プロジェクト設定のインポート（AUTH_USER_MODELの参照に使用）
 from django.db import models  # Djangoのモデルモジュールのインポート
-
+from django.core.validators import MaxValueValidator  # 最大値バリデーターのインポート
 
 # 家計簿モデル
 class HouseholdAccount(models.Model):
@@ -111,8 +111,12 @@ class Transaction(models.Model):
         blank=True,
         verbose_name="カテゴリー"
     )
-    # 金額
-    amount = models.PositiveIntegerField(null=True, blank=True)
+    # 金額（上限99999999円）
+    amount = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(99999999)]
+    )
     # メモ
     memo = models.CharField(max_length=200, blank=True)
     # レシートなどの画像

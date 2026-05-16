@@ -222,19 +222,20 @@
             </div>
           </div>
           <!-- 画像プレビューエリア（画像選択後に表示される） -->
-          <div id="image-preview-area" style="display: none; margin-top: 8px; display: flex; align-items: center; gap: 8px;">
-            <img id="image-preview" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+          <div id="image-preview-area" style="display: none; margin-top: 8px; align-items: center; gap: 8px;">
+            <!-- 選択した画像のサムネイル -->
+            <img id="image-preview" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0;">
             <!-- 取り消しボタン -->
-            <button type="button" id="image-cancel-btn" style="background: none; border: none; color: #e74c3c; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">取り消し</button>
+            <button type="button" id="image-cancel-btn" class="btn btn-sm" style="background-color: #e74c3c; color: white; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px; border: none; cursor: pointer;">取り消し</button>
           </div>
           <!-- 既存画像のプレビュー（編集時） -->
           {% if form.instance.pk and form.instance.image %}
           <div id="existing-image-area" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
-            <img src="{{ form.instance.image.url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
-            <span style="font-size: 0.8rem; color: #888;">登録済みの画像</span>
-            <!-- 既存画像の削除チェックボックス（非表示） -->
+            <!-- 登録済み画像のサムネイル -->
+            <img src="{{ form.instance.image.url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0;">
+            <!-- 削除ボタン -->
             <input type="checkbox" name="image-clear" id="image-clear-checkbox" style="display: none;">
-            <button type="button" id="existing-image-cancel-btn" style="background: none; border: none; color: #e74c3c; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">削除</button>
+            <button type="button" id="existing-image-cancel-btn" class="btn btn-sm" style="background-color: #e74c3c; color: white; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px; border: none; cursor: pointer;">削除</button>
           </div>
           {% endif %}
         </div>

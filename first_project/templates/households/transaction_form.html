@@ -171,7 +171,10 @@
           <span class="note-label">金額<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
           <div class="note-input-wrapper d-flex align-items-center">
             <span style="font-weight: bold; color: #9c6d5c; margin-right: 5px;">¥</span>
-            {{ form.amount }}
+            <input type="number" name="amount" id="id_amount"
+              placeholder="0"
+              value="{{ form.amount.value|default:'' }}"
+              style="border: none !important; box-shadow: none !important; background: transparent !important; text-align: right; width: 100%; font-weight: bold; color: #5d4037; outline: none;">
           </div>
         </div>
 
@@ -526,8 +529,12 @@
     // 金額または写真のどちらか必須チェック
     const amountInput = document.getElementById('id_amount');
     const imageInput = document.getElementById('id_image');
-    const hasAmount = amountInput && amountInput.value && amountInput.value !== '0';
+    
+    // 0円または空欄は未入力扱いにする
+    const hasAmount = amountInput && amountInput.value && parseInt(amountInput.value) > 0;
+    
     const hasNewImage = imageInput && imageInput.files && imageInput.files.length > 0;
+    
     // 編集時にすでに画像が登録されている場合はtrueにする
     const hasExistingImage = {% if form.instance.pk and form.instance.image %}true{% else %}false{% endif %};
 

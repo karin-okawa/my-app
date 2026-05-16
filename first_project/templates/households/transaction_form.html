@@ -209,16 +209,34 @@
         </div>
 
         <!-- 写真アップロード行 -->
-        <div class="note-row d-flex align-items-center justify-content-between">
-          <span class="note-label">写真<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            {# 編集時に既存の画像がある場合のみ確認ボタンを表示する #}
-            {% if form.instance.pk and form.instance.image %}
-            <button type="button" id="image-confirm-btn" class="btn btn-sm" style="background-color: #f0f0f0; color: #5d4037; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px;">確認</button>
-            {% endif %}
-            <label for="id_image" class="btn btn-sm" style="background-color: #9c6d5c; color: white; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px; cursor: pointer; margin: 0;">アップロード</label>
-            <div style="display: none;">{{ form.image }}</div>
+        <div class="note-row">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="note-label">写真<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              {# 編集時に既存の画像がある場合のみ確認ボタンを表示する #}
+              {% if form.instance.pk and form.instance.image %}
+              <button type="button" id="image-confirm-btn" class="btn btn-sm" style="background-color: #f0f0f0; color: #5d4037; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px;">確認</button>
+              {% endif %}
+              <label for="id_image" class="btn btn-sm" style="background-color: #9c6d5c; color: white; border-radius: 8px; font-size: 0.8rem; padding: 6px 12px; cursor: pointer; margin: 0;">アップロード</label>
+              <div style="display: none;">{{ form.image }}</div>
+            </div>
           </div>
+          <!-- 画像プレビューエリア（画像選択後に表示される） -->
+          <div id="image-preview-area" style="display: none; margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+            <img id="image-preview" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+            <!-- 取り消しボタン -->
+            <button type="button" id="image-cancel-btn" style="background: none; border: none; color: #e74c3c; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">取り消し</button>
+          </div>
+          <!-- 既存画像のプレビュー（編集時） -->
+          {% if form.instance.pk and form.instance.image %}
+          <div id="existing-image-area" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+            <img src="{{ form.instance.image.url }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+            <span style="font-size: 0.8rem; color: #888;">登録済みの画像</span>
+            <!-- 既存画像の削除チェックボックス（非表示） -->
+            <input type="checkbox" name="image-clear" id="image-clear-checkbox" style="display: none;">
+            <button type="button" id="existing-image-cancel-btn" style="background: none; border: none; color: #e74c3c; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">削除</button>
+          </div>
+          {% endif %}
         </div>
 
         <!-- 必須項目の説明 -->
@@ -469,16 +487,50 @@
     filterCategories();
   });
 
-  // 画像ファイルを選択した時にボタンのラベルをファイル名に変更する
+  // 画像ファイルを選択した時にプレビューを表示する
   const imageInput = document.getElementById('id_image');
+  const imagePreviewArea = document.getElementById('image-preview-area');
+  const imagePreview = document.getElementById('image-preview');
+  const imageCancelBtn = document.getElementById('image-cancel-btn');
+  const label = document.querySelector('label[for="id_image"]');
+
   if (imageInput) {
     imageInput.addEventListener('change', function() {
-      const fileName = this.files[0] ? this.files[0].name : '';
-      const label = document.querySelector('label[for="id_image"]');
-      if (fileName) {
-        label.innerText = '✓ ' + fileName.slice(0, 10) + '...';
+      const file = this.files[0];
+      if (file) {
+        // プレビュー画像を表示する
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreview.src = e.target.result;
+          imagePreviewArea.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+        label.innerText = '変更する';
         label.style.backgroundColor = '#2ecc71';
       }
+    });
+  }
+
+  // 新しく選択した画像を取り消すボタン
+  if (imageCancelBtn) {
+    imageCancelBtn.addEventListener('click', function() {
+      // ファイル選択をリセットする
+      imageInput.value = '';
+      imagePreviewArea.style.display = 'none';
+      label.innerText = 'アップロード';
+      label.style.backgroundColor = '#9c6d5c';
+    });
+  }
+
+  // 既存画像を削除するボタン
+  const existingImageCancelBtn = document.getElementById('existing-image-cancel-btn');
+  if (existingImageCancelBtn) {
+    existingImageCancelBtn.addEventListener('click', function() {
+      // 既存画像削除チェックボックスをオンにする
+      document.getElementById('image-clear-checkbox').checked = true;
+      document.getElementById('existing-image-area').style.display = 'none';
+      label.innerText = 'アップロード';
+      label.style.backgroundColor = '#9c6d5c';
     });
   }
 

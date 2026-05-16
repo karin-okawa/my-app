@@ -526,7 +526,7 @@
           </div>
 
           <!-- メンバー一覧 -->
-          <div style="margin-bottom: 16px;">
+          <div style="margin-bottom: 16px; max-height: 300px; overflow-y: auto;">
             {% if current_household %}
             {% for uha in current_household.userhouseholdaccount_set.all %}
             {% if uha.status == 1 %}

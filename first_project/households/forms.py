@@ -26,8 +26,8 @@ class TransactionForm(forms.ModelForm):
             'category': forms.Select(attrs={'class': 'form-select'}),
             # 金額：数値入力
             'amount': forms.NumberInput(attrs={'class': 'form-control', 'required': False}),
-            # メモ：テキスト入力
-            'memo': forms.TextInput(attrs={'class': 'form-control'}),
+            # メモ：複数行テキスト入力（折り返し対応）
+            'memo': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             # 画像：ファイル選択
             'image': forms.FileInput(attrs={'class': 'form-control'}),
         }

@@ -129,7 +129,7 @@
     <!-- messagesにデータがある場合のみ表示される -->
     {% if messages %}
       {% for message in messages %}
-        <div style="
+        <div class="success-message" style="
           background-color: #e8f5e9;
           color: #2e7d32;
           border: 1px solid #a5d6a7;
@@ -619,6 +619,9 @@
     // エラーがある場合は送信を止めてメッセージを表示する
     if (errors.length > 0) {
       e.preventDefault();
+
+      // サクセスメッセージを非表示にする
+      document.querySelectorAll('.success-message').forEach(el => el.remove());
 
       // 既存のエラーメッセージを削除する
       const existing = document.getElementById('validation-errors');

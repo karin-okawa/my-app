@@ -639,9 +639,9 @@
         errorDiv.appendChild(p);
       });
 
-      // 保存ボタンの上にエラーメッセージを挿入する
-      const saveBtn = document.querySelector('button[type="submit"]');
-      saveBtn.parentElement.insertBefore(errorDiv, saveBtn);
+      // フォームの先頭にエラーメッセージを挿入する
+      const form = document.getElementById('main-form');
+      form.insertBefore(errorDiv, form.firstChild);
 
       // エラーメッセージが見えるように上部にスクロールする
       document.querySelector('.custom-phone-frame').scrollTop = 0;

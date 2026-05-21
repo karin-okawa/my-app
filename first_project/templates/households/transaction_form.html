@@ -263,7 +263,11 @@
 
       <!-- 保存ボタン -->
       <div class="d-grid gap-2 mt-5">
-        <button type="submit" class="btn btn-primary py-2" style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;">保存する</button>
+        <button type="submit" class="btn btn-primary py-2" 
+          style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;"
+          onclick="this.disabled=true; this.innerText='保存中...';">
+          保存する
+        </button>
         {# 編集時のみ削除ボタンを表示する #}
         {% if form.instance.pk %}
         <!-- 削除ボタン（タップで確認モーダルを表示） -->
@@ -619,6 +623,10 @@
     // エラーがある場合は送信を止めてメッセージを表示する
     if (errors.length > 0) {
       e.preventDefault();
+      // ボタンを再度有効化する
+      const saveBtn = document.querySelector('button[type="submit"]');
+      saveBtn.disabled = false;
+      saveBtn.innerText = '保存する';
 
       // サクセスメッセージを非表示にする
       document.querySelectorAll('.success-message').forEach(el => el.remove());

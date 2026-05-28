@@ -813,7 +813,7 @@
     setTimeout(() => {
       showBanner('reminderEnabled: ' + reminderEnabled + '\nreminderTime: ' + reminderTime);
     }, 2000);
-    
+
     // バナー通知を表示する関数
     function showBanner(message) {
       const banner = document.getElementById('notification-banner');
@@ -879,8 +879,10 @@
 
       // リマインダーチェック関数
       function checkReminder() {
-        if (reminderShownToday) return;
-        // デバッグ用：時刻チェックを外して即座に表示する
+      // デバッグ用：localStorageの値を確認する
+      console.log('reminderShownToday:', reminderShownToday);
+      console.log('localStorage:', localStorage.getItem('reminder_shown_date'));
+      if (reminderShownToday) return;
         showBanner('テスト通知');
         reminderShownToday = true;
         localStorage.setItem('reminder_shown_date', new Date().toDateString());

@@ -823,18 +823,30 @@
 
     // リマインダー通知の監視
     if (reminderEnabled && reminderTime) {
-      // リマインダーチェック関数（ページ読み込み時と1分ごとに実行する）
+      // 今日のリマインダーを表示済みかチェックするフラグ
+      let reminderShownToday = false;
+      const reminderShownDate = localStorage.getItem('reminder_shown_date');
+      if (reminderShownDate === new Date().toDateString()) {
+        reminderShownToday = true;
+      }
+
+      // リマインダーチェック関数
       function checkReminder() {
+        // 今日すでに表示済みの場合はスキップする
+        if (reminderShownToday) return;
         const now = new Date();
         const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         if (currentTime === reminderTime) {
           showBanner('家計簿を入力して\n今日もかけいをまもろう！');
+          // 今日は表示済みとしてフラグを立てる
+          reminderShownToday = true;
+          localStorage.setItem('reminder_shown_date', new Date().toDateString());
         }
       }
       // ページ読み込み時にも確認する
       checkReminder();
-      // 1分ごとに確認する
-      setInterval(checkReminder, 60000);
+      // 10秒ごとに確認する
+      setInterval(checkReminder, 10000);
     }
 
     // 励ましメッセージの設定

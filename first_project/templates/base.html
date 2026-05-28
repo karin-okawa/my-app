@@ -823,13 +823,18 @@
 
     // リマインダー通知の監視
     if (reminderEnabled && reminderTime) {
-      setInterval(() => {
+      // リマインダーチェック関数（ページ読み込み時と1分ごとに実行する）
+      function checkReminder() {
         const now = new Date();
         const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         if (currentTime === reminderTime) {
           showBanner('家計簿を入力して\n今日もかけいをまもろう！');
         }
-      }, 60000); // 1分ごとに確認する
+      }
+      // ページ読み込み時にも確認する
+      checkReminder();
+      // 1分ごとに確認する
+      setInterval(checkReminder, 60000);
     }
 
     // 励ましメッセージの設定
@@ -859,7 +864,7 @@
           // 現在時刻から23時までの残り時間内でランダムに設定する
           const remainingMinutes = (23 - currentHour) * 60 - now.getMinutes();
           // 5分〜60分後にランダムに表示する（残り時間が少ない場合は残り時間内に収める）
-          waitMinutes = Math.floor(Math.random() * Math.min(remainingMinutes, - 5, 56)) + 5;
+          waitMinutes = Math.floor(Math.random() * Math.min(remainingMinutes - 5, 56)) + 5;
         } else {
           // 就寝時間帯はスキップする
           waitMinutes = null;

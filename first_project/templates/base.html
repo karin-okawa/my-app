@@ -809,6 +809,42 @@
       const banner = document.getElementById('notification-banner');
       banner.innerText = message;
       banner.style.display = 'block';
+      banner.style.transition = 'top 0.3s ease, opacity 0.3s ease';
+
+      // スワイプで消せるようにする
+      let startY = 0;
+      banner.addEventListener('touchstart', function(e) {
+        // タッチ開始位置を記録する
+        startY = e.touches[0].clientY;
+      }, { once: false });
+
+      banner.addEventListener('touchmove', function(e) {
+        const deltaY = e.touches[0].clientY - startY;
+        // 上にスワイプした場合のみ動かす
+        if (deltaY < 0) {
+          banner.style.top = (10 + deltaY) + 'px';
+          banner.style.opacity = 1 + deltaY / 100;
+        }
+      }, { once: false });
+
+      banner.addEventListener('touchend', function(e) {
+        const deltaY = e.changedTouches[0].clientY - startY;
+        if (deltaY < -50) {
+          // 50px以上上にスワイプしたら消す
+          banner.style.top = '-100px';
+          banner.style.opacity = '0';
+          setTimeout(() => {
+            banner.style.display = 'none';
+            banner.style.top = '10px';
+            banner.style.opacity = '1';
+          }, 300);
+        } else {
+          // スワイプが足りない場合は元の位置に戻す
+          banner.style.top = '10px';
+          banner.style.opacity = '1';
+        }
+      }, { once: false });
+
       // 30秒後に自動的に消える
       setTimeout(() => {
         banner.style.display = 'none';

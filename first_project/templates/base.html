@@ -809,6 +809,11 @@
     setTimeout(() => {
       showBanner('デバッグ通知テスト');
     }, 2000);
+    // デバッグ用：値を確認する
+    setTimeout(() => {
+      showBanner('reminderEnabled: ' + reminderEnabled + '\nreminderTime: ' + reminderTime);
+    }, 2000);
+    
     // バナー通知を表示する関数
     function showBanner(message) {
       const banner = document.getElementById('notification-banner');

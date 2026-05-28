@@ -869,16 +869,11 @@
 
       // リマインダーチェック関数
       function checkReminder() {
-        // 今日すでに表示済みの場合はスキップする
         if (reminderShownToday) return;
-        const now = new Date();
-        const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-        if (currentTime === reminderTime) {
-          showBanner('家計簿を入力して\n今日もかけいをまもろう！');
-          // 今日は表示済みとしてフラグを立てる
-          reminderShownToday = true;
-          localStorage.setItem('reminder_shown_date', new Date().toDateString());
-        }
+        // デバッグ用：時刻チェックを外して即座に表示する
+        showBanner('テスト通知');
+        reminderShownToday = true;
+        localStorage.setItem('reminder_shown_date', new Date().toDateString());
       }
       // ページ読み込み時にも確認する
       checkReminder();

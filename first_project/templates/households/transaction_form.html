@@ -271,9 +271,8 @@
 
       <!-- 保存ボタン -->
       <div class="d-grid gap-2 mt-5">
-        <button type="submit" class="btn btn-primary py-2" 
-          style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;"
-          onclick="this.disabled=true; this.innerText='{% if form.instance.pk %}更新中...{% else %}保存中...{% endif %}';">
+        <button type="submit" id="save-btn" class="btn btn-primary py-2" 
+          style="background-color: #9c6d5c; border: none; border-radius: 10px; font-weight: bold;">
           {% if form.instance.pk %}更新する{% else %}保存する{% endif %}
         </button>
         {# 編集時のみ削除ボタンを表示する #}

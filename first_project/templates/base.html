@@ -857,13 +857,14 @@
     const encourageEnabled = {{ user.encourage_enabled|lower }};
 
     // リマインダー通知の監視
+    // 今日のリマインダーを表示済みかチェックするフラグ
+    let reminderShownToday = false;
+    const reminderShownDate = localStorage.getItem('reminder_shown_date');
+    if (reminderShownDate === new Date().toDateString()) {
+      reminderShownToday = true;
+    }
+
     if (reminderEnabled && reminderTime) {
-      // 今日のリマインダーを表示済みかチェックするフラグ
-      let reminderShownToday = false;
-      const reminderShownDate = localStorage.getItem('reminder_shown_date');
-      if (reminderShownDate === new Date().toDateString()) {
-        reminderShownToday = true;
-      }
 
       // リマインダーチェック関数
       function checkReminder() {

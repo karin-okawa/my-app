@@ -809,16 +809,14 @@
 
     // バナー通知を表示する関数
     function showBanner(message) {
-      const banner = document.getElementById('notification-banner');
-      banner.innerText = message;
-      banner.style.display = 'block';
-      banner.style.transition = 'top 0.3s ease, opacity 0.3s ease';
-      banner.style.top = '10px';
-      banner.style.opacity = '1';
-
-      // 30秒後に自動的に消える
+      const bannerEl = document.getElementById('notification-banner');
+      bannerEl.innerText = message;
+      bannerEl.style.display = 'block';
+      bannerEl.style.transition = 'top 0.3s ease, opacity 0.3s ease';
+      bannerEl.style.top = '10px';
+      bannerEl.style.opacity = '1';
       setTimeout(() => {
-        banner.style.display = 'none';
+        bannerEl.style.display = 'none';
       }, 30000);
     }
 

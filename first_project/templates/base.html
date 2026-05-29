@@ -806,7 +806,6 @@
 
     {% if user.is_authenticated %}
     
-
     // バナー通知を表示する関数
     function showBanner(message) {
       const bannerEl = document.getElementById('notification-banner');
@@ -823,36 +822,34 @@
     // スワイプで消せるようにする（一度だけ登録する）
     const banner = document.getElementById('notification-banner');
     let startY = 0;
-    banner.addEventListener('touchstart', function(e) {
-      // タッチ開始位置を記録する
-      startY = e.touches[0].clientY;
-    });
-    banner.addEventListener('touchmove', function(e) {
-      const deltaY = e.touches[0].clientY - startY;
-      // 上にスワイプした場合のみ動かす
-      if (deltaY < 0) {
-        banner.style.top = (10 + deltaY) + 'px';
-        banner.style.opacity = String(1 + deltaY / 100);
-      }
-    });
-    banner.addEventListener('touchend', function(e) {
-      const deltaY = e.changedTouches[0].clientY - startY;
-      if (deltaY < -50) {
-        // 50px以上上にスワイプしたら消す
-        banner.style.top = '-100px';
-        banner.style.opacity = '0';
-        setTimeout(() => {
-          banner.style.display = 'none';
+    if (banner) {
+      banner.addEventListener('touchstart', function(e) {
+        startY = e.touches[0].clientY;
+      });
+      banner.addEventListener('touchmove', function(e) {
+        const deltaY = e.touches[0].clientY - startY;
+        if (deltaY < 0) {
+          banner.style.top = (10 + deltaY) + 'px';
+          banner.style.opacity = String(1 + deltaY / 100);
+        }
+      });
+      banner.addEventListener('touchend', function(e) {
+        const deltaY = e.changedTouches[0].clientY - startY;
+        if (deltaY < -50) {
+          banner.style.top = '-100px';
+          banner.style.opacity = '0';
+          setTimeout(() => {
+            banner.style.display = 'none';
+            banner.style.top = '10px';
+            banner.style.opacity = '1';
+          }, 300);
+        } else {
           banner.style.top = '10px';
           banner.style.opacity = '1';
-        }, 300);
-      } else {
-        // スワイプが足りない場合は元の位置に戻す
-        banner.style.top = '10px';
-        banner.style.opacity = '1';
-      }
-    });
-
+        }
+      });
+    }
+      
     // リマインダーの設定をDjangoから受け取る
     const reminderEnabled = {{ user.reminder_enabled|lower }};
     // reminder_timeをHH:MM形式で渡す

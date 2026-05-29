@@ -54,9 +54,8 @@
       {% endif %}
 
       <div style="border-bottom: 1px solid #eee; padding: 15px 0; display: flex; align-items: center; justify-content: space-between;">
-        <span style="font-size: 0.9rem; color: #888; font-weight: bold; min-width: 80px; white-space: nowrap;">カテゴリー名</span>
-        <div style="flex-grow: 1; margin-left: 16px;">
-          {# Djangoフォームのnameフィールドを出力 #}
+        <span style="font-size: 0.9rem; color: #888; font-weight: bold; min-width: 80px; white-space: nowrap; flex-shrink: 0;">カテゴリー名</span>
+        <div style="flex-grow: 1; margin-left: 16px; position: relative; z-index: 1;">
           {{ form.name }}
         </div>
       </div>

@@ -24,14 +24,15 @@
     <!-- 収支タイプの選択（収入 or 支出） -->
     <div class="mb-4 text-center">
       <label class="form-label d-block small text-muted">どちらのデータを共有しますか？</label>
-      <div class="btn-group w-100" role="group">
-        {# 収支タイプのラジオボタンをループして表示 #}
+      <div class="d-flex justify-content-between gap-3">
         {% for radio in form.post_type %}
-        {{ radio.tag }}
-        <label class="btn btn-outline-primary" for="{{ radio.id_for_label }}"
-          style="border-color: #9c6d5c; color: #9c6d5c;">
-          {{ radio.choice_label }}
-        </label>
+        <div class="flex-fill">
+          {{ radio.tag }}
+          <label class="btn btn-outline-custom w-100 py-2" for="{{ radio.id_for_label }}"
+            style="border-radius: 12px;">
+            {{ radio.choice_label }}
+          </label>
+        </div>
         {% endfor %}
       </div>
     </div>
@@ -79,6 +80,17 @@
   /* プレースホルダーの色 */
   ::placeholder {
     color: #ccc;
+  }
+  /* 収入・支出切り替えボタンのスタイル */
+  .btn-outline-custom {
+    color: #9c6d5c !important;
+    border: 2px solid #9c6d5c !important;
+    font-weight: bold !important;
+  }
+  /* 選択中のボタンのスタイル */
+  .btn-check:checked + .btn-outline-custom {
+    background-color: #9c6d5c !important;
+    color: white !important;
   }
 </style>
 

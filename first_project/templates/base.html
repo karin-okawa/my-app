@@ -442,7 +442,8 @@
               <input type="text" name="name" placeholder="新しい家計簿名" 
                     style="flex-grow: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
               <button type="submit" class="btn" 
-                      style="background-color: #9c6d5c; color: white; border-radius: 8px; padding: 8px 16px; font-weight: bold; border: none;">
+                      style="background-color: #9c6d5c; color: white; border-radius: 8px; padding: 8px 16px; font-weight: bold; border: none;"
+                      onclick="this.disabled=true; this.innerText='作成中...'; this.form.submit();">
                 作成
               </button>
             </div>
@@ -471,7 +472,8 @@
               <input type="text" name="name" id="edit-household-name"
                     style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; box-sizing: border-box;">
               <div style="display: flex; gap: 12px;">
-                <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">保存</button>
+                <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;"
+                  onclick="this.disabled=true; this.innerText='保存中...'; this.form.submit();">保存</button>
                 <button type="button" id="household-edit-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">キャンセル</button>
               </div>
             </form>
@@ -497,7 +499,8 @@
               <form method="post" action="{% url 'home:household_delete' %}" style="flex: 1;">
                 {% csrf_token %}
                 <input type="hidden" name="household_id" id="delete-household-id">
-                <button type="submit" class="btn w-100" style="background-color: #e74c3c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;">削除</button>
+                <button type="submit" class="btn w-100" style="background-color: #e74c3c; color: white; border-radius: 50px; font-weight: bold; padding: 10px; border: none;"
+                  onclick="this.disabled=true; this.innerText='削除中...'; this.form.submit();">削除</button>
               </form>
             </div>
           </div>

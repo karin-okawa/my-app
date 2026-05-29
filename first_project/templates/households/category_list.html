@@ -243,7 +243,7 @@
             <!-- 削除実行フォーム -->
             <form method="post" action="/households/categories/${categoryId}/delete/" style="flex: 1;">
               <input type="hidden" name="csrfmiddlewaretoken" value="${document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1]}">
-              <button type="submit" style="width: 100%; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">削除</button>
+              <button type="submit" onclick="this.disabled=true; this.innerText='削除中...'; this.form.submit();" style="width: 100%; background-color: #e74c3c; color: white; border: none; border-radius: 50px; font-weight: bold; padding: 10px; cursor: pointer;">削除</button>
             </form>
           </div>
         </div>

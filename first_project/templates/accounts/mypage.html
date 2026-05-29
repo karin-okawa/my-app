@@ -104,7 +104,8 @@
       <div class="info-label">ニックネーム：</div>
       <div class="info-value" id="nickname-display">{{ user_obj.username }}</div>
     </div>
-    <button type="button" id="nickname-edit-btn" class="edit-link">編集する</button>
+    <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px;"
+      onclick="this.disabled=true; this.innerText='保存中...'; this.form.submit();">保存</button>
   </div>
 
   <div class="info-row">

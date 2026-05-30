@@ -50,10 +50,11 @@
         style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;">
     </div>
 
-    <button type="submit" class="btn w-100 py-2"
-      style="background-color: #e8d5c0; color: #5d4037; border-radius: 10px; font-weight: bold; border: none;">
-      メールアドレスを変更する
-    </button>
+   <button type="submit" class="btn w-100 py-2"
+     style="background-color: #e8d5c0; color: #5d4037; border-radius: 10px; font-weight: bold; border: none;"
+     onclick="this.disabled=true; this.innerText='送信中...'; this.form.submit();">
+     メールアドレスを変更する
+   </button>
 
     <p style="font-size: 0.75rem; color: #999; margin-top: 12px; text-align: center;">
       ※変更後は確認メールが送信されます。<br>リンクをクリックすることで変更が完了します。

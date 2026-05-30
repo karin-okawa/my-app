@@ -162,7 +162,8 @@
       <input type="text" name="username" value="{{ user_obj.username }}"
              style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem;">
       <div style="display: flex; gap: 12px;">
-        <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px;">保存</button>
+        <button type="submit" class="btn" style="flex: 1; background-color: #9c6d5c; color: white; border-radius: 50px; font-weight: bold; padding: 10px;"
+          onclick="this.disabled=true; this.innerText='保存中...'; this.form.submit();">保存</button>
         <button type="button" id="nickname-modal-close" class="btn" style="flex: 1; background-color: #f0f0f0; color: #333; border-radius: 50px; font-weight: bold; padding: 10px;">キャンセル</button>
       </div>
     </form>

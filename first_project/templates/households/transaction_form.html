@@ -209,7 +209,7 @@
           </div>
           <!-- 金額上限の注意書き -->
           <div style="text-align: left; font-size: 0.7rem; color: #999; margin-top: 2px;">
-            *上限 ¥99,999,999
+            *上限 ¥99999999
           </div>
         </div>
 
@@ -620,7 +620,7 @@
     
     // 金額の上限チェック（99999999円まで）
     if (amountInput && amountInput.value && parseInt(amountInput.value) > 99999999) {
-      errors.push('金額は¥99,999,999以下で入力してください');
+      errors.push('金額は¥99999999以下で入力してください');
     }
 
     const hasNewImage = imageInput && imageInput.files && imageInput.files.length > 0;

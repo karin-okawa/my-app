@@ -410,17 +410,30 @@
           calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]);
         } else {
           // 数字ボタンの処理
+          let newExpression;
           if (expression === '0') {
-            expression = val;
+            newExpression = val;
           } else {
             const last = expression.slice(-1);
             const secondLast = expression.slice(-2, -1);
             if (last === '0' && ['+', '-', '*', '/'].includes(secondLast)) {
-              expression = expression.slice(0, -1) + val;
+              newExpression = expression.slice(0, -1) + val;
             } else {
-              expression += val;
+              newExpression = expression + val;
             }
           }
+          // 上限チェック（99999999円を超える場合は入力を無視する）
+          try {
+            const preview = Math.round(eval(newExpression));
+            if (!isNaN(preview) && preview > 99999999) {
+              calcDisplay.innerText = '上限は¥99,999,999です';
+              setTimeout(() => {
+                calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]) || '0';
+              }, 1000);
+              return;
+            }
+          } catch(e) {}
+          expression = newExpression;
           calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]);
         }
       });

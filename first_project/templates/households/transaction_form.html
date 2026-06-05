@@ -367,10 +367,7 @@
         try {
           const result = Math.round(eval(expression));
           if (!isNaN(result) && result >= 0) {
-            // 実際の値は数字のまま保持する
-            amountInput.dataset.rawValue = result;
-            // 表示はカンマ区切りにする
-            amountInput.value = result.toLocaleString();
+            amountInput.value = result;
           }
         } catch(e) {}
       }
@@ -428,12 +425,6 @@
         }
       });
     });
-
-    // 数字をカンマ区切りで表示する関数
-    function formatWithComma(str) {
-      // 演算子で分割して最後の数字部分だけカンマ区切りにする
-      return str.replace(/(\d+)(?=(?:\d{3})+(?!\d))/g, '$1,');
-    }
 
     // カテゴリーパネルの選択肢を更新する
     const updateCategoryPanel = () => {
@@ -605,11 +596,6 @@
 
   // 保存ボタンを押した時のバリデーション処理
   document.getElementById('main-form').addEventListener('submit', function(e) {
-    
-    // カンマを除去して数値に戻す
-    if (amountInput.dataset.rawValue) {
-      amountInput.value = amountInput.dataset.rawValue;
-    }
     
     const errors = [];
 

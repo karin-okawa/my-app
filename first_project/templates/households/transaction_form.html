@@ -196,14 +196,20 @@
       <div class="note-style-container">
 
         <!-- 金額入力行 -->
-        <div class="note-row d-flex align-items-center justify-content-between">
-          <span class="note-label">金額<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
-          <div class="note-input-wrapper d-flex align-items-center">
-            <span style="font-weight: bold; color: #9c6d5c; margin-right: 5px;">¥</span>
-            <input type="number" name="amount" id="id_amount"
-              placeholder="0"
-              value="{{ form.amount.value|default:'' }}"
-              style="border: none !important; box-shadow: none !important; background: transparent !important; text-align: right; width: 100%; font-weight: bold; color: #5d4037; outline: none;">
+        <div class="note-row">
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="note-label">金額<span style="color: #e74c3c; font-size: 0.7rem; margin-left: 2px;">**</span></span>
+            <div class="note-input-wrapper d-flex align-items-center">
+              <span style="font-weight: bold; color: #9c6d5c; margin-right: 5px;">¥</span>
+              <input type="number" name="amount" id="id_amount"
+                placeholder="0"
+                value="{{ form.amount.value|default:'' }}"
+                style="border: none !important; box-shadow: none !important; background: transparent !important; text-align: right; width: 100%; font-weight: bold; color: #5d4037; outline: none;">
+            </div>
+          </div>
+          <!-- 金額上限の注意書き -->
+          <div style="text-align: right; font-size: 0.7rem; color: #999; margin-top: 2px;">
+            ※上限99,999,999円
           </div>
         </div>
 

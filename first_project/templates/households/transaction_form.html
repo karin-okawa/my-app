@@ -426,7 +426,7 @@
           try {
             const preview = Math.round(eval(newExpression));
             if (!isNaN(preview) && preview > 99999999) {
-              calcDisplay.innerText = '上限は¥99,999,999です';
+              calcDisplay.innerText = '上限は¥99999999です';
               setTimeout(() => {
                 calcDisplay.innerText = expression.replace(/[+\-*/]/g, m => displayMap[m]) || '0';
               }, 1000);

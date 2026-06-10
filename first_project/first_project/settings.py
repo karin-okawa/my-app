@@ -123,6 +123,10 @@ USE_TZ = True
 
 # 静的ファイル（CSS・JavaScript・画像など）のURL
 STATIC_URL = 'static/'
+# 静的ファイルの検索ディレクトリ
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 # モデルの主キーに使用する自動採番フィールドの型
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
